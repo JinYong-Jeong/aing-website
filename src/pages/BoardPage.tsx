@@ -13,10 +13,10 @@ const CATEGORY_LABELS: Record<string, string> = {
 };
 
 const CATEGORY_COLORS: Record<string, string> = {
-  notice: 'text-red-400 border-red-400/30 bg-red-400/10',
-  activity: 'text-green-400 border-green-400/30 bg-green-400/10',
-  study: 'text-aing-blue border-aing-blue/30 bg-aing-blue/10',
-  project: 'text-purple-400 border-purple-400/30 bg-purple-400/10',
+  notice: 'text-red-500 border-red-200 bg-red-50',
+  activity: 'text-green-500 border-green-200 bg-green-50',
+  study: 'text-aing-blue border-blue-200 bg-aing-blue-light',
+  project: 'text-purple-500 border-purple-200 bg-purple-50',
 };
 
 const demoPosts: Post[] = [
@@ -24,7 +24,7 @@ const demoPosts: Post[] = [
     id: '1',
     title: '[공지] 2026 Spring 신규 부원 모집 안내',
     content: '안녕하세요, A.ing입니다. 2026 Spring 학기 신규 부원을 모집합니다.',
-    author_id: '1',
+    author_id: null,
     category: 'notice',
     tags: ['모집', '2026'],
     is_pinned: true,
@@ -36,7 +36,7 @@ const demoPosts: Post[] = [
     id: '2',
     title: 'ResNet 구현 스터디 1주차 후기',
     content: 'ResNet-50을 직접 구현하며 Skip Connection의 의미를 다시 느꼈습니다...',
-    author_id: '2',
+    author_id: null,
     category: 'study',
     tags: ['ResNet', 'CV', 'PyTorch'],
     is_pinned: false,
@@ -48,7 +48,7 @@ const demoPosts: Post[] = [
     id: '3',
     title: 'Transformer Study 킥오프 세션 정리',
     content: 'Attention is All You Need 논문 리뷰 및 구현 계획을 공유합니다.',
-    author_id: '1',
+    author_id: null,
     category: 'study',
     tags: ['Transformer', 'NLP', 'Attention'],
     is_pinned: false,
@@ -60,7 +60,7 @@ const demoPosts: Post[] = [
     id: '4',
     title: '26-Spring Senior Session 프로젝트 소개',
     content: '이번 학기 시니어 트랙은 CV/NLP/RL 세 팀으로 나눠 진행됩니다.',
-    author_id: '1',
+    author_id: null,
     category: 'activity',
     tags: ['Senior', 'Project', '2026'],
     is_pinned: false,
@@ -109,7 +109,7 @@ const BoardPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-aing-black pt-20">
+    <div className="min-h-screen bg-aing-bg pt-20">
       {/* Header */}
       <section className="py-20 px-6 border-b border-aing-border">
         <div className="max-w-4xl mx-auto flex items-start justify-between flex-wrap gap-4">
@@ -143,8 +143,8 @@ const BoardPage: React.FC = () => {
                 onClick={() => setFilter(f)}
                 className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
                   filter === f
-                    ? 'bg-aing-white text-aing-black'
-                    : 'border border-aing-border text-aing-muted hover:border-aing-blue/50 hover:text-aing-blue'
+                    ? 'bg-aing-dark text-white'
+                    : 'border border-aing-border text-aing-muted hover:border-aing-blue hover:text-aing-blue'
                 }`}
               >
                 {f === 'all' ? 'All' : CATEGORY_LABELS[f]}
@@ -153,14 +153,14 @@ const BoardPage: React.FC = () => {
           </div>
 
           {/* Search */}
-          <div className="flex items-center gap-2 border border-aing-border rounded-xl px-3 py-2 bg-aing-card w-full sm:w-64 ml-auto">
+          <div className="flex items-center gap-2 border border-aing-border rounded-xl px-3 py-2 bg-white w-full sm:w-64 ml-auto">
             <Search size={14} className="text-aing-muted shrink-0" />
             <input
               type="text"
               placeholder="Search..."
               value={search}
               onChange={e => setSearch(e.target.value)}
-              className="bg-transparent text-sm text-aing-white placeholder-aing-muted focus:outline-none w-full"
+              className="bg-transparent text-sm text-aing-text placeholder-aing-muted focus:outline-none w-full"
             />
           </div>
         </div>
@@ -186,7 +186,7 @@ const BoardPage: React.FC = () => {
                 <AnimatedSection key={post.id} delay={i * 50}>
                   <Link
                     to={`/board/${post.id}`}
-                    className="card flex items-center gap-4 hover:border-aing-blue/30 group cursor-pointer"
+                    className="card flex items-center gap-4 hover:border-blue-200 group cursor-pointer"
                   >
                     {/* Pin */}
                     {post.is_pinned && (
@@ -200,7 +200,7 @@ const BoardPage: React.FC = () => {
 
                     {/* Title */}
                     <div className="flex-1 min-w-0">
-                      <h3 className="text-sm font-medium text-aing-white truncate group-hover:text-aing-blue transition-colors">
+                      <h3 className="text-sm font-medium text-aing-text truncate group-hover:text-aing-blue transition-colors">
                         {post.title}
                       </h3>
                       {post.tags && post.tags.length > 0 && (

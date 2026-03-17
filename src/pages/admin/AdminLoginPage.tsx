@@ -23,14 +23,14 @@ const AdminLoginPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-aing-black flex items-center justify-center px-6">
+    <div className="min-h-screen bg-aing-bg flex items-center justify-center px-6">
       <AnimatedSection>
         <div className="w-full max-w-sm">
           <div className="text-center mb-8">
-            <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-aing-blue/10 border border-aing-blue/20 mb-4">
+            <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-aing-blue-light border border-blue-200 mb-4">
               <Lock size={20} className="text-aing-blue" />
             </div>
-            <h1 className="text-xl font-semibold text-aing-white">Admin Login</h1>
+            <h1 className="text-xl font-semibold text-aing-text">Admin Login</h1>
             <p className="text-aing-muted text-sm mt-1">A.ing 관리자 패널</p>
           </div>
 
@@ -60,13 +60,13 @@ const AdminLoginPage: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setShowPw(!showPw)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-aing-muted hover:text-aing-white transition-colors"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-aing-muted hover:text-aing-text transition-colors"
                 >
                   {showPw ? <EyeOff size={14} /> : <Eye size={14} />}
                 </button>
               </div>
             </div>
-            {error && <p className="text-red-400 text-xs">{error}</p>}
+            {error && <p className="text-red-500 text-xs">{error}</p>}
             <button type="submit" className="btn-primary w-full">
               로그인
             </button>

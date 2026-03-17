@@ -36,7 +36,7 @@ const Navbar: React.FC = () => {
       <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
         {/* Logo */}
         <Link to="/" className="flex items-center gap-3 group">
-          <img src="/logo.png" alt="A.ing" className="h-8 w-auto opacity-90 group-hover:opacity-100 transition-opacity" />
+          <img src="/logo.png" alt="A.ing" className="h-10 w-auto opacity-90 group-hover:opacity-100 transition-opacity" />
           <span className="text-sm font-mono text-aing-muted group-hover:text-aing-blue transition-colors">
             @ Gachon
           </span>
@@ -48,7 +48,7 @@ const Navbar: React.FC = () => {
             <Link
               key={item.to}
               to={item.to}
-              className={`nav-link ${isActive(item.to) ? 'text-aing-white' : ''}`}
+              className={`nav-link ${isActive(item.to) ? 'text-aing-text' : ''}`}
             >
               {item.label}
             </Link>
@@ -65,7 +65,7 @@ const Navbar: React.FC = () => {
               </button>
             </>
           ) : (
-            <Link to="/admin/login" className="nav-link flex items-center gap-1 hover:text-aing-white">
+            <Link to="/admin/login" className="nav-link flex items-center gap-1 hover:text-aing-text">
               <LogIn size={14} />
               <span className="text-xs">Admin</span>
             </Link>
@@ -81,7 +81,7 @@ const Navbar: React.FC = () => {
         {/* Mobile menu button */}
         <button
           onClick={() => setIsOpen(!isOpen)}
-          className="md:hidden text-aing-muted hover:text-aing-white transition-colors"
+          className="md:hidden text-aing-muted hover:text-aing-text transition-colors"
         >
           {isOpen ? <X size={20} /> : <Menu size={20} />}
         </button>
@@ -95,7 +95,7 @@ const Navbar: React.FC = () => {
               key={item.to}
               to={item.to}
               className={`text-base font-medium transition-colors ${
-                isActive(item.to) ? 'text-aing-white' : 'text-aing-muted hover:text-aing-white'
+                isActive(item.to) ? 'text-aing-text' : 'text-aing-muted hover:text-aing-text'
               }`}
             >
               {item.label}

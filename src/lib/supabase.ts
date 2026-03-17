@@ -22,7 +22,7 @@ export type Post = {
   id: string;
   title: string;
   content: string;
-  author_id: string;
+  author_id: string | null;
   category: 'notice' | 'activity' | 'study' | 'project';
   tags: string[];
   is_pinned: boolean;

@@ -9,10 +9,10 @@ const CATEGORY_LABELS: Record<string, string> = {
   notice: 'Notice', activity: 'Activity', study: 'Study', project: 'Project',
 };
 const CATEGORY_COLORS: Record<string, string> = {
-  notice: 'text-red-400 border-red-400/30 bg-red-400/10',
-  activity: 'text-green-400 border-green-400/30 bg-green-400/10',
-  study: 'text-aing-blue border-aing-blue/30 bg-aing-blue/10',
-  project: 'text-purple-400 border-purple-400/30 bg-purple-400/10',
+  notice: 'text-red-500 border-red-200 bg-red-50',
+  activity: 'text-green-500 border-green-200 bg-green-50',
+  study: 'text-aing-blue border-blue-200 bg-aing-blue-light',
+  project: 'text-purple-500 border-purple-200 bg-purple-50',
 };
 
 const demoPost: Post = {
@@ -31,7 +31,7 @@ const demoPost: Post = {
 아래 Contact 페이지를 통해 지원해주세요.
 
 A.ing에서 함께 성장해요! 🚀`,
-  author_id: '1',
+  author_id: null,
   category: 'notice',
   tags: ['모집', '2026', 'Spring'],
   is_pinned: true,
@@ -116,31 +116,31 @@ const PostDetailPage: React.FC = () => {
 
   const renderContent = (content: string) => {
     return content
-      .replace(/\*\*(.*?)\*\*/g, '<strong class="text-aing-white">$1</strong>')
-      .replace(/## (.*)/g, '<h2 class="text-lg font-semibold text-aing-white mt-6 mb-3">$1</h2>')
-      .replace(/# (.*)/g, '<h1 class="text-xl font-semibold text-aing-white mt-6 mb-3">$1</h1>')
+      .replace(/\*\*(.*?)\*\*/g, '<strong class="text-aing-text">$1</strong>')
+      .replace(/## (.*)/g, '<h2 class="text-lg font-semibold text-aing-text mt-6 mb-3">$1</h2>')
+      .replace(/# (.*)/g, '<h1 class="text-xl font-semibold text-aing-text mt-6 mb-3">$1</h1>')
       .replace(/- (.*)/g, '<li class="ml-4 list-disc">$1</li>')
       .replace(/\n/g, '<br/>');
   };
 
   if (loading) return (
-    <div className="min-h-screen bg-aing-black pt-32 flex items-center justify-center">
+    <div className="min-h-screen bg-aing-bg pt-32 flex items-center justify-center">
       <div className="text-aing-muted">Loading...</div>
     </div>
   );
 
   if (!post) return (
-    <div className="min-h-screen bg-aing-black pt-32 flex items-center justify-center">
+    <div className="min-h-screen bg-aing-bg pt-32 flex items-center justify-center">
       <div className="text-aing-muted">Post not found.</div>
     </div>
   );
 
   return (
-    <div className="min-h-screen bg-aing-black pt-20">
+    <div className="min-h-screen bg-aing-bg pt-20">
       <div className="max-w-3xl mx-auto px-6 py-12">
         {/* Back */}
         <AnimatedSection>
-          <Link to="/board" className="flex items-center gap-2 text-aing-muted hover:text-aing-white text-sm transition-colors mb-8">
+          <Link to="/board" className="flex items-center gap-2 text-aing-muted hover:text-aing-text text-sm transition-colors mb-8">
             <ArrowLeft size={14} />
             Board
           </Link>
@@ -163,7 +163,7 @@ const PostDetailPage: React.FC = () => {
             </div>
 
             {/* Title */}
-            <h1 className="text-2xl font-semibold text-aing-white mb-4 leading-tight">
+            <h1 className="text-2xl font-semibold text-aing-text mb-4 leading-tight">
               {post.title}
             </h1>
 
@@ -192,10 +192,10 @@ const PostDetailPage: React.FC = () => {
               </div>
               {isAdmin && (
                 <div className="flex gap-3">
-                  <Link to={`/admin/posts/edit/${post.id}`} className="text-xs text-aing-muted hover:text-aing-white transition-colors">
+                  <Link to={`/admin/posts/edit/${post.id}`} className="text-xs text-aing-muted hover:text-aing-text transition-colors">
                     수정
                   </Link>
-                  <button onClick={handleDelete} className="text-xs text-red-400 hover:text-red-300 flex items-center gap-1 transition-colors">
+                  <button onClick={handleDelete} className="text-xs text-red-500 hover:text-red-400 flex items-center gap-1 transition-colors">
                     <Trash2 size={12} /> 삭제
                   </button>
                 </div>
@@ -207,7 +207,7 @@ const PostDetailPage: React.FC = () => {
         {/* Comments */}
         <AnimatedSection delay={200}>
           <div className="mb-8">
-            <h3 className="text-sm font-semibold text-aing-white mb-4 flex items-center gap-2">
+            <h3 className="text-sm font-semibold text-aing-text mb-4 flex items-center gap-2">
               <MessageSquare size={14} className="text-aing-blue" />
               댓글 {comments.length}개
             </h3>
@@ -218,7 +218,7 @@ const PostDetailPage: React.FC = () => {
                 {comments.map(c => (
                   <div key={c.id} className="card">
                     <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm font-medium text-aing-white">{c.author_name}</span>
+                      <span className="text-sm font-medium text-aing-text">{c.author_name}</span>
                       <span className="text-xs text-aing-muted">
                         {new Date(c.created_at).toLocaleDateString('ko-KR')}
                       </span>
@@ -234,7 +234,7 @@ const PostDetailPage: React.FC = () => {
         {/* Comment Form */}
         <AnimatedSection delay={300}>
           <div className="card">
-            <h3 className="text-sm font-semibold text-aing-white mb-4">댓글 작성</h3>
+            <h3 className="text-sm font-semibold text-aing-text mb-4">댓글 작성</h3>
             {submitted ? (
               <p className="text-aing-muted text-sm py-4 text-center">
                 댓글이 등록되었습니다. 관리자 승인 후 표시됩니다.

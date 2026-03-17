@@ -19,15 +19,15 @@ const seniorWeeks = [
 ];
 
 const domains = [
-  { name: 'Computer Vision', tag: 'CV', desc: '이미지 인식, 객체 탐지, 생성 모델 등', color: 'text-blue-400 border-blue-400/30 bg-blue-400/5' },
-  { name: 'Natural Language Processing', tag: 'NLP', desc: '언어 모델, 텍스트 분류, 번역 등', color: 'text-purple-400 border-purple-400/30 bg-purple-400/5' },
-  { name: 'Reinforcement Learning', tag: 'RL', desc: '에이전트 학습, 보상 설계, 환경 구축', color: 'text-green-400 border-green-400/30 bg-green-400/5' },
-  { name: 'HCI & Multi-Agent', tag: 'HCI', desc: '사람-AI 상호작용, 멀티에이전트 시스템', color: 'text-orange-400 border-orange-400/30 bg-orange-400/5' },
+  { name: 'Computer Vision', tag: 'CV', desc: '이미지 인식, 객체 탐지, 생성 모델 등', color: 'text-blue-500 border-blue-200 bg-blue-50' },
+  { name: 'Natural Language Processing', tag: 'NLP', desc: '언어 모델, 텍스트 분류, 번역 등', color: 'text-purple-500 border-purple-200 bg-purple-50' },
+  { name: 'Reinforcement Learning', tag: 'RL', desc: '에이전트 학습, 보상 설계, 환경 구축', color: 'text-green-500 border-green-200 bg-green-50' },
+  { name: 'HCI & Multi-Agent', tag: 'HCI', desc: '사람-AI 상호작용, 멀티에이전트 시스템', color: 'text-orange-500 border-orange-200 bg-orange-50' },
 ];
 
 const AboutPage: React.FC = () => {
   return (
-    <div className="min-h-screen bg-aing-black pt-20">
+    <div className="min-h-screen bg-aing-bg pt-20">
       {/* Header */}
       <section className="py-20 px-6 border-b border-aing-border">
         <div className="max-w-4xl mx-auto">
@@ -63,19 +63,19 @@ const AboutPage: React.FC = () => {
                 icon: Code,
                 title: 'Build It',
                 desc: '이해한 것을 직접 코드로 구현합니다. 구현이 곧 진짜 이해의 증명.',
-                color: 'text-purple-400',
+                color: 'text-purple-500',
               },
               {
                 icon: Target,
                 title: 'Level Up',
                 desc: '기초부터 SOTA까지. 각자의 속도로, 함께 성장합니다.',
-                color: 'text-green-400',
+                color: 'text-green-500',
               },
             ].map((item, i) => (
               <AnimatedSection key={item.title} delay={i * 150}>
                 <div className="card h-full">
                   <item.icon size={24} className={`${item.color} mb-4`} />
-                  <h3 className="text-lg font-semibold text-aing-white mb-3">{item.title}</h3>
+                  <h3 className="text-lg font-semibold text-aing-text mb-3">{item.title}</h3>
                   <p className="text-aing-muted text-sm leading-relaxed">{item.desc}</p>
                 </div>
               </AnimatedSection>
@@ -97,13 +97,13 @@ const AboutPage: React.FC = () => {
           <div className="grid md:grid-cols-2 gap-8">
             {/* Junior */}
             <AnimatedSection delay={0}>
-              <div className="card border-aing-blue/20 bg-aing-blue/5 h-full">
+              <div className="card border-blue-200 bg-aing-blue-light h-full">
                 <div className="flex items-center gap-3 mb-6">
-                  <div className="p-2 rounded-lg bg-aing-blue/10 border border-aing-blue/20">
+                  <div className="p-2 rounded-lg bg-white border border-blue-200">
                     <Brain size={18} className="text-aing-blue" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-aing-white">Junior Track</h3>
+                    <h3 className="font-semibold text-aing-text">Junior Track</h3>
                     <span className="text-xs text-aing-blue font-mono">Foundation</span>
                   </div>
                 </div>
@@ -116,7 +116,7 @@ const AboutPage: React.FC = () => {
                     <div key={w.week} className="flex gap-4 text-sm">
                       <span className="text-aing-blue font-mono text-xs w-14 shrink-0 pt-0.5">{w.week}</span>
                       <div>
-                        <span className="text-aing-white font-medium">{w.title}</span>
+                        <span className="text-aing-text font-medium">{w.title}</span>
                         <span className="text-aing-muted ml-2">{w.desc}</span>
                       </div>
                     </div>
@@ -127,14 +127,14 @@ const AboutPage: React.FC = () => {
 
             {/* Senior */}
             <AnimatedSection delay={150}>
-              <div className="card border-purple-400/20 bg-purple-400/5 h-full">
+              <div className="card border-purple-200 bg-purple-50 h-full">
                 <div className="flex items-center gap-3 mb-6">
-                  <div className="p-2 rounded-lg bg-purple-400/10 border border-purple-400/20">
-                    <Code size={18} className="text-purple-400" />
+                  <div className="p-2 rounded-lg bg-white border border-purple-200">
+                    <Code size={18} className="text-purple-500" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-aing-white">Senior Track</h3>
-                    <span className="text-xs text-purple-400 font-mono">Applied Research</span>
+                    <h3 className="font-semibold text-aing-text">Senior Track</h3>
+                    <span className="text-xs text-purple-500 font-mono">Applied Research</span>
                   </div>
                 </div>
                 <p className="text-aing-muted text-sm mb-6 leading-relaxed">
@@ -144,9 +144,9 @@ const AboutPage: React.FC = () => {
                 <div className="space-y-3">
                   {seniorWeeks.map((w) => (
                     <div key={w.week} className="flex gap-4 text-sm">
-                      <span className="text-purple-400 font-mono text-xs w-14 shrink-0 pt-0.5">{w.week}</span>
+                      <span className="text-purple-500 font-mono text-xs w-14 shrink-0 pt-0.5">{w.week}</span>
                       <div>
-                        <span className="text-aing-white font-medium">{w.title}</span>
+                        <span className="text-aing-text font-medium">{w.title}</span>
                         <span className="text-aing-muted ml-2">{w.desc}</span>
                       </div>
                     </div>
@@ -176,7 +176,7 @@ const AboutPage: React.FC = () => {
                     {d.tag}
                   </div>
                   <div>
-                    <h3 className="text-aing-white font-medium mb-1">{d.name}</h3>
+                    <h3 className="text-aing-text font-medium mb-1">{d.name}</h3>
                     <p className="text-aing-muted text-sm">{d.desc}</p>
                   </div>
                 </div>
@@ -190,14 +190,14 @@ const AboutPage: React.FC = () => {
       <section className="py-24 px-6 border-t border-aing-border">
         <div className="max-w-4xl mx-auto">
           <AnimatedSection>
-            <div className="card border-aing-blue/20">
+            <div className="card border-blue-200">
               <div className="flex items-center gap-3 mb-8">
                 <Layers size={20} className="text-aing-blue" />
-                <h2 className="text-xl font-semibold text-aing-white">지원 자격</h2>
+                <h2 className="text-xl font-semibold text-aing-text">지원 자격</h2>
               </div>
               <div className="grid md:grid-cols-2 gap-8">
                 <div>
-                  <h4 className="text-sm font-semibold text-aing-white mb-4">필수 조건</h4>
+                  <h4 className="text-sm font-semibold text-aing-text mb-4">필수 조건</h4>
                   <ul className="space-y-2 text-sm text-aing-muted">
                     {[
                       'Python 코드를 읽고 수정할 수 있는 능력',
@@ -213,7 +213,7 @@ const AboutPage: React.FC = () => {
                   </ul>
                 </div>
                 <div>
-                  <h4 className="text-sm font-semibold text-aing-white mb-4">우대 사항</h4>
+                  <h4 className="text-sm font-semibold text-aing-text mb-4">우대 사항</h4>
                   <ul className="space-y-2 text-sm text-aing-muted">
                     {[
                       '선택 도메인(CV/NLP/RL)에 대한 기본 이해',
@@ -222,7 +222,7 @@ const AboutPage: React.FC = () => {
                       '주니어 트랙 수료 또는 유사 프로젝트 경험',
                     ].map(item => (
                       <li key={item} className="flex items-start gap-2">
-                        <span className="text-purple-400 mt-0.5">→</span>
+                        <span className="text-purple-500 mt-0.5">→</span>
                         {item}
                       </li>
                     ))}

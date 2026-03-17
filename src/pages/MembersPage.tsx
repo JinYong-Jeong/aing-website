@@ -10,9 +10,9 @@ const TRACK_LABELS: Record<string, string> = {
 };
 
 const TRACK_COLORS: Record<string, string> = {
-  junior: 'text-aing-blue border-aing-blue/30 bg-aing-blue/10',
-  senior: 'text-purple-400 border-purple-400/30 bg-purple-400/10',
-  admin: 'text-green-400 border-green-400/30 bg-green-400/10',
+  junior: 'text-aing-blue border-blue-200 bg-aing-blue-light',
+  senior: 'text-purple-500 border-purple-200 bg-purple-50',
+  admin: 'text-green-500 border-green-200 bg-green-50',
 };
 
 const demoMembers: Member[] = [
@@ -57,7 +57,7 @@ const MembersPage: React.FC = () => {
     name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
 
   return (
-    <div className="min-h-screen bg-aing-black pt-20">
+    <div className="min-h-screen bg-aing-bg pt-20">
       {/* Header */}
       <section className="py-20 px-6 border-b border-aing-border">
         <div className="max-w-4xl mx-auto">
@@ -83,8 +83,8 @@ const MembersPage: React.FC = () => {
               onClick={() => setFilter(f)}
               className={`shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
                 filter === f
-                  ? 'bg-aing-white text-aing-black'
-                  : 'border border-aing-border text-aing-muted hover:border-aing-blue/50 hover:text-aing-blue'
+                  ? 'bg-aing-dark text-white'
+                  : 'border border-aing-border text-aing-muted hover:border-aing-blue hover:text-aing-blue'
               }`}
             >
               {f === 'all' ? 'All' : TRACK_LABELS[f]}
@@ -113,7 +113,7 @@ const MembersPage: React.FC = () => {
             <div className="grid md:grid-cols-3 lg:grid-cols-4 gap-4">
               {filtered.map((member, i) => (
                 <AnimatedSection key={member.id} delay={i * 50}>
-                  <div className="card group hover:border-aing-blue/30">
+                  <div className="card group hover:border-blue-200">
                     {/* Avatar */}
                     <div className="mb-4">
                       {member.avatar_url ? (
@@ -123,8 +123,8 @@ const MembersPage: React.FC = () => {
                           className="w-16 h-16 rounded-2xl object-cover"
                         />
                       ) : (
-                        <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-aing-blue/30 to-purple-400/30 border border-aing-border flex items-center justify-center">
-                          <span className="text-aing-white font-semibold text-lg">
+                        <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-100 to-purple-100 border border-aing-border flex items-center justify-center">
+                          <span className="text-aing-text font-semibold text-lg">
                             {getInitials(member.name)}
                           </span>
                         </div>
@@ -133,7 +133,7 @@ const MembersPage: React.FC = () => {
 
                     {/* Info */}
                     <div className="mb-3">
-                      <h3 className="font-semibold text-aing-white text-sm">{member.name}</h3>
+                      <h3 className="font-semibold text-aing-text text-sm">{member.name}</h3>
                       <p className="text-aing-muted text-xs mt-0.5">{member.role}</p>
                     </div>
 
@@ -160,7 +160,7 @@ const MembersPage: React.FC = () => {
                         href={member.github}
                         target="_blank"
                         rel="noreferrer"
-                        className="flex items-center gap-1 text-xs text-aing-muted hover:text-aing-white transition-colors"
+                        className="flex items-center gap-1 text-xs text-aing-muted hover:text-aing-text transition-colors"
                       >
                         <Github size={12} />
                         GitHub

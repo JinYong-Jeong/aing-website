@@ -36,20 +36,20 @@ const activities = [
 ];
 
 const TYPE_COLORS: Record<string, string> = {
-  study: 'text-aing-blue border-aing-blue/30 bg-aing-blue/10',
-  project: 'text-purple-400 border-purple-400/30 bg-purple-400/10',
-  event: 'text-green-400 border-green-400/30 bg-green-400/10',
+  study: 'text-aing-blue border-blue-200 bg-aing-blue-light',
+  project: 'text-purple-500 border-purple-200 bg-purple-50',
+  event: 'text-green-500 border-green-200 bg-green-50',
 };
 
 const STATUS_COLORS: Record<string, string> = {
-  ongoing: 'text-green-400',
+  ongoing: 'text-green-500',
   completed: 'text-aing-muted',
-  upcoming: 'text-yellow-400',
+  upcoming: 'text-yellow-500',
 };
 
 const ActivitiesPage: React.FC = () => {
   return (
-    <div className="min-h-screen bg-aing-black pt-20">
+    <div className="min-h-screen bg-aing-bg pt-20">
       {/* Header */}
       <section className="py-20 px-6 border-b border-aing-border">
         <div className="max-w-4xl mx-auto">
@@ -74,14 +74,14 @@ const ActivitiesPage: React.FC = () => {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {[
               { icon: BookOpen, label: 'Weekly Study', desc: '논문 리딩 & 코드 구현', color: 'text-aing-blue' },
-              { icon: Code2, label: 'Projects', desc: 'SOTA 모델 커스터마이징', color: 'text-purple-400' },
-              { icon: Users2, label: 'Seminars', desc: '지식 공유 & 발표', color: 'text-green-400' },
-              { icon: Calendar, label: 'Sessions', desc: '정기 모임 및 코드 리뷰', color: 'text-orange-400' },
+              { icon: Code2, label: 'Projects', desc: 'SOTA 모델 커스터마이징', color: 'text-purple-500' },
+              { icon: Users2, label: 'Seminars', desc: '지식 공유 & 발표', color: 'text-green-500' },
+              { icon: Calendar, label: 'Sessions', desc: '정기 모임 및 코드 리뷰', color: 'text-orange-500' },
             ].map((item, i) => (
               <AnimatedSection key={item.label} delay={i * 100}>
                 <div className="card text-center group">
                   <item.icon size={24} className={`${item.color} mx-auto mb-3`} />
-                  <h3 className="text-sm font-semibold text-aing-white mb-1">{item.label}</h3>
+                  <h3 className="text-sm font-semibold text-aing-text mb-1">{item.label}</h3>
                   <p className="text-xs text-aing-muted">{item.desc}</p>
                 </div>
               </AnimatedSection>
@@ -97,7 +97,7 @@ const ActivitiesPage: React.FC = () => {
             <div key={semester.semester} className="mb-20">
               <AnimatedSection>
                 <div className="flex items-center gap-4 mb-10">
-                  <h2 className="text-2xl font-semibold text-aing-white">{semester.semester}</h2>
+                  <h2 className="text-2xl font-semibold text-aing-text">{semester.semester}</h2>
                   <div className="flex-1 gradient-line" />
                 </div>
               </AnimatedSection>
@@ -117,7 +117,7 @@ const ActivitiesPage: React.FC = () => {
                         </span>
                       </div>
 
-                      <h3 className="text-base font-semibold text-aing-white mb-2">{item.title}</h3>
+                      <h3 className="text-base font-semibold text-aing-text mb-2">{item.title}</h3>
                       <p className="text-aing-muted text-sm mb-4 leading-relaxed flex-1">{item.desc}</p>
 
                       {/* Tags */}
@@ -133,7 +133,7 @@ const ActivitiesPage: React.FC = () => {
                           href={item.github}
                           target="_blank"
                           rel="noreferrer"
-                          className="flex items-center gap-2 text-xs text-aing-muted hover:text-aing-white transition-colors mt-auto"
+                          className="flex items-center gap-2 text-xs text-aing-muted hover:text-aing-text transition-colors mt-auto"
                         >
                           <Github size={12} />
                           View on GitHub

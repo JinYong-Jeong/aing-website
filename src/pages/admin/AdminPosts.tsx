@@ -5,10 +5,10 @@ import { supabase, Post } from '../../lib/supabase';
 import { useAdmin } from '../../context/AdminContext';
 
 const CATEGORY_COLORS: Record<string, string> = {
-  notice: 'text-red-400 border-red-400/30 bg-red-400/10',
-  activity: 'text-green-400 border-green-400/30 bg-green-400/10',
-  study: 'text-aing-blue border-aing-blue/30 bg-aing-blue/10',
-  project: 'text-purple-400 border-purple-400/30 bg-purple-400/10',
+  notice: 'text-red-500 border-red-200 bg-red-50',
+  activity: 'text-green-500 border-green-200 bg-green-50',
+  study: 'text-aing-blue border-blue-200 bg-aing-blue-light',
+  project: 'text-purple-500 border-purple-200 bg-purple-50',
 };
 
 const AdminPosts: React.FC = () => {
@@ -46,15 +46,15 @@ const AdminPosts: React.FC = () => {
   if (!isAdmin) return null;
 
   return (
-    <div className="min-h-screen bg-aing-black pt-20">
+    <div className="min-h-screen bg-aing-bg pt-20">
       <div className="max-w-6xl mx-auto px-6 py-12">
-        <Link to="/admin" className="flex items-center gap-2 text-aing-muted hover:text-aing-white text-sm mb-8 transition-colors">
+        <Link to="/admin" className="flex items-center gap-2 text-aing-muted hover:text-aing-text text-sm mb-8 transition-colors">
           <ArrowLeft size={14} />
           Dashboard
         </Link>
 
         <div className="flex items-center justify-between mb-8">
-          <h1 className="text-2xl font-semibold text-aing-white">게시글 관리</h1>
+          <h1 className="text-2xl font-semibold text-aing-text">게시글 관리</h1>
           <Link to="/admin/posts/new" className="btn-primary flex items-center gap-2 text-sm">
             <PlusCircle size={14} />
             새 게시글
@@ -75,7 +75,7 @@ const AdminPosts: React.FC = () => {
                   {post.category}
                 </span>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-aing-white truncate">{post.title}</p>
+                  <p className="text-sm font-medium text-aing-text truncate">{post.title}</p>
                   <p className="text-xs text-aing-muted mt-0.5">
                     {new Date(post.created_at).toLocaleDateString('ko-KR')} · 조회 {post.views}
                   </p>
@@ -85,7 +85,7 @@ const AdminPosts: React.FC = () => {
                     onClick={() => togglePin(post.id, post.is_pinned)}
                     className={`p-1.5 rounded-lg border transition-colors ${
                       post.is_pinned
-                        ? 'border-aing-blue/30 text-aing-blue bg-aing-blue/10'
+                        ? 'border-blue-200 text-aing-blue bg-aing-blue-light'
                         : 'border-aing-border text-aing-muted hover:text-aing-blue'
                     }`}
                     title="고정"
@@ -94,13 +94,13 @@ const AdminPosts: React.FC = () => {
                   </button>
                   <Link
                     to={`/admin/posts/edit/${post.id}`}
-                    className="p-1.5 rounded-lg border border-aing-border text-aing-muted hover:text-aing-white hover:border-aing-blue/30 transition-colors"
+                    className="p-1.5 rounded-lg border border-aing-border text-aing-muted hover:text-aing-text hover:border-blue-200 transition-colors"
                   >
                     <Pencil size={14} />
                   </Link>
                   <button
                     onClick={() => deletePost(post.id)}
-                    className="p-1.5 rounded-lg border border-aing-border text-aing-muted hover:text-red-400 hover:border-red-400/30 transition-colors"
+                    className="p-1.5 rounded-lg border border-aing-border text-aing-muted hover:text-red-500 hover:border-red-200 transition-colors"
                   >
                     <Trash2 size={14} />
                   </button>

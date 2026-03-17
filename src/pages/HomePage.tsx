@@ -18,8 +18,8 @@ const tracks = [
     desc: '기초 논문의 수식을 코드로 매핑하며 딥러닝 파이프라인을 직접 체화합니다. 이론과 구현의 간극을 좁히는 과정.',
     icon: Brain,
     color: 'text-aing-blue',
-    border: 'border-aing-blue/20',
-    bg: 'bg-aing-blue/5',
+    border: 'border-blue-200',
+    bg: 'bg-aing-blue-light',
   },
   {
     id: 'senior',
@@ -27,9 +27,9 @@ const tracks = [
     tag: 'Applied',
     desc: '특정 도메인의 SOTA 모델을 기반으로 커스텀 모델을 설계하고 실전 역량을 강화합니다. 포트폴리오 구축 중심.',
     icon: Code,
-    color: 'text-purple-400',
-    border: 'border-purple-400/20',
-    bg: 'bg-purple-400/5',
+    color: 'text-purple-500',
+    border: 'border-purple-200',
+    bg: 'bg-purple-50',
   },
 ];
 
@@ -47,7 +47,7 @@ const HomePage: React.FC = () => {
   }, []);
 
   return (
-    <div className="min-h-screen bg-aing-black">
+    <div className="min-h-screen bg-aing-bg">
       {/* Hero */}
       <section className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden px-6">
         {/* Grid bg */}
@@ -63,18 +63,18 @@ const HomePage: React.FC = () => {
         <div
           className="pointer-events-none absolute inset-0 transition-opacity duration-300"
           style={{
-            background: `radial-gradient(600px circle at ${mousePos.x}px ${mousePos.y}px, rgba(74, 158, 255, 0.04), transparent 40%)`,
+            background: `radial-gradient(600px circle at ${mousePos.x}px ${mousePos.y}px, rgba(59,130,246,0.05), transparent 40%)`,
           }}
         />
 
         {/* Blue glow center */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full opacity-10"
-          style={{ background: 'radial-gradient(circle, #4A9EFF 0%, transparent 70%)' }}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full opacity-5"
+          style={{ background: 'radial-gradient(circle, #3B82F6 0%, transparent 70%)' }}
         />
 
         <div className="relative z-10 max-w-4xl mx-auto text-center">
           {/* Badge */}
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-aing-blue/30 bg-aing-blue/10 text-aing-blue text-xs font-mono mb-8 animate-fade-in">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-blue-200 bg-aing-blue-light text-aing-blue text-xs font-mono mb-8 animate-fade-in">
             <span className="w-1.5 h-1.5 rounded-full bg-aing-blue animate-pulse" />
             Gachon University · AI Academic Society
           </div>
@@ -84,8 +84,7 @@ const HomePage: React.FC = () => {
             <img
               src="/logo.png"
               alt="A.ing"
-              className="h-24 md:h-32 w-auto drop-shadow-2xl"
-              style={{ filter: 'brightness(1.1)' }}
+              className="h-24 md:h-32 w-auto drop-shadow-lg"
             />
           </div>
 
@@ -93,7 +92,7 @@ const HomePage: React.FC = () => {
           <h1 className="text-4xl md:text-6xl lg:text-7xl font-semibold tracking-tight mb-6 leading-tight">
             <span className="text-gradient">Theory to Code.</span>
             <br />
-            <span className="text-aing-white/70">Code to Insight.</span>
+            <span className="text-aing-muted">Code to Insight.</span>
           </h1>
 
           <p className="text-aing-muted text-lg md:text-xl max-w-2xl mx-auto mb-12 leading-relaxed">
@@ -123,7 +122,7 @@ const HomePage: React.FC = () => {
         {/* Scroll indicator */}
         <a
           href="#stats"
-          className="absolute bottom-8 left-1/2 -translate-x-1/2 text-aing-muted hover:text-aing-white transition-colors animate-bounce"
+          className="absolute bottom-8 left-1/2 -translate-x-1/2 text-aing-muted hover:text-aing-text transition-colors animate-bounce"
         >
           <ChevronDown size={20} />
         </a>
@@ -162,16 +161,16 @@ const HomePage: React.FC = () => {
           <div className="grid md:grid-cols-2 gap-6">
             {tracks.map((track, i) => (
               <AnimatedSection key={track.id} delay={i * 150}>
-                <div className={`card group cursor-pointer ${track.bg} ${track.border}`}>
+                <div className={`card group cursor-pointer ${track.bg} border ${track.border}`}>
                   <div className="flex items-start justify-between mb-4">
                     <div className={`p-2 rounded-lg ${track.bg} border ${track.border}`}>
                       <track.icon size={20} className={track.color} />
                     </div>
-                    <span className={`tag-blue text-xs ${track.color}`} style={{ borderColor: 'currentColor', backgroundColor: 'rgba(74,158,255,0.08)' }}>
+                    <span className="tag-blue text-xs">
                       {track.tag}
                     </span>
                   </div>
-                  <h3 className="text-lg font-semibold text-aing-white mb-3">{track.label}</h3>
+                  <h3 className="text-lg font-semibold text-aing-text mb-3">{track.label}</h3>
                   <p className="text-aing-muted text-sm leading-relaxed">{track.desc}</p>
                   <div className="mt-6 flex items-center gap-2 text-xs text-aing-muted group-hover:text-aing-blue transition-colors">
                     <Link to="/activities" className="flex items-center gap-1">
@@ -219,13 +218,13 @@ const HomePage: React.FC = () => {
       <section className="py-24 px-6">
         <div className="max-w-4xl mx-auto">
           <AnimatedSection>
-            <div className="card relative overflow-hidden border-aing-blue/20 bg-gradient-to-br from-aing-blue/10 to-transparent text-center py-16">
+            <div className="card relative overflow-hidden border-blue-200 bg-gradient-to-br from-aing-blue-light to-white text-center py-16">
               <div className="absolute inset-0 bg-grid-pattern bg-grid opacity-30" />
               <div className="relative z-10">
                 <div className="flex justify-center mb-4">
                   <Users className="text-aing-blue" size={32} />
                 </div>
-                <h2 className="text-2xl md:text-3xl font-semibold text-aing-white mb-4">
+                <h2 className="text-2xl md:text-3xl font-semibold text-aing-text mb-4">
                   함께 성장할 멤버를 찾습니다
                 </h2>
                 <p className="text-aing-muted mb-8 max-w-md mx-auto text-sm leading-relaxed">

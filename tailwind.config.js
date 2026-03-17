@@ -7,15 +7,15 @@ module.exports = {
     extend: {
       colors: {
         aing: {
-          black: '#0A0A0A',
+          bg: '#FFFFFF',
+          'bg-alt': '#F8F8F8',
+          card: '#FFFFFF',
+          border: '#E5E5E5',
+          text: '#111111',
+          muted: '#777777',
+          blue: '#3B82F6',
+          'blue-light': '#EFF6FF',
           dark: '#111111',
-          card: '#161616',
-          border: '#222222',
-          accent: '#E8E8E8',
-          muted: '#666666',
-          white: '#F5F5F5',
-          blue: '#4A9EFF',
-          'blue-dim': '#1A3A5C',
         }
       },
       fontFamily: {
@@ -42,12 +42,12 @@ module.exports = {
           '100%': { opacity: '1', transform: 'translateX(0)' },
         },
         glow: {
-          '0%': { boxShadow: '0 0 20px rgba(74, 158, 255, 0.1)' },
-          '100%': { boxShadow: '0 0 40px rgba(74, 158, 255, 0.3)' },
+          '0%': { boxShadow: '0 0 20px rgba(59, 130, 246, 0.1)' },
+          '100%': { boxShadow: '0 0 40px rgba(59, 130, 246, 0.3)' },
         }
       },
       backgroundImage: {
-        'grid-pattern': "linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px)",
+        'grid-pattern': "linear-gradient(rgba(0,0,0,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(0,0,0,0.04) 1px, transparent 1px)",
         'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
       },
       backgroundSize: {

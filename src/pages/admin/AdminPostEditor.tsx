@@ -1,9 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, Link } from 'react-router-dom';
 import { ArrowLeft, Save, Tag } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useAdmin } from '../../context/AdminContext';
-import { Link } from 'react-router-dom';
 
 type Category = 'notice' | 'activity' | 'study' | 'project';
 
@@ -45,34 +44,38 @@ const AdminPostEditor: React.FC = () => {
       title: form.title,
       content: form.content,
       category: form.category,
-      tags: form.tags.split(',').map(t => t.trim()).filter(Boolean),
+      tags: form.tags.split(',').map((t: string) => t.trim()).filter(Boolean),
       is_pinned: form.is_pinned,
-      author_id: '1',
-      views: 0,
+      author_id: null,
       updated_at: new Date().toISOString(),
     };
     try {
       if (isEdit && id) {
-        await supabase.from('posts').update(payload).eq('id', id);
+        const { error } = await supabase.from('posts').update(payload).eq('id', id);
+        if (error) throw error;
       } else {
-        await supabase.from('posts').insert({ ...payload, created_at: new Date().toISOString() });
+        const { error } = await supabase.from('posts').insert({ ...payload, views: 0, created_at: new Date().toISOString() });
+        if (error) throw error;
       }
-      navigate('/board');
-    } catch {}
+      navigate('/admin/posts');
+    } catch(err) {
+      console.error('Save error:', err);
+      alert('저장 실패: ' + (err as any)?.message);
+    }
     setSaving(false);
   };
 
   if (!isAdmin) return null;
 
   return (
-    <div className="min-h-screen bg-aing-black pt-20">
+    <div className="min-h-screen bg-aing-bg pt-20">
       <div className="max-w-3xl mx-auto px-6 py-12">
-        <Link to="/admin" className="flex items-center gap-2 text-aing-muted hover:text-aing-white text-sm mb-8 transition-colors">
+        <Link to="/admin" className="flex items-center gap-2 text-aing-muted hover:text-aing-text text-sm mb-8 transition-colors">
           <ArrowLeft size={14} />
           Admin
         </Link>
 
-        <h1 className="text-2xl font-semibold text-aing-white mb-8">
+        <h1 className="text-2xl font-semibold text-aing-text mb-8">
           {isEdit ? '게시글 수정' : '새 게시글 작성'}
         </h1>
 

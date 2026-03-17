@@ -41,20 +41,20 @@ const AdminMessages: React.FC = () => {
   if (!isAdmin) return null;
 
   return (
-    <div className="min-h-screen bg-aing-black pt-20">
+    <div className="min-h-screen bg-aing-bg pt-20">
       <div className="max-w-4xl mx-auto px-6 py-12">
-        <Link to="/admin" className="flex items-center gap-2 text-aing-muted hover:text-aing-white text-sm mb-8 transition-colors">
+        <Link to="/admin" className="flex items-center gap-2 text-aing-muted hover:text-aing-text text-sm mb-8 transition-colors">
           <ArrowLeft size={14} />
           Dashboard
         </Link>
 
         <div className="flex items-center justify-between mb-8">
-          <h1 className="text-2xl font-semibold text-aing-white">문의 관리</h1>
+          <h1 className="text-2xl font-semibold text-aing-text">문의 관리</h1>
           <div className="flex gap-2">
             {(['unread', 'all'] as const).map(f => (
               <button key={f} onClick={() => setFilter(f)}
                 className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
-                  filter === f ? 'bg-aing-white text-aing-black' : 'border border-aing-border text-aing-muted hover:text-aing-white'
+                  filter === f ? 'bg-aing-dark text-white' : 'border border-aing-border text-aing-muted hover:text-aing-text'
                 }`}>
                 {f === 'unread' ? '미확인' : '전체'}
               </button>
@@ -72,11 +72,11 @@ const AdminMessages: React.FC = () => {
         ) : (
           <div className="space-y-4">
             {filtered.map(msg => (
-              <div key={msg.id} className={`card ${!msg.is_read ? 'border-aing-blue/20' : ''}`}>
+              <div key={msg.id} className={`card ${!msg.is_read ? 'border-blue-200' : ''}`}>
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1">
-                      <span className="font-medium text-aing-white text-sm">{msg.name}</span>
+                      <span className="font-medium text-aing-text text-sm">{msg.name}</span>
                       {!msg.is_read && (
                         <span className="w-1.5 h-1.5 rounded-full bg-aing-blue" />
                       )}
@@ -92,12 +92,12 @@ const AdminMessages: React.FC = () => {
                   <div className="flex gap-2 shrink-0">
                     {!msg.is_read && (
                       <button onClick={() => markRead(msg.id)}
-                        className="p-1.5 rounded-lg border border-green-400/30 text-green-400 hover:bg-green-400/10 transition-colors">
+                        className="p-1.5 rounded-lg border border-green-200 text-green-500 hover:bg-green-50 transition-colors">
                         <CheckCircle size={14} />
                       </button>
                     )}
                     <button onClick={() => deleteMsg(msg.id)}
-                      className="p-1.5 rounded-lg border border-aing-border text-aing-muted hover:text-red-400 hover:border-red-400/30 transition-colors">
+                      className="p-1.5 rounded-lg border border-aing-border text-aing-muted hover:text-red-500 hover:border-red-200 transition-colors">
                       <XCircle size={14} />
                     </button>
                   </div>

@@ -4,13 +4,13 @@ import { Github, Mail, MapPin } from 'lucide-react';
 
 const Footer: React.FC = () => {
   return (
-    <footer className="border-t border-aing-border bg-aing-dark">
+    <footer className="border-t border-aing-border bg-aing-bg-alt">
       <div className="max-w-6xl mx-auto px-6 py-16">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
           {/* Brand */}
           <div className="space-y-4">
             <div className="flex items-center gap-3">
-              <img src="/logo.png" alt="A.ing" className="h-7 w-auto opacity-80" />
+              <img src="/logo.png" alt="A.ing" className="h-7 w-auto opacity-90" />
               <span className="text-xs font-mono text-aing-muted">@ Gachon Univ.</span>
             </div>
             <p className="text-aing-muted text-sm leading-relaxed">
@@ -25,7 +25,7 @@ const Footer: React.FC = () => {
 
           {/* Links */}
           <div className="space-y-4">
-            <h4 className="text-sm font-semibold text-aing-white">Quick Links</h4>
+            <h4 className="text-sm font-semibold text-aing-text">Quick Links</h4>
             <div className="grid grid-cols-2 gap-2">
               {[
                 { label: 'About', to: '/about' },
@@ -38,7 +38,7 @@ const Footer: React.FC = () => {
                 <Link
                   key={item.to + item.label}
                   to={item.to}
-                  className="text-aing-muted hover:text-aing-white text-sm transition-colors"
+                  className="text-aing-muted hover:text-aing-text text-sm transition-colors"
                 >
                   {item.label}
                 </Link>
@@ -48,11 +48,11 @@ const Footer: React.FC = () => {
 
           {/* Contact */}
           <div className="space-y-4">
-            <h4 className="text-sm font-semibold text-aing-white">Contact</h4>
+            <h4 className="text-sm font-semibold text-aing-text">Contact</h4>
             <div className="space-y-3">
               <a
                 href="mailto:gachon.aing@gmail.com"
-                className="flex items-center gap-2 text-aing-muted hover:text-aing-white text-sm transition-colors"
+                className="flex items-center gap-2 text-aing-muted hover:text-aing-text text-sm transition-colors"
               >
                 <Mail size={14} />
                 gachon.aing@gmail.com
@@ -61,7 +61,7 @@ const Footer: React.FC = () => {
                 href="https://github.com/aing-gachon"
                 target="_blank"
                 rel="noreferrer"
-                className="flex items-center gap-2 text-aing-muted hover:text-aing-white text-sm transition-colors"
+                className="flex items-center gap-2 text-aing-muted hover:text-aing-text text-sm transition-colors"
               >
                 <Github size={14} />
                 aing-gachon

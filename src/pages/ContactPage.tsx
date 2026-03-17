@@ -29,7 +29,7 @@ const ContactPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-aing-black pt-20">
+    <div className="min-h-screen bg-aing-bg pt-20">
       {/* Header */}
       <section className="py-20 px-6 border-b border-aing-border">
         <div className="max-w-4xl mx-auto">
@@ -56,18 +56,18 @@ const ContactPage: React.FC = () => {
             <AnimatedSection direction="left">
               <div className="space-y-8">
                 <div>
-                  <h2 className="text-xl font-semibold text-aing-white mb-6">Contact Info</h2>
+                  <h2 className="text-xl font-semibold text-aing-text mb-6">Contact Info</h2>
                   <div className="space-y-4">
                     <a
                       href="mailto:gachon.aing@gmail.com"
                       className="flex items-center gap-4 group"
                     >
-                      <div className="p-3 rounded-xl bg-aing-card border border-aing-border group-hover:border-aing-blue/30 transition-colors">
+                      <div className="p-3 rounded-xl bg-aing-bg-alt border border-aing-border group-hover:border-blue-200 transition-colors">
                         <Mail size={18} className="text-aing-blue" />
                       </div>
                       <div>
                         <p className="text-xs text-aing-muted mb-0.5">Email</p>
-                        <p className="text-sm text-aing-white group-hover:text-aing-blue transition-colors">
+                        <p className="text-sm text-aing-text group-hover:text-aing-blue transition-colors">
                           gachon.aing@gmail.com
                         </p>
                       </div>
@@ -78,23 +78,23 @@ const ContactPage: React.FC = () => {
                       rel="noreferrer"
                       className="flex items-center gap-4 group"
                     >
-                      <div className="p-3 rounded-xl bg-aing-card border border-aing-border group-hover:border-aing-blue/30 transition-colors">
+                      <div className="p-3 rounded-xl bg-aing-bg-alt border border-aing-border group-hover:border-blue-200 transition-colors">
                         <Github size={18} className="text-aing-blue" />
                       </div>
                       <div>
                         <p className="text-xs text-aing-muted mb-0.5">GitHub</p>
-                        <p className="text-sm text-aing-white group-hover:text-aing-blue transition-colors">
+                        <p className="text-sm text-aing-text group-hover:text-aing-blue transition-colors">
                           github.com/aing-gachon
                         </p>
                       </div>
                     </a>
                     <div className="flex items-center gap-4">
-                      <div className="p-3 rounded-xl bg-aing-card border border-aing-border">
+                      <div className="p-3 rounded-xl bg-aing-bg-alt border border-aing-border">
                         <MapPin size={18} className="text-aing-blue" />
                       </div>
                       <div>
                         <p className="text-xs text-aing-muted mb-0.5">Location</p>
-                        <p className="text-sm text-aing-white">가천대학교 AI관</p>
+                        <p className="text-sm text-aing-text">가천대학교 AI관</p>
                       </div>
                     </div>
                   </div>
@@ -102,7 +102,7 @@ const ContactPage: React.FC = () => {
 
                 {/* FAQ */}
                 <div className="card">
-                  <h3 className="text-sm font-semibold text-aing-white mb-4">자주 묻는 질문</h3>
+                  <h3 className="text-sm font-semibold text-aing-text mb-4">자주 묻는 질문</h3>
                   <div className="space-y-4">
                     {[
                       {
@@ -119,7 +119,7 @@ const ContactPage: React.FC = () => {
                       },
                     ].map(item => (
                       <div key={item.q} className="border-b border-aing-border last:border-0 pb-4 last:pb-0">
-                        <p className="text-sm font-medium text-aing-white mb-1">{item.q}</p>
+                        <p className="text-sm font-medium text-aing-text mb-1">{item.q}</p>
                         <p className="text-sm text-aing-muted">{item.a}</p>
                       </div>
                     ))}
@@ -131,11 +131,11 @@ const ContactPage: React.FC = () => {
             {/* Form */}
             <AnimatedSection delay={150} direction="right">
               <div className="card">
-                <h2 className="text-lg font-semibold text-aing-white mb-6">메시지 보내기</h2>
+                <h2 className="text-lg font-semibold text-aing-text mb-6">메시지 보내기</h2>
                 {submitted ? (
                   <div className="py-16 text-center">
-                    <CheckCircle size={40} className="text-green-400 mx-auto mb-4" />
-                    <h3 className="text-aing-white font-semibold mb-2">메시지가 전송되었습니다!</h3>
+                    <CheckCircle size={40} className="text-green-500 mx-auto mb-4" />
+                    <h3 className="text-aing-text font-semibold mb-2">메시지가 전송되었습니다!</h3>
                     <p className="text-aing-muted text-sm">빠른 시일 내로 답변드리겠습니다.</p>
                     <button
                       onClick={() => setSubmitted(false)}

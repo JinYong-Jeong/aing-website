@@ -60,13 +60,13 @@ const AdminDashboard: React.FC = () => {
   if (!isAdmin) return null;
 
   return (
-    <div className="min-h-screen bg-aing-black pt-20">
+    <div className="min-h-screen bg-aing-bg pt-20">
       <div className="max-w-6xl mx-auto px-6 py-12">
         {/* Header */}
         <AnimatedSection>
           <div className="flex items-center justify-between mb-12">
             <div>
-              <h1 className="text-2xl font-semibold text-aing-white">Admin Dashboard</h1>
+              <h1 className="text-2xl font-semibold text-aing-text">Admin Dashboard</h1>
               <p className="text-aing-muted text-sm mt-1">A.ing 관리자 패널</p>
             </div>
             <button
@@ -83,17 +83,17 @@ const AdminDashboard: React.FC = () => {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
           {[
             { label: 'Members', value: stats.members, icon: Users, color: 'text-aing-blue', to: '/admin/members' },
-            { label: 'Posts', value: stats.posts, icon: MessageSquare, color: 'text-purple-400', to: '/admin/posts' },
-            { label: 'Comments', value: stats.comments, icon: BarChart2, color: 'text-green-400', to: '/admin/comments' },
-            { label: 'Messages', value: stats.messages, icon: Mail, color: 'text-orange-400', to: '/admin/messages' },
+            { label: 'Posts', value: stats.posts, icon: MessageSquare, color: 'text-purple-500', to: '/admin/posts' },
+            { label: 'Comments', value: stats.comments, icon: BarChart2, color: 'text-green-500', to: '/admin/comments' },
+            { label: 'Messages', value: stats.messages, icon: Mail, color: 'text-orange-500', to: '/admin/messages' },
           ].map((s, i) => (
             <AnimatedSection key={s.label} delay={i * 80}>
-              <Link to={s.to} className="card group hover:border-aing-blue/30 block">
+              <Link to={s.to} className="card group hover:border-blue-200 block">
                 <div className="flex items-start justify-between">
                   <s.icon size={18} className={`${s.color} mb-3`} />
                   <TrendingUp size={12} className="text-aing-muted" />
                 </div>
-                <div className="text-2xl font-semibold text-aing-white mb-1">
+                <div className="text-2xl font-semibold text-aing-text mb-1">
                   {loading ? '—' : s.value}
                 </div>
                 <div className="text-xs text-aing-muted">{s.label}</div>
@@ -105,7 +105,7 @@ const AdminDashboard: React.FC = () => {
         {/* Quick Actions */}
         <AnimatedSection delay={200}>
           <div className="card mb-8">
-            <h3 className="text-sm font-semibold text-aing-white mb-4">Quick Actions</h3>
+            <h3 className="text-sm font-semibold text-aing-text mb-4">Quick Actions</h3>
             <div className="flex flex-wrap gap-3">
               <Link to="/admin/posts/new" className="btn-primary flex items-center gap-2 text-sm">
                 <PlusCircle size={14} />
@@ -128,11 +128,11 @@ const AdminDashboard: React.FC = () => {
           <AnimatedSection delay={300}>
             <div className="card h-full">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-sm font-semibold text-aing-white flex items-center gap-2">
+                <h3 className="text-sm font-semibold text-aing-text flex items-center gap-2">
                   <MessageSquare size={14} className="text-aing-blue" />
                   승인 대기 댓글 ({pendingComments.length})
                 </h3>
-                <Link to="/admin/comments" className="text-xs text-aing-muted hover:text-aing-white">
+                <Link to="/admin/comments" className="text-xs text-aing-muted hover:text-aing-text">
                   전체 보기
                 </Link>
               </div>
@@ -141,14 +141,14 @@ const AdminDashboard: React.FC = () => {
               ) : (
                 <div className="space-y-3">
                   {pendingComments.map(c => (
-                    <div key={c.id} className="p-3 rounded-xl bg-aing-dark border border-aing-border">
+                    <div key={c.id} className="p-3 rounded-xl bg-aing-bg-alt border border-aing-border">
                       <div className="flex items-center justify-between mb-2">
-                        <span className="text-sm font-medium text-aing-white">{c.author_name}</span>
+                        <span className="text-sm font-medium text-aing-text">{c.author_name}</span>
                         <div className="flex gap-2">
-                          <button onClick={() => approveComment(c.id)} className="text-green-400 hover:text-green-300 transition-colors">
+                          <button onClick={() => approveComment(c.id)} className="text-green-500 hover:text-green-400 transition-colors">
                             <CheckCircle size={14} />
                           </button>
-                          <button onClick={() => deleteComment(c.id)} className="text-red-400 hover:text-red-300 transition-colors">
+                          <button onClick={() => deleteComment(c.id)} className="text-red-500 hover:text-red-400 transition-colors">
                             <XCircle size={14} />
                           </button>
                         </div>
@@ -165,11 +165,11 @@ const AdminDashboard: React.FC = () => {
           <AnimatedSection delay={350}>
             <div className="card h-full">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-sm font-semibold text-aing-white flex items-center gap-2">
-                  <Mail size={14} className="text-orange-400" />
+                <h3 className="text-sm font-semibold text-aing-text flex items-center gap-2">
+                  <Mail size={14} className="text-orange-500" />
                   미확인 문의 ({unreadMessages.length})
                 </h3>
-                <Link to="/admin/messages" className="text-xs text-aing-muted hover:text-aing-white">
+                <Link to="/admin/messages" className="text-xs text-aing-muted hover:text-aing-text">
                   전체 보기
                 </Link>
               </div>
@@ -178,12 +178,12 @@ const AdminDashboard: React.FC = () => {
               ) : (
                 <div className="space-y-3">
                   {unreadMessages.map(m => (
-                    <div key={m.id} className="p-3 rounded-xl bg-aing-dark border border-aing-border">
+                    <div key={m.id} className="p-3 rounded-xl bg-aing-bg-alt border border-aing-border">
                       <div className="flex items-center justify-between mb-2">
-                        <span className="text-sm font-medium text-aing-white">{m.name}</span>
+                        <span className="text-sm font-medium text-aing-text">{m.name}</span>
                         <button
                           onClick={() => markRead(m.id)}
-                          className="text-xs text-aing-muted hover:text-aing-white transition-colors flex items-center gap-1"
+                          className="text-xs text-aing-muted hover:text-aing-text transition-colors flex items-center gap-1"
                         >
                           <Eye size={12} />
                           확인
