@@ -35,6 +35,7 @@ const Navbar: React.FC = () => {
   const navItems = [
     { label: 'About', to: '/about' },
     { label: 'Activities', to: '/activities' },
+    { label: 'Projects', to: '/projects' },
     { label: 'Members', to: '/members' },
     { label: 'Team', to: '/team' },
     { label: 'Board', to: '/board' },
@@ -45,6 +46,7 @@ const Navbar: React.FC = () => {
     { label: 'Dashboard', to: '/admin' },
     { label: 'Posts', to: '/admin/posts' },
     { label: 'Members', to: '/admin/members' },
+    { label: 'Projects', to: '/admin/projects' },
     { label: 'Activities', to: '/admin/activities' },
     { label: 'Comments', to: '/admin/comments' },
     { label: 'Messages', to: '/admin/messages' },

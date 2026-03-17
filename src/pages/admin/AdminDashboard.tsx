@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
   Users, MessageSquare, Mail, PlusCircle, CheckCircle,
-  XCircle, Eye, LogOut, TrendingUp, BarChart2, BookOpen
+  XCircle, Eye, LogOut, TrendingUp, BarChart2, BookOpen, Code2
 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useAdmin } from '../../context/AdminContext';
@@ -117,6 +117,10 @@ const AdminDashboard: React.FC = () => {
               <Link to="/admin/members" className="btn-ghost flex items-center gap-2 text-sm">
                 <Users size={14} />
                 부원 관리
+              </Link>
+              <Link to="/admin/projects" className="btn-ghost flex items-center gap-2 text-sm">
+                <Code2 size={14} />
+                프로젝트 관리
               </Link>
               <Link to="/admin/activities" className="btn-ghost flex items-center gap-2 text-sm">
                 <BookOpen size={14} />

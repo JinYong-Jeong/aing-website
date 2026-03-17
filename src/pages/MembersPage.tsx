@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Github, Users, Pencil } from 'lucide-react';
+import { Github, Users, Pencil, ChevronDown, ChevronUp, X } from 'lucide-react';
 import { supabase, Member } from '../lib/supabase';
 import AnimatedSection from '../components/AnimatedSection';
 
@@ -16,19 +16,50 @@ const TRACK_COLORS: Record<string, string> = {
   admin: 'text-green-500 border-green-200 bg-green-50',
 };
 
+const STATUS_COLORS: Record<string, string> = {
+  active: 'bg-green-100 text-green-700 border-green-200',
+  busy: 'bg-red-100 text-red-700 border-red-200',
+  open: 'bg-blue-100 text-blue-700 border-blue-200',
+};
+
+const STATUS_LABELS: Record<string, string> = {
+  active: 'Active',
+  busy: 'Busy',
+  open: 'Open',
+};
+
 const demoMembers: Member[] = [
-  { id: '1', name: '송이두', role: 'President', track: 'admin', semester: '2026 Spring', github: 'https://github.com', is_active: true, created_at: '' },
-  { id: '2', name: '정진용', role: 'Researcher', track: 'senior', semester: '2026 Spring', github: 'https://github.com/JinYong-Jeong', bio: 'On-Device AI Agent, Federated Learning', is_active: true, created_at: '' },
-  { id: '3', name: 'Member 3', role: 'Junior', track: 'junior', semester: '2026 Spring', is_active: true, created_at: '' },
-  { id: '4', name: 'Member 4', role: 'Senior', track: 'senior', semester: '2026 Spring', is_active: true, created_at: '' },
-  { id: '5', name: 'Member 5', role: 'Junior', track: 'junior', semester: '2026 Spring', is_active: true, created_at: '' },
-  { id: '6', name: 'Member 6', role: 'Junior', track: 'junior', semester: '2026 Spring', is_active: true, created_at: '' },
+  { id: '1', name: '송이두', role: 'President', track: 'admin', semester: '2026 Spring', github: 'https://github.com', is_active: true, created_at: '', interests: ['CV', 'NLP'], workload: 3, status: 'active' },
+  { id: '2', name: '정진용', role: 'Researcher', track: 'senior', semester: '2026 Spring', github: 'https://github.com/JinYong-Jeong', bio: 'On-Device AI Agent, Federated Learning', is_active: true, created_at: '', interests: ['RL', 'CV'], workload: 2, status: 'open', looking_for_team: true },
+  { id: '3', name: 'Member 3', role: 'Junior', track: 'junior', semester: '2026 Spring', is_active: true, created_at: '', interests: ['NLP'], workload: 1, status: 'active' },
+  { id: '4', name: 'Member 4', role: 'Senior', track: 'senior', semester: '2026 Spring', is_active: true, created_at: '', interests: ['CV', 'RL'], workload: 4, status: 'busy' },
+  { id: '5', name: 'Member 5', role: 'Junior', track: 'junior', semester: '2026 Spring', is_active: true, created_at: '', interests: ['NLP', 'CV'], workload: 0, status: 'open', looking_for_team: true },
+  { id: '6', name: 'Member 6', role: 'Junior', track: 'junior', semester: '2026 Spring', is_active: true, created_at: '', interests: ['CV'], workload: 5, status: 'busy' },
 ];
+
+const WorkloadDots: React.FC<{ value: number }> = ({ value }) => {
+  const filled = value ?? 0;
+  return (
+    <span className="flex gap-0.5">
+      {[...Array(5)].map((_, i) => (
+        <span key={i} className={`text-xs ${i < filled ? 'text-aing-blue' : 'text-aing-border'}`}>
+          {i < filled ? '●' : '○'}
+        </span>
+      ))}
+    </span>
+  );
+};
 
 const MembersPage: React.FC = () => {
   const [members, setMembers] = useState<Member[]>([]);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState<'all' | 'junior' | 'senior' | 'admin'>('all');
+  const [filtersOpen, setFiltersOpen] = useState(true);
+
+  // Filters
+  const [trackFilter, setTrackFilter] = useState<'all' | 'junior' | 'senior' | 'admin'>('all');
+  const [interestFilter, setInterestFilter] = useState<string>('');
+  const [workloadFilter, setWorkloadFilter] = useState<'' | 'light' | 'normal' | 'heavy'>('');
+  const [statusFilter, setStatusFilter] = useState<'' | 'active' | 'busy' | 'open'>('');
 
   useEffect(() => {
     const fetchMembers = async () => {
@@ -52,7 +83,32 @@ const MembersPage: React.FC = () => {
     fetchMembers();
   }, []);
 
-  const filtered = filter === 'all' ? members : members.filter(m => m.track === filter);
+  // Extract unique interests
+  const allInterests = Array.from(
+    new Set(members.flatMap(m => m.interests ?? []))
+  ).sort();
+
+  const filtered = members.filter(m => {
+    if (trackFilter !== 'all' && m.track !== trackFilter) return false;
+    if (interestFilter && !(m.interests ?? []).includes(interestFilter)) return false;
+    if (workloadFilter) {
+      const w = m.workload ?? 0;
+      if (workloadFilter === 'light' && w > 2) return false;
+      if (workloadFilter === 'normal' && w !== 3) return false;
+      if (workloadFilter === 'heavy' && w < 4) return false;
+    }
+    if (statusFilter && m.status !== statusFilter) return false;
+    return true;
+  });
+
+  const hasFilters = trackFilter !== 'all' || interestFilter !== '' || workloadFilter !== '' || statusFilter !== '';
+
+  const resetFilters = () => {
+    setTrackFilter('all');
+    setInterestFilter('');
+    setWorkloadFilter('');
+    setStatusFilter('');
+  };
 
   const getInitials = (name: string) =>
     name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
@@ -75,25 +131,134 @@ const MembersPage: React.FC = () => {
         </div>
       </section>
 
-      {/* Filter */}
-      <section className="py-8 px-6 border-b border-aing-border sticky top-16 z-30 glass">
-        <div className="max-w-6xl mx-auto flex items-center gap-3 overflow-x-auto">
-          {(['all', 'admin', 'senior', 'junior'] as const).map(f => (
+      {/* Filters */}
+      <section className="py-6 px-6 border-b border-aing-border sticky top-16 z-30 glass">
+        <div className="max-w-6xl mx-auto">
+          {/* Filter toggle header */}
+          <div className="flex items-center justify-between mb-3">
             <button
-              key={f}
-              onClick={() => setFilter(f)}
-              className={`shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
-                filter === f
-                  ? 'bg-aing-dark text-white'
-                  : 'border border-aing-border text-aing-muted hover:border-aing-blue hover:text-aing-blue'
-              }`}
+              onClick={() => setFiltersOpen(!filtersOpen)}
+              className="flex items-center gap-2 text-sm font-medium text-aing-text hover:text-aing-blue transition-colors"
             >
-              {f === 'all' ? 'All' : TRACK_LABELS[f]}
+              {filtersOpen ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+              필터
+              {hasFilters && (
+                <span className="text-xs bg-aing-blue text-white rounded-full px-2 py-0.5">적용중</span>
+              )}
             </button>
-          ))}
-          <span className="text-aing-muted text-sm ml-auto shrink-0">
-            {filtered.length} members
-          </span>
+            <div className="flex items-center gap-3">
+              {hasFilters && (
+                <button
+                  onClick={resetFilters}
+                  className="flex items-center gap-1 text-xs text-aing-muted hover:text-red-500 transition-colors"
+                >
+                  <X size={12} />
+                  초기화
+                </button>
+              )}
+              <span className="text-aing-muted text-sm">
+                {filtered.length} / {members.length} members
+              </span>
+            </div>
+          </div>
+
+          {filtersOpen && (
+            <div className="space-y-3">
+              {/* Track filter */}
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-xs text-aing-muted w-14 shrink-0">트랙</span>
+                {(['all', 'admin', 'senior', 'junior'] as const).map(f => (
+                  <button
+                    key={f}
+                    onClick={() => setTrackFilter(f)}
+                    className={`shrink-0 px-3 py-1 rounded-full text-xs font-medium transition-all duration-200 ${
+                      trackFilter === f
+                        ? 'bg-aing-dark text-white'
+                        : 'border border-aing-border text-aing-muted hover:border-aing-blue hover:text-aing-blue'
+                    }`}
+                  >
+                    {f === 'all' ? 'All' : TRACK_LABELS[f]}
+                  </button>
+                ))}
+              </div>
+
+              {/* Interest filter */}
+              {allInterests.length > 0 && (
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="text-xs text-aing-muted w-14 shrink-0">관심분야</span>
+                  <button
+                    onClick={() => setInterestFilter('')}
+                    className={`shrink-0 px-3 py-1 rounded-full text-xs font-medium transition-all duration-200 ${
+                      interestFilter === ''
+                        ? 'bg-aing-blue text-white'
+                        : 'border border-aing-border text-aing-muted hover:border-aing-blue hover:text-aing-blue'
+                    }`}
+                  >
+                    All
+                  </button>
+                  {allInterests.map(interest => (
+                    <button
+                      key={interest}
+                      onClick={() => setInterestFilter(interestFilter === interest ? '' : interest)}
+                      className={`shrink-0 px-3 py-1 rounded-full text-xs font-medium transition-all duration-200 ${
+                        interestFilter === interest
+                          ? 'bg-aing-blue text-white'
+                          : 'border border-aing-border text-aing-muted hover:border-aing-blue hover:text-aing-blue'
+                      }`}
+                    >
+                      {interest}
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              {/* Workload filter */}
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-xs text-aing-muted w-14 shrink-0">포화도</span>
+                {([
+                  { value: '', label: 'All' },
+                  { value: 'light', label: '여유있음 (0-2)' },
+                  { value: 'normal', label: '보통 (3)' },
+                  { value: 'heavy', label: '바쁨 (4-5)' },
+                ] as { value: '' | 'light' | 'normal' | 'heavy'; label: string }[]).map(opt => (
+                  <button
+                    key={opt.value}
+                    onClick={() => setWorkloadFilter(opt.value)}
+                    className={`shrink-0 px-3 py-1 rounded-full text-xs font-medium transition-all duration-200 ${
+                      workloadFilter === opt.value
+                        ? 'bg-aing-dark text-white'
+                        : 'border border-aing-border text-aing-muted hover:border-aing-blue hover:text-aing-blue'
+                    }`}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+
+              {/* Status filter */}
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-xs text-aing-muted w-14 shrink-0">상태</span>
+                {([
+                  { value: '', label: 'All' },
+                  { value: 'active', label: 'Active' },
+                  { value: 'busy', label: 'Busy' },
+                  { value: 'open', label: 'Open (팀원구함)' },
+                ] as { value: '' | 'active' | 'busy' | 'open'; label: string }[]).map(opt => (
+                  <button
+                    key={opt.value}
+                    onClick={() => setStatusFilter(opt.value)}
+                    className={`shrink-0 px-3 py-1 rounded-full text-xs font-medium transition-all duration-200 ${
+                      statusFilter === opt.value
+                        ? 'bg-aing-dark text-white'
+                        : 'border border-aing-border text-aing-muted hover:border-aing-blue hover:text-aing-blue'
+                    }`}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </section>
 
@@ -110,76 +275,119 @@ const MembersPage: React.FC = () => {
                 </div>
               ))}
             </div>
+          ) : filtered.length === 0 ? (
+            <div className="text-center py-24">
+              <p className="text-aing-muted text-sm mb-3">조건에 맞는 멤버가 없습니다.</p>
+              <button onClick={resetFilters} className="btn-ghost text-sm">필터 초기화</button>
+            </div>
           ) : (
             <div className="grid md:grid-cols-3 lg:grid-cols-4 gap-4">
-              {filtered.map((member, i) => (
-                <AnimatedSection key={member.id} delay={i * 50}>
-                  <div className="card group hover:border-blue-200 flex flex-col">
-                    <Link to={`/members/${member.id}`} className="flex-1 block">
-                      {/* Avatar */}
-                      <div className="mb-4">
-                        {member.avatar_url ? (
-                          <img
-                            src={member.avatar_url}
-                            alt={member.name}
-                            className="w-16 h-16 rounded-2xl object-cover"
-                          />
-                        ) : (
-                          <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-100 to-purple-100 border border-aing-border flex items-center justify-center">
-                            <span className="text-aing-text font-semibold text-lg">
-                              {getInitials(member.name)}
+              {filtered.map((member, i) => {
+                const status = member.status ?? 'active';
+                const workload = member.workload ?? 0;
+                const interests = member.interests ?? [];
+                return (
+                  <AnimatedSection key={member.id} delay={i * 50}>
+                    <div className="card group hover:border-blue-200 flex flex-col relative">
+                      {/* Looking for team badge */}
+                      {member.looking_for_team && (
+                        <div className="absolute top-3 right-3">
+                          <span className="text-xs px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 border border-blue-200 font-medium">
+                            팀원 구함
+                          </span>
+                        </div>
+                      )}
+
+                      <Link to={`/members/${member.id}`} className="flex-1 block">
+                        {/* Avatar */}
+                        <div className="mb-4">
+                          {member.avatar_url ? (
+                            <img
+                              src={member.avatar_url}
+                              alt={member.name}
+                              className="w-16 h-16 rounded-2xl object-cover"
+                            />
+                          ) : (
+                            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-100 to-purple-100 border border-aing-border flex items-center justify-center">
+                              <span className="text-aing-text font-semibold text-lg">
+                                {getInitials(member.name)}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Info */}
+                        <div className="mb-3">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <h3 className="font-semibold text-aing-text text-sm">{member.name}</h3>
+                            <span className={`text-xs px-1.5 py-0.5 rounded-full border font-medium ${STATUS_COLORS[status]}`}>
+                              {STATUS_LABELS[status]}
                             </span>
                           </div>
+                          <p className="text-aing-muted text-xs mt-0.5">{member.role}</p>
+                        </div>
+
+                        {/* Track + Semester tags */}
+                        <div className="flex flex-wrap gap-1.5 mb-3">
+                          <span className={`text-xs px-2 py-0.5 rounded-full border font-mono ${TRACK_COLORS[member.track]}`}>
+                            {TRACK_LABELS[member.track]}
+                          </span>
+                          <span className="text-xs px-2 py-0.5 rounded-full border border-aing-border text-aing-muted font-mono">
+                            {member.semester}
+                          </span>
+                        </div>
+
+                        {/* Interests tags (max 3) */}
+                        {interests.length > 0 && (
+                          <div className="flex flex-wrap gap-1 mb-3">
+                            {interests.slice(0, 3).map(tag => (
+                              <span key={tag} className="text-xs px-1.5 py-0.5 rounded-full bg-blue-50 text-aing-blue border border-blue-100">
+                                {tag}
+                              </span>
+                            ))}
+                            {interests.length > 3 && (
+                              <span className="text-xs text-aing-muted">+{interests.length - 3}</span>
+                            )}
+                          </div>
                         )}
-                      </div>
 
-                      {/* Info */}
-                      <div className="mb-3">
-                        <h3 className="font-semibold text-aing-text text-sm">{member.name}</h3>
-                        <p className="text-aing-muted text-xs mt-0.5">{member.role}</p>
-                      </div>
+                        {/* Bio */}
+                        {member.bio && (
+                          <p className="text-aing-muted text-xs leading-relaxed mb-3 line-clamp-2">
+                            {member.bio}
+                          </p>
+                        )}
 
-                      {/* Tags */}
-                      <div className="flex flex-wrap gap-2 mb-4">
-                        <span className={`text-xs px-2 py-0.5 rounded-full border font-mono ${TRACK_COLORS[member.track]}`}>
-                          {TRACK_LABELS[member.track]}
-                        </span>
-                        <span className="text-xs px-2 py-0.5 rounded-full border border-aing-border text-aing-muted font-mono">
-                          {member.semester}
-                        </span>
-                      </div>
+                        {/* Workload dots */}
+                        <div className="flex items-center gap-2 mb-2">
+                          <span className="text-xs text-aing-muted">워크로드</span>
+                          <WorkloadDots value={workload} />
+                        </div>
 
-                      {/* Bio */}
-                      {member.bio && (
-                        <p className="text-aing-muted text-xs leading-relaxed mb-3 line-clamp-2">
-                          {member.bio}
-                        </p>
-                      )}
-
-                      {/* Links */}
-                      {member.github && (
-                        <span
-                          className="flex items-center gap-1 text-xs text-aing-muted"
-                        >
-                          <Github size={12} />
-                          GitHub
-                        </span>
-                      )}
-                    </Link>
-                    {/* Profile Edit Link */}
-                    <div className="mt-3 pt-3 border-t border-aing-border flex justify-end">
-                      <Link
-                        to={`/members/${member.id}/edit`}
-                        className="flex items-center gap-1 text-xs text-aing-muted hover:text-aing-blue transition-colors"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        <Pencil size={10} />
-                        프로필 수정
+                        {/* GitHub link */}
+                        {member.github && (
+                          <span className="flex items-center gap-1 text-xs text-aing-muted">
+                            <Github size={12} />
+                            GitHub
+                          </span>
+                        )}
                       </Link>
+
+                      {/* Profile Edit Link */}
+                      <div className="mt-3 pt-3 border-t border-aing-border flex justify-end">
+                        <Link
+                          to={`/members/${member.id}/edit`}
+                          className="flex items-center gap-1 text-xs text-aing-muted hover:text-aing-blue transition-colors"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <Pencil size={10} />
+                          프로필 수정
+                        </Link>
+                      </div>
                     </div>
-                  </div>
-                </AnimatedSection>
-              ))}
+                  </AnimatedSection>
+                );
+              })}
             </div>
           )}
         </div>

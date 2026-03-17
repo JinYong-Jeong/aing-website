@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-
+import { Link } from 'react-router-dom';
 import { Calendar, BookOpen, Code2, Users2, ArrowRight, Github } from 'lucide-react';
 import AnimatedSection from '../components/AnimatedSection';
 import { supabase } from '../lib/supabase';
@@ -201,6 +201,21 @@ const ActivitiesPage: React.FC = () => {
             <div className="card border-dashed text-center py-16">
               <Calendar size={32} className="text-aing-muted mx-auto mb-4 opacity-40" />
               <p className="text-aing-muted text-sm">다음 활동이 추가될 예정입니다.</p>
+            </div>
+          </AnimatedSection>
+
+          {/* Link to full project history */}
+          <AnimatedSection>
+            <div className="mt-12 text-center">
+              <p className="text-aing-muted text-sm mb-4">더 많은 프로젝트와 스터디 기록을 확인하세요.</p>
+              <Link
+                to="/projects"
+                className="btn-primary inline-flex items-center gap-2 text-sm"
+              >
+                <Code2 size={14} />
+                프로젝트 전체 히스토리 보기
+                <ArrowRight size={14} />
+              </Link>
             </div>
           </AnimatedSection>
         </div>

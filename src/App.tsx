@@ -13,6 +13,8 @@ import TeamPage from './pages/TeamPage';
 import BoardPage from './pages/BoardPage';
 import PostDetailPage from './pages/PostDetailPage';
 import ContactPage from './pages/ContactPage';
+import ProjectsPage from './pages/ProjectsPage';
+import ProjectDetailPage from './pages/ProjectDetailPage';
 import AdminLoginPage from './pages/admin/AdminLoginPage';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminPosts from './pages/admin/AdminPosts';
@@ -22,6 +24,7 @@ import AdminMessages from './pages/admin/AdminMessages';
 import AdminComments from './pages/admin/AdminComments';
 import AdminActivities from './pages/admin/AdminActivities';
 import AdminSettings from './pages/admin/AdminSettings';
+import AdminProjects from './pages/admin/AdminProjects';
 
 function App() {
   return (
@@ -34,6 +37,8 @@ function App() {
               <Route path="/" element={<HomePage />} />
               <Route path="/about" element={<AboutPage />} />
               <Route path="/activities" element={<ActivitiesPage />} />
+              <Route path="/projects" element={<ProjectsPage />} />
+              <Route path="/projects/:id" element={<ProjectDetailPage />} />
               <Route path="/members" element={<MembersPage />} />
               <Route path="/members/:id" element={<MemberDetailPage />} />
               <Route path="/members/:id/edit" element={<MemberProfilePage />} />
@@ -51,6 +56,7 @@ function App() {
               <Route path="/admin/messages" element={<AdminMessages />} />
               <Route path="/admin/activities" element={<AdminActivities />} />
               <Route path="/admin/settings" element={<AdminSettings />} />
+              <Route path="/admin/projects" element={<AdminProjects />} />
               <Route path="*" element={
                 <div className="min-h-screen flex items-center justify-center">
                   <div className="text-center">

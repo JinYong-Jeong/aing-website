@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { Github, Mail, MessageCircle, Users, ChevronLeft, Pencil } from 'lucide-react';
-import { supabase, Member } from '../lib/supabase';
+import { Github, Mail, MessageCircle, Users, ChevronLeft, Pencil, Code2 } from 'lucide-react';
+import { supabase, Member, Project } from '../lib/supabase';
 
 const TRACK_LABELS: Record<string, string> = {
   junior: 'Junior',
@@ -41,6 +41,7 @@ const WORKLOAD_LABELS = ['여유', '여유', '보통', '보통', '바쁨', '매�
 const MemberDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const [member, setMember] = useState<Member | null>(null);
+  const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
 
@@ -57,6 +58,21 @@ const MemberDetailPage: React.FC = () => {
           setNotFound(true);
         } else {
           setMember(data);
+          // Fetch participated projects
+          try {
+            const { data: pmData } = await supabase
+              .from('project_members')
+              .select('project:projects(*)')
+              .eq('member_id', id);
+            if (pmData && pmData.length > 0) {
+              const fetchedProjects = (pmData as unknown as { project: Project }[])
+                .map(pm => pm.project)
+                .filter(Boolean);
+              setProjects(fetchedProjects);
+            }
+          } catch {
+            // projects fetch failed silently
+          }
         }
       } catch {
         setNotFound(true);
@@ -250,6 +266,40 @@ const MemberDetailPage: React.FC = () => {
             )}
           </div>
         </div>
+
+        {/* Participated Projects */}
+        {projects.length > 0 && (
+          <div className="mt-6 bg-aing-card border border-aing-border rounded-2xl p-6">
+            <h2 className="text-sm font-semibold text-aing-text mb-4 flex items-center gap-2">
+              <Code2 size={14} className="text-aing-blue" />
+              참여 프로젝트 ({projects.length})
+            </h2>
+            <div className="space-y-3">
+              {projects.map(project => (
+                <Link
+                  key={project.id}
+                  to={`/projects/${project.id}`}
+                  className="flex items-center gap-3 p-3 rounded-xl border border-aing-border hover:border-blue-200 transition-colors"
+                >
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm font-medium text-aing-text truncate">{project.title}</div>
+                    <div className="flex items-center gap-2 mt-0.5">
+                      <span className="text-xs text-aing-muted">{project.type}</span>
+                      {project.semester && <span className="text-xs text-aing-muted">· {project.semester}</span>}
+                    </div>
+                  </div>
+                  <span className={`text-xs px-2 py-0.5 rounded-full border font-medium ${
+                    project.status === 'ongoing' ? 'bg-blue-100 text-blue-700 border-blue-200' :
+                    project.status === 'completed' ? 'bg-green-100 text-green-700 border-green-200' :
+                    'bg-gray-100 text-gray-500 border-gray-200'
+                  }`}>
+                    {project.status === 'ongoing' ? '진행중' : project.status === 'completed' ? '완료' : project.status}
+                  </span>
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

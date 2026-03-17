@@ -75,3 +75,31 @@ export type ContactMessage = {
   is_read: boolean;
   created_at: string;
 };
+
+export type Project = {
+  id: string;
+  title: string;
+  description?: string;
+  type: 'study' | 'project' | 'research' | 'competition';
+  status: 'planned' | 'ongoing' | 'completed' | 'archived';
+  semester?: string;
+  start_date?: string;
+  end_date?: string;
+  tags: string[];
+  github?: string;
+  demo_url?: string;
+  thumbnail_url?: string;
+  outcome?: string;
+  created_at: string;
+  updated_at: string;
+  project_members?: ProjectMember[];
+};
+
+export type ProjectMember = {
+  id: string;
+  project_id: string;
+  member_id: string;
+  role: string;
+  joined_at: string;
+  member?: Member;
+};
