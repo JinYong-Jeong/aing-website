@@ -1,13 +1,118 @@
-body {
-  margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    box-sizing: border-box;
+  }
+  
+  html {
+    scroll-behavior: smooth;
+  }
+  
+  body {
+    @apply bg-aing-black text-aing-white;
+    font-family: 'Inter', 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  ::selection {
+    @apply bg-aing-blue text-aing-black;
+  }
+
+  ::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-aing-black;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-aing-border rounded-full;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-aing-muted;
+  }
 }
 
-code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
-    monospace;
+@layer components {
+  .section-title {
+    @apply text-3xl md:text-4xl font-semibold tracking-tight text-aing-white;
+  }
+  
+  .section-subtitle {
+    @apply text-aing-muted text-base md:text-lg leading-relaxed;
+  }
+  
+  .card {
+    @apply bg-aing-card border border-aing-border rounded-2xl p-6 transition-all duration-300;
+  }
+  
+  .card:hover {
+    @apply border-aing-blue/30;
+    box-shadow: 0 0 30px rgba(74, 158, 255, 0.08);
+  }
+  
+  .btn-primary {
+    @apply bg-aing-white text-aing-black font-medium px-6 py-3 rounded-full transition-all duration-200 hover:bg-aing-accent hover:scale-105 active:scale-95;
+  }
+  
+  .btn-ghost {
+    @apply border border-aing-border text-aing-white font-medium px-6 py-3 rounded-full transition-all duration-200 hover:border-aing-blue/50 hover:text-aing-blue;
+  }
+  
+  .tag {
+    @apply text-xs font-mono px-3 py-1 rounded-full border border-aing-border text-aing-muted bg-aing-card;
+  }
+  
+  .tag-blue {
+    @apply text-xs font-mono px-3 py-1 rounded-full border border-aing-blue/30 text-aing-blue bg-aing-blue/10;
+  }
+
+  .nav-link {
+    @apply text-aing-muted hover:text-aing-white transition-colors duration-200 text-sm font-medium;
+  }
+
+  .input-field {
+    @apply w-full bg-aing-card border border-aing-border rounded-xl px-4 py-3 text-aing-white placeholder-aing-muted focus:outline-none focus:border-aing-blue/50 transition-colors duration-200;
+  }
+
+  .gradient-line {
+    background: linear-gradient(90deg, transparent, #4A9EFF, transparent);
+    height: 1px;
+  }
+}
+
+@layer utilities {
+  .text-gradient {
+    background: linear-gradient(135deg, #F5F5F5 0%, #4A9EFF 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  
+  .glass {
+    background: rgba(22, 22, 22, 0.8);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+  }
+  
+  .noise {
+    position: relative;
+  }
+  
+  .noise::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 0;
+  }
 }
