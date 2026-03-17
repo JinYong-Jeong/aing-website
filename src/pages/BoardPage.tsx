@@ -214,7 +214,7 @@ const BoardPage: React.FC = () => {
                         <Eye size={12} />
                         {post.views}
                       </span>
-                      <span>{formatDate(post.created_at)}</span>
+                      <span>{formatDate(post.created_at)}{(post.author_name || (post as any).author?.name) ? ` · ${post.author_name || (post as any).author?.name}` : ''}</span>
                       <ChevronRight size={14} className="text-aing-muted group-hover:text-aing-blue transition-colors" />
                     </div>
                   </Link>

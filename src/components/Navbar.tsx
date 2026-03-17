@@ -2,14 +2,51 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Menu, X, LogIn, LogOut, ChevronDown } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { supabase } from '../lib/supabase';
 
 const Navbar: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [adminMenuOpen, setAdminMenuOpen] = useState(false);
-  const { isAdmin, logout } = useAuth();
+  const { user, isAdmin, logout } = useAuth();
   const location = useLocation();
   const adminMenuRef = useRef<HTMLDivElement>(null);
+
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [memberId, setMemberId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!user) {
+      setAvatarUrl(null);
+      setMemberId(null);
+      return;
+    }
+    if (user.member_id) {
+      supabase
+        .from('members')
+        .select('avatar_url, id')
+        .eq('id', user.member_id)
+        .single()
+        .then(({ data }) => {
+          if (data) {
+            setAvatarUrl(data.avatar_url ?? null);
+            setMemberId(data.id);
+          }
+        });
+    } else if (user.name !== 'admin') {
+      supabase
+        .from('members')
+        .select('avatar_url, id')
+        .ilike('name', user.name)
+        .single()
+        .then(({ data }) => {
+          if (data) {
+            setAvatarUrl(data.avatar_url ?? null);
+            setMemberId(data.id);
+          }
+        });
+    }
+  }, [user]);
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20);
@@ -55,6 +92,8 @@ const Navbar: React.FC = () => {
 
   const isActive = (path: string) => location.pathname === path;
 
+  const profileLink = memberId ? `/members/${memberId}` : (isAdmin ? '/admin' : '/');
+
   return (
     <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
       scrolled ? 'glass border-b border-aing-border' : 'bg-transparent'
@@ -78,52 +117,68 @@ const Navbar: React.FC = () => {
           ))}
         </div>
 
-        {/* Right side */}
-        <div className="hidden md:flex items-center gap-4">
-          {isAdmin ? (
-            <div className="relative" ref={adminMenuRef}>
-              <button
-                onClick={() => setAdminMenuOpen(!adminMenuOpen)}
-                className="nav-link text-aing-blue flex items-center gap-1"
-              >
-                Admin
-                <ChevronDown size={12} className={`transition-transform ${adminMenuOpen ? 'rotate-180' : ''}`} />
-              </button>
-              {adminMenuOpen && (
-                <div className="absolute right-0 top-full mt-2 w-44 glass border border-aing-border rounded-xl shadow-xl py-1 z-50">
-                  {adminMenuItems.map(item => (
-                    <Link
-                      key={item.to}
-                      to={item.to}
-                      className="block px-4 py-2 text-xs text-aing-muted hover:text-aing-text hover:bg-white/5 transition-colors"
-                    >
-                      {item.label}
-                    </Link>
-                  ))}
-                  <div className="border-t border-aing-border mt-1 pt-1">
-                    <button
-                      onClick={logout}
-                      className="w-full text-left px-4 py-2 text-xs text-aing-muted hover:text-red-400 hover:bg-white/5 transition-colors flex items-center gap-2"
-                    >
-                      <LogOut size={12} />
-                      로그아웃
-                    </button>
-                  </div>
+        {/* Right side - Desktop */}
+        <div className="hidden md:flex items-center gap-3">
+          {user ? (
+            <>
+              {isAdmin && (
+                <div className="relative" ref={adminMenuRef}>
+                  <button
+                    onClick={() => setAdminMenuOpen(!adminMenuOpen)}
+                    className="nav-link text-aing-blue flex items-center gap-1 text-xs"
+                  >
+                    Admin
+                    <ChevronDown size={12} className={`transition-transform ${adminMenuOpen ? 'rotate-180' : ''}`} />
+                  </button>
+                  {adminMenuOpen && (
+                    <div className="absolute right-0 top-full mt-2 w-44 glass border border-aing-border rounded-xl shadow-xl py-1 z-50">
+                      {adminMenuItems.map(item => (
+                        <Link
+                          key={item.to}
+                          to={item.to}
+                          className="block px-4 py-2 text-xs text-aing-muted hover:text-aing-text hover:bg-white/5 transition-colors"
+                        >
+                          {item.label}
+                        </Link>
+                      ))}
+                    </div>
+                  )}
                 </div>
               )}
-            </div>
+              <Link to={profileLink} title={user.name}>
+                {avatarUrl ? (
+                  <img
+                    src={avatarUrl}
+                    alt={user.name}
+                    className="w-8 h-8 rounded-full object-cover border border-aing-border hover:border-aing-blue transition-colors"
+                  />
+                ) : (
+                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-aing-blue/30 to-purple-400/30 border border-aing-border flex items-center justify-center hover:border-aing-blue transition-colors">
+                    <span className="text-xs font-semibold text-aing-text">
+                      {user.name[0].toUpperCase()}
+                    </span>
+                  </div>
+                )}
+              </Link>
+              <button
+                onClick={logout}
+                className="text-aing-muted hover:text-aing-text transition-colors"
+                title="로그아웃"
+              >
+                <LogOut size={14} />
+              </button>
+            </>
           ) : (
-            <Link to="/admin/login" className="nav-link flex items-center gap-1 hover:text-aing-text">
-              <LogIn size={14} />
-              <span className="text-xs">Admin</span>
-            </Link>
+            <>
+              <Link to="/login" className="nav-link flex items-center gap-1 text-xs hover:text-aing-text">
+                <LogIn size={14} />
+                로그인
+              </Link>
+              <Link to="/contact" className="btn-ghost text-sm !px-4 !py-2">
+                Join Us
+              </Link>
+            </>
           )}
-          <Link
-            to="/contact"
-            className="btn-ghost text-sm !px-4 !py-2"
-          >
-            Join Us
-          </Link>
         </div>
 
         {/* Mobile menu button */}
@@ -149,24 +204,52 @@ const Navbar: React.FC = () => {
               {item.label}
             </Link>
           ))}
-          {isAdmin && (
-            <div className="pt-2 border-t border-aing-border flex flex-col gap-2">
-              {adminMenuItems.map(item => (
-                <Link
-                  key={item.to}
-                  to={item.to}
-                  className="text-xs text-aing-blue hover:text-aing-text transition-colors"
-                >
-                  {item.label}
+          {user ? (
+            <div className="pt-2 border-t border-aing-border flex flex-col gap-3">
+              {isAdmin && (
+                <div className="flex flex-col gap-2">
+                  {adminMenuItems.map(item => (
+                    <Link
+                      key={item.to}
+                      to={item.to}
+                      className="text-xs text-aing-blue hover:text-aing-text transition-colors"
+                    >
+                      {item.label}
+                    </Link>
+                  ))}
+                </div>
+              )}
+              <div className="flex items-center gap-3">
+                <Link to={profileLink} className="flex items-center gap-2">
+                  {avatarUrl ? (
+                    <img src={avatarUrl} alt={user.name} className="w-7 h-7 rounded-full object-cover border border-aing-border" />
+                  ) : (
+                    <div className="w-7 h-7 rounded-full bg-gradient-to-br from-aing-blue/30 to-purple-400/30 border border-aing-border flex items-center justify-center">
+                      <span className="text-xs font-semibold text-aing-text">{user.name[0].toUpperCase()}</span>
+                    </div>
+                  )}
+                  <span className="text-sm text-aing-text">{user.name}</span>
                 </Link>
-              ))}
+                <button
+                  onClick={logout}
+                  className="ml-auto text-xs text-aing-muted hover:text-red-400 flex items-center gap-1 transition-colors"
+                >
+                  <LogOut size={12} />
+                  로그아웃
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="pt-2 border-t border-aing-border flex flex-col gap-3">
+              <Link to="/login" className="flex items-center gap-2 text-sm text-aing-muted hover:text-aing-text transition-colors">
+                <LogIn size={14} />
+                로그인
+              </Link>
+              <Link to="/contact" className="btn-primary text-sm inline-block text-center w-full">
+                Join Us
+              </Link>
             </div>
           )}
-          <div className="pt-2 border-t border-aing-border">
-            <Link to="/contact" className="btn-primary text-sm inline-block text-center w-full">
-              Join Us
-            </Link>
-          </div>
         </div>
       )}
     </nav>

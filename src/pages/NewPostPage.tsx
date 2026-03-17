@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { ArrowLeft, Send } from 'lucide-react';
 import { supabase } from '../lib/supabase';
@@ -20,7 +20,7 @@ const ADMIN_CATEGORIES: { value: Category; label: string }[] = [
 
 const NewPostPage: React.FC = () => {
   const navigate = useNavigate();
-  const { isAdmin } = useAuth();
+  const { user, isAdmin } = useAuth();
 
   const [form, setForm] = useState({
     title: '',
@@ -33,6 +33,13 @@ const NewPostPage: React.FC = () => {
   const [authError, setAuthError] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
+  // 로그인 상태면 작성자 자동 설정
+  useEffect(() => {
+    if (user) {
+      setAuthorName(user.name);
+    }
+  }, [user]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.title || !form.content) return;
@@ -40,8 +47,8 @@ const NewPostPage: React.FC = () => {
     setAuthError('');
 
     try {
-      // 어드민은 바로 작성
-      if (!isAdmin) {
+      // 로그인한 멤버는 인증 생략
+      if (!user) {
         if (!authorName.trim() || !password.trim()) {
           setAuthError('이름과 비밀번호를 입력해주세요.');
           setSubmitting(false);
@@ -77,6 +84,8 @@ const NewPostPage: React.FC = () => {
         }
       }
 
+      const finalAuthorName = user ? user.name : authorName.trim();
+
       const { error } = await supabase.from('posts').insert({
         title: form.title,
         content: form.content,
@@ -84,7 +93,7 @@ const NewPostPage: React.FC = () => {
         tags: form.tags.split(',').map((t: string) => t.trim()).filter(Boolean),
         is_pinned: false,
         author_id: null,
-        author_name: isAdmin ? 'admin' : authorName.trim(),
+        author_name: finalAuthorName,
         views: 0,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
@@ -92,8 +101,8 @@ const NewPostPage: React.FC = () => {
 
       if (error) throw error;
       navigate('/board');
-    } catch (err: any) {
-      setAuthError('게시글 작성 실패: ' + (err.message || '다시 시도해주세요.'));
+    } catch (err: unknown) {
+      setAuthError('게시글 작성 실패: ' + (err instanceof Error ? err.message : '다시 시도해주세요.'));
     }
     setSubmitting(false);
   };
@@ -176,8 +185,21 @@ const NewPostPage: React.FC = () => {
               </div>
             </div>
 
-            {/* 작성자 인증 (비어드민) */}
-            {!isAdmin && (
+            {/* 작성자 확인 */}
+            {user ? (
+              /* 로그인 상태: 작성자 자동 표시 (수정 불가) */
+              <div className="card">
+                <h3 className="text-sm font-semibold text-aing-text mb-2">작성자</h3>
+                <div className="flex items-center gap-2 py-2 px-3 bg-aing-bg border border-aing-border rounded-xl">
+                  <div className="w-6 h-6 rounded-full bg-gradient-to-br from-aing-blue/30 to-purple-400/30 border border-aing-border flex items-center justify-center shrink-0">
+                    <span className="text-xs font-semibold text-aing-text">{user.name[0].toUpperCase()}</span>
+                  </div>
+                  <span className="text-sm text-aing-text">{user.name}</span>
+                  <span className="text-xs text-aing-muted ml-1">(로그인됨)</span>
+                </div>
+              </div>
+            ) : (
+              /* 비로그인: 이름 + 비밀번호 입력 */
               <div className="card space-y-4">
                 <h3 className="text-sm font-semibold text-aing-text">작성자 확인</h3>
                 <div className="grid sm:grid-cols-2 gap-3">
@@ -200,6 +222,7 @@ const NewPostPage: React.FC = () => {
                       onChange={e => setPassword(e.target.value)}
                       className="input-field"
                       placeholder="••••••"
+                      autoComplete="current-password"
                       required
                     />
                   </div>
@@ -213,7 +236,7 @@ const NewPostPage: React.FC = () => {
               </div>
             )}
 
-            {isAdmin && authError && (
+            {user && authError && (
               <p className="text-red-500 text-xs">{authError}</p>
             )}
 

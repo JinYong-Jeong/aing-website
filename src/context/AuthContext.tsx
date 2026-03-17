@@ -37,59 +37,62 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const login = async (name: string, password: string): Promise<boolean> => {
-    // Try users table first
+    // 1. users 테이블 확인
     try {
-      const { data } = await supabase
+      const { data: userData } = await supabase
         .from('users')
         .select('*')
-        .eq('name', name)
+        .eq('name', name.trim())
         .eq('password_hash', password)
         .single();
 
-      if (data) {
-        const authUser: AuthUser = {
-          id: data.id,
-          name: data.name,
-          role: data.role as 'admin' | 'member' | 'ob',
-          member_id: data.member_id,
+      if (userData) {
+        const u: AuthUser = {
+          id: userData.id,
+          name: userData.name,
+          role: userData.role as 'admin' | 'member' | 'ob',
+          member_id: userData.member_id,
         };
-        setUser(authUser);
-        sessionStorage.setItem('aing_user', JSON.stringify(authUser));
+        setUser(u);
+        sessionStorage.setItem('aing_user', JSON.stringify(u));
         return true;
       }
     } catch {
       // users table may not exist yet, fall through
     }
 
-    // Fallback: hardcoded admin
-    if (name === 'admin' && password === '2026') {
-      const adminUser: AuthUser = { id: 'admin', name: 'admin', role: 'admin', member_id: null };
-      setUser(adminUser);
-      sessionStorage.setItem('aing_user', JSON.stringify(adminUser));
-      return true;
-    }
-
-    // Fallback: check members table by name + password_hash
+    // 2. members 테이블에서 확인 (password_hash + track 기반 role)
     try {
       const { data: memberData } = await supabase
         .from('members')
-        .select('id, name, password_hash')
+        .select('id, name, password_hash, track')
         .ilike('name', name.trim())
         .single();
 
       if (memberData && memberData.password_hash === password) {
-        const memberUser: AuthUser = {
+        const role: 'admin' | 'member' | 'ob' =
+          memberData.track === 'admin' ? 'admin' :
+          memberData.track === 'ob' ? 'ob' : 'member';
+        const u: AuthUser = {
           id: memberData.id,
           name: memberData.name,
-          role: 'member',
+          role,
           member_id: memberData.id,
         };
-        setUser(memberUser);
-        sessionStorage.setItem('aing_user', JSON.stringify(memberUser));
+        setUser(u);
+        sessionStorage.setItem('aing_user', JSON.stringify(u));
         return true;
       }
     } catch {
       // ignore
+    }
+
+    // 3. fallback: admin/2026
+    if (name.trim() === 'admin' && password === '2026') {
+      const u: AuthUser = { id: 'admin', name: 'admin', role: 'admin', member_id: null };
+      setUser(u);
+      sessionStorage.setItem('aing_user', JSON.stringify(u));
+      return true;
     }
 
     return false;
@@ -98,7 +101,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const logout = () => {
     setUser(null);
     sessionStorage.removeItem('aing_user');
-    // Also clear legacy key
     sessionStorage.removeItem('aing_admin');
   };
 

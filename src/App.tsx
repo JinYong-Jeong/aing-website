@@ -16,6 +16,7 @@ import PostDetailPage from './pages/PostDetailPage';
 import ContactPage from './pages/ContactPage';
 import ProjectsPage from './pages/ProjectsPage';
 import ProjectDetailPage from './pages/ProjectDetailPage';
+import LoginPage from './pages/LoginPage';
 import AdminLoginPage from './pages/admin/AdminLoginPage';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminPosts from './pages/admin/AdminPosts';
@@ -48,6 +49,7 @@ function App() {
               <Route path="/board/new" element={<NewPostPage />} />
               <Route path="/board/:id" element={<PostDetailPage />} />
               <Route path="/contact" element={<ContactPage />} />
+              <Route path="/login" element={<LoginPage />} />
               <Route path="/admin/login" element={<AdminLoginPage />} />
               <Route path="/admin" element={<AdminDashboard />} />
               <Route path="/admin/posts" element={<AdminPosts />} />

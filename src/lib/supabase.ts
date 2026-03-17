@@ -12,6 +12,7 @@ export type Member = {
   track: 'junior' | 'senior' | 'admin' | 'ob';
   semester: string;
   github?: string;
+  linkedin?: string;
   avatar_url?: string;
   bio?: string;
   is_active: boolean;

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { Github, Mail, MessageCircle, Users, ChevronLeft, Pencil, Code2 } from 'lucide-react';
+import { Github, Mail, MessageCircle, Users, ChevronLeft, Pencil, Code2, ExternalLink } from 'lucide-react';
 import { supabase, Member, Project } from '../lib/supabase';
 
 const TRACK_LABELS: Record<string, string> = {
@@ -244,6 +244,17 @@ const MemberDetailPage: React.FC = () => {
               >
                 <Github size={14} />
                 GitHub
+              </a>
+            )}
+            {member.linkedin && (
+              <a
+                href={member.linkedin}
+                target="_blank"
+                rel="noreferrer"
+                className="flex items-center gap-1.5 text-sm text-aing-muted hover:text-blue-600 transition-colors"
+              >
+                <ExternalLink size={14} />
+                LinkedIn
               </a>
             )}
             {member.contact_info && (

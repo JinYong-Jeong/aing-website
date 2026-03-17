@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Eye, MessageSquare, Trash2, Pin } from 'lucide-react';
+import { ArrowLeft, Eye, MessageSquare, Trash2, Pin, User } from 'lucide-react';
 import { supabase, Post, Comment } from '../lib/supabase';
 import AnimatedSection from '../components/AnimatedSection';
-import { useAdmin } from '../context/AdminContext';
+import { useAuth } from '../context/AuthContext';
 
 const CATEGORY_LABELS: Record<string, string> = {
   notice: 'Notice', activity: 'Activity', study: 'Study', project: 'Project',
@@ -43,20 +43,21 @@ A.ing에서 함께 성장해요! 🚀`,
 const PostDetailPage: React.FC = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { isAdmin } = useAdmin();
+  const { isAdmin } = useAuth();
   const [post, setPost] = useState<Post | null>(null);
   const [comments, setComments] = useState<Comment[]>([]);
   const [loading, setLoading] = useState(true);
   const [commentForm, setCommentForm] = useState({ name: '', email: '', content: '' });
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [authorMemberId, setAuthorMemberId] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchPost = async () => {
       try {
         const { data, error } = await supabase
           .from('posts')
-          .select('*, author:members(name)')
+          .select('*, author:members(name, id)')
           .eq('id', id)
           .single();
         if (error || !data) { setPost(demoPost); }
@@ -64,6 +65,17 @@ const PostDetailPage: React.FC = () => {
           setPost(data);
           // increment view
           await supabase.from('posts').update({ views: (data.views || 0) + 1 }).eq('id', id);
+
+          // 작성자 멤버 ID 탐색
+          const authorName = data.author_name || (data.author as any)?.name;
+          if (authorName && authorName !== 'admin') {
+            const { data: memberData } = await supabase
+              .from('members')
+              .select('id')
+              .ilike('name', authorName)
+              .single();
+            if (memberData) setAuthorMemberId(memberData.id);
+          }
         }
         // fetch comments
         const { data: cmts } = await supabase
@@ -94,7 +106,7 @@ const PostDetailPage: React.FC = () => {
         is_approved: true,
       });
       if (!error) {
-        const newComment = {
+        const newComment: Comment = {
           id: Date.now().toString(),
           post_id: id!,
           author_name: commentForm.name,
@@ -145,6 +157,8 @@ const PostDetailPage: React.FC = () => {
     </div>
   );
 
+  const authorName = post.author_name || (post.author as any)?.name;
+
   return (
     <div className="min-h-screen bg-aing-bg pt-20">
       <div className="max-w-3xl mx-auto px-6 py-12">
@@ -170,6 +184,22 @@ const PostDetailPage: React.FC = () => {
                 </span>
               )}
               <span className="text-xs text-aing-muted ml-auto">{formatDate(post.created_at)}</span>
+              {authorName && (
+                authorMemberId ? (
+                  <Link
+                    to={`/members/${authorMemberId}`}
+                    className="flex items-center gap-1 text-xs text-aing-muted hover:text-aing-blue transition-colors"
+                  >
+                    <User size={10} />
+                    {authorName}
+                  </Link>
+                ) : (
+                  <span className="flex items-center gap-1 text-xs text-aing-muted">
+                    <User size={10} />
+                    {authorName}
+                  </span>
+                )
+              )}
             </div>
 
             {/* Title */}

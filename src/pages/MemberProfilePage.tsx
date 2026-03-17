@@ -24,6 +24,7 @@ type FormData = {
   contact_info: string;
   contact_email: string;
   github: string;
+  linkedin: string;
   new_password: string;
 };
 
@@ -52,6 +53,7 @@ const MemberProfilePage: React.FC = () => {
     contact_info: '',
     contact_email: '',
     github: '',
+    linkedin: '',
     new_password: '',
   });
 
@@ -83,6 +85,7 @@ const MemberProfilePage: React.FC = () => {
             contact_info: data.contact_info ?? '',
             contact_email: data.contact_email ?? '',
             github: data.github ?? '',
+            linkedin: data.linkedin ?? '',
             new_password: '',
           });
         }
@@ -114,23 +117,22 @@ const MemberProfilePage: React.FC = () => {
     }
   };
 
-  const parseTagInput = (value: string): string[] =>
-    value.split(',').map((s) => s.trim()).filter(Boolean);
-
   const handleSave = async () => {
     if (!member || !id) return;
     setSaving(true);
     try {
-      const basePayload: Record<string, unknown> = {
+      const payload: Record<string, unknown> = {
         bio: form.bio,
         avatar_url: form.avatar_url,
         github: form.github,
-      };
-
-      const extPayload: Record<string, unknown> = {
-        interests: parseTagInput(form.interests),
-        skills: parseTagInput(form.skills),
-        workload: form.workload,
+        linkedin: form.linkedin,
+        interests: typeof form.interests === 'string'
+          ? form.interests.split(',').map((s: string) => s.trim()).filter(Boolean)
+          : form.interests,
+        skills: typeof form.skills === 'string'
+          ? form.skills.split(',').map((s: string) => s.trim()).filter(Boolean)
+          : form.skills,
+        workload: Number(form.workload),
         status: form.status,
         looking_for_team: form.looking_for_team,
         project_idea: form.project_idea,
@@ -139,27 +141,17 @@ const MemberProfilePage: React.FC = () => {
       };
 
       if (isSettingPassword && password.trim()) {
-        basePayload.password_hash = password;
-      } else if (form.new_password.trim()) {
-        basePayload.password_hash = form.new_password;
+        payload.password_hash = password.trim();
+      } else if (form.new_password && form.new_password.trim()) {
+        payload.password_hash = form.new_password.trim();
       }
 
       const { error } = await supabase
         .from('members')
-        .update({ ...basePayload, ...extPayload })
+        .update(payload)
         .eq('id', id);
 
-      if (error) {
-        // New columns may not exist yet — save base fields only
-        const { error: error2 } = await supabase
-          .from('members')
-          .update(basePayload)
-          .eq('id', id);
-        if (error2) throw error2;
-        alert('기본 프로필만 저장되었습니다. (Supabase 스키마 업데이트 필요)');
-      } else {
-        alert('저장되었습니다!');
-      }
+      if (error) throw error;
       navigate(`/members/${id}`);
     } catch (err: unknown) {
       alert('저장 실패: ' + (err instanceof Error ? err.message : '알 수 없는 오류'));
@@ -240,6 +232,7 @@ const MemberProfilePage: React.FC = () => {
                 onChange={(e) => setPassword(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handlePasswordSubmit()}
                 placeholder="비밀번호"
+                autoComplete="current-password"
                 className="w-full border border-aing-border rounded-xl px-4 py-2.5 text-sm text-aing-text bg-aing-bg outline-none focus:border-aing-blue pr-10"
               />
               <button
@@ -293,6 +286,16 @@ const MemberProfilePage: React.FC = () => {
                     value={form.github}
                     onChange={(e) => setForm({ ...form, github: e.target.value })}
                     placeholder="https://github.com/username"
+                    className="w-full border border-aing-border rounded-xl px-3 py-2 text-sm text-aing-text bg-aing-bg outline-none focus:border-aing-blue"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs text-aing-muted mb-1 block">LinkedIn URL</label>
+                  <input
+                    type="text"
+                    value={form.linkedin}
+                    onChange={(e) => setForm({ ...form, linkedin: e.target.value })}
+                    placeholder="https://linkedin.com/in/username"
                     className="w-full border border-aing-border rounded-xl px-3 py-2 text-sm text-aing-text bg-aing-bg outline-none focus:border-aing-blue"
                   />
                 </div>
@@ -435,6 +438,7 @@ const MemberProfilePage: React.FC = () => {
                 value={form.new_password}
                 onChange={(e) => setForm({ ...form, new_password: e.target.value })}
                 placeholder="새 비밀번호 (비우면 변경 안 함)"
+                autoComplete="new-password"
                 className="w-full border border-aing-border rounded-xl px-3 py-2 text-sm text-aing-text bg-aing-bg outline-none focus:border-aing-blue"
               />
             </div>
