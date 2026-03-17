@@ -4,7 +4,7 @@ import { Github, ExternalLink, ChevronLeft, BookOpen, Code2, Beaker, Trophy, Clo
 import { supabase, Project, ProjectMember } from '../lib/supabase';
 import AnimatedSection from '../components/AnimatedSection';
 
-const TYPE_ICONS: Record<string, React.FC<{ size?: number; className?: string }>> = {
+const TYPE_ICONS: Record<string, React.ElementType> = {
   study: BookOpen,
   project: Code2,
   research: Beaker,
