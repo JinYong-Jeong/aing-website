@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { ChevronLeft, Save, Eye, EyeOff } from 'lucide-react';
 import { supabase, Member } from '../lib/supabase';
 
@@ -7,9 +7,9 @@ const WORKLOAD_LABELS = ['여유', '여유', '보통', '바쁨', '바쁨', '매�
 const WORKLOAD_COLORS = ['text-green-600', 'text-green-600', 'text-yellow-600', 'text-orange-500', 'text-orange-600', 'text-red-600'];
 
 const STATUS_OPTIONS = [
-  { value: 'active', label: '활동중', color: 'bg-green-100 text-green-700 border-green-300' },
   { value: 'busy', label: '바쁨', color: 'bg-red-100 text-red-700 border-red-300' },
-  { value: 'open', label: '팀원 구함', color: 'bg-blue-100 text-blue-700 border-blue-300' },
+  { value: 'mid', label: '프로젝트 관심', color: 'bg-yellow-100 text-yellow-700 border-yellow-300' },
+  { value: 'free', label: '프로젝트 희망', color: 'bg-green-100 text-green-700 border-green-300' },
 ];
 
 type FormData = {
@@ -18,10 +18,10 @@ type FormData = {
   interests: string;
   skills: string;
   workload: number;
-  status: 'active' | 'busy' | 'open';
+  status: 'busy' | 'mid' | 'free';
   looking_for_team: boolean;
   project_idea: string;
-  contact_kakao: string;
+  contact_info: string;
   contact_email: string;
   github: string;
   new_password: string;
@@ -29,6 +29,7 @@ type FormData = {
 
 const MemberProfilePage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const [member, setMember] = useState<Member | null>(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
@@ -45,18 +46,16 @@ const MemberProfilePage: React.FC = () => {
     interests: '',
     skills: '',
     workload: 0,
-    status: 'active',
+    status: 'free',
     looking_for_team: false,
     project_idea: '',
-    contact_kakao: '',
+    contact_info: '',
     contact_email: '',
     github: '',
     new_password: '',
   });
 
   const [saving, setSaving] = useState(false);
-  const [saveSuccess, setSaveSuccess] = useState(false);
-  const [saveError, setSaveError] = useState('');
 
   useEffect(() => {
     const fetchMember = async () => {
@@ -78,10 +77,10 @@ const MemberProfilePage: React.FC = () => {
             interests: (data.interests ?? []).join(', '),
             skills: (data.skills ?? []).join(', '),
             workload: data.workload ?? 0,
-            status: data.status ?? 'active',
+            status: (data.status as 'busy' | 'mid' | 'free') ?? 'free',
             looking_for_team: data.looking_for_team ?? false,
             project_idea: data.project_idea ?? '',
-            contact_kakao: data.contact_kakao ?? '',
+            contact_info: data.contact_info ?? '',
             contact_email: data.contact_email ?? '',
             github: data.github ?? '',
             new_password: '',
@@ -121,39 +120,51 @@ const MemberProfilePage: React.FC = () => {
   const handleSave = async () => {
     if (!member || !id) return;
     setSaving(true);
-    setSaveSuccess(false);
-    setSaveError('');
     try {
-      const updates: Partial<Member> & { password_hash?: string } = {
+      const basePayload: Record<string, unknown> = {
         bio: form.bio,
         avatar_url: form.avatar_url,
+        github: form.github,
+      };
+
+      const extPayload: Record<string, unknown> = {
         interests: parseTagInput(form.interests),
         skills: parseTagInput(form.skills),
         workload: form.workload,
         status: form.status,
         looking_for_team: form.looking_for_team,
         project_idea: form.project_idea,
-        contact_kakao: form.contact_kakao,
+        contact_info: form.contact_info,
         contact_email: form.contact_email,
-        github: form.github,
       };
+
       if (isSettingPassword && password.trim()) {
-        updates.password_hash = password;
+        basePayload.password_hash = password;
       } else if (form.new_password.trim()) {
-        updates.password_hash = form.new_password;
+        basePayload.password_hash = form.new_password;
       }
-      const { error } = await supabase.from('members').update(updates).eq('id', id);
-      if (error) throw error;
-      setSaveSuccess(true);
-      setMember({ ...member, ...updates });
-      if (updates.password_hash) {
-        setIsSettingPassword(false);
+
+      const { error } = await supabase
+        .from('members')
+        .update({ ...basePayload, ...extPayload })
+        .eq('id', id);
+
+      if (error) {
+        // New columns may not exist yet — save base fields only
+        const { error: error2 } = await supabase
+          .from('members')
+          .update(basePayload)
+          .eq('id', id);
+        if (error2) throw error2;
+        alert('기본 프로필만 저장되었습니다. (Supabase 스키마 업데이트 필요)');
+      } else {
+        alert('저장되었습니다!');
       }
-    } catch (e: unknown) {
-      setSaveError(e instanceof Error ? e.message : '저장 중 오류가 발생했습니다.');
-    } finally {
-      setSaving(false);
+      navigate(`/members/${id}`);
+    } catch (err: unknown) {
+      alert('저장 실패: ' + (err instanceof Error ? err.message : '알 수 없는 오류'));
     }
+    setSaving(false);
   };
 
   const getInitials = (name: string) =>
@@ -344,7 +355,7 @@ const MemberProfilePage: React.FC = () => {
                 {STATUS_OPTIONS.map((opt) => (
                   <button
                     key={opt.value}
-                    onClick={() => setForm({ ...form, status: opt.value as 'active' | 'busy' | 'open' })}
+                    onClick={() => setForm({ ...form, status: opt.value as 'busy' | 'mid' | 'free' })}
                     className={`flex-1 py-2 rounded-xl text-xs font-medium border transition-all ${
                       form.status === opt.value
                         ? opt.color + ' border-opacity-100'
@@ -394,12 +405,12 @@ const MemberProfilePage: React.FC = () => {
               <h3 className="text-xs font-semibold text-aing-muted uppercase tracking-wider mb-3">연락처</h3>
               <div className="space-y-3">
                 <div>
-                  <label className="text-xs text-aing-muted mb-1 block">카카오톡 오픈채팅 링크</label>
+                  <label className="text-xs text-aing-muted mb-1 block">연락수단</label>
                   <input
                     type="text"
-                    value={form.contact_kakao}
-                    onChange={(e) => setForm({ ...form, contact_kakao: e.target.value })}
-                    placeholder="https://open.kakao.com/..."
+                    value={form.contact_info}
+                    onChange={(e) => setForm({ ...form, contact_info: e.target.value })}
+                    placeholder="연락수단 링크 또는 ID"
                     className="w-full border border-aing-border rounded-xl px-3 py-2 text-sm text-aing-text bg-aing-bg outline-none focus:border-aing-blue"
                   />
                 </div>
@@ -429,12 +440,6 @@ const MemberProfilePage: React.FC = () => {
             </div>
 
             {/* Save */}
-            {saveSuccess && (
-              <div className="text-green-600 text-sm text-center">✓ 저장되었습니다.</div>
-            )}
-            {saveError && (
-              <div className="text-red-500 text-sm text-center">{saveError}</div>
-            )}
             <button
               onClick={handleSave}
               disabled={saving}

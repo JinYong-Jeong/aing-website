@@ -1,6 +1,6 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import { AdminProvider } from './context/AdminContext';
+import { AuthProvider } from './context/AuthContext';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import HomePage from './pages/HomePage';
@@ -11,6 +11,7 @@ import MemberDetailPage from './pages/MemberDetailPage';
 import MemberProfilePage from './pages/MemberProfilePage';
 import TeamPage from './pages/TeamPage';
 import BoardPage from './pages/BoardPage';
+import NewPostPage from './pages/NewPostPage';
 import PostDetailPage from './pages/PostDetailPage';
 import ContactPage from './pages/ContactPage';
 import ProjectsPage from './pages/ProjectsPage';
@@ -29,7 +30,7 @@ import AdminProjects from './pages/admin/AdminProjects';
 function App() {
   return (
     <BrowserRouter>
-      <AdminProvider>
+      <AuthProvider>
         <div className="min-h-screen bg-aing-black flex flex-col">
           <Navbar />
           <main className="flex-1">
@@ -44,6 +45,7 @@ function App() {
               <Route path="/members/:id/edit" element={<MemberProfilePage />} />
               <Route path="/team" element={<TeamPage />} />
               <Route path="/board" element={<BoardPage />} />
+              <Route path="/board/new" element={<NewPostPage />} />
               <Route path="/board/:id" element={<PostDetailPage />} />
               <Route path="/contact" element={<ContactPage />} />
               <Route path="/admin/login" element={<AdminLoginPage />} />
@@ -70,7 +72,7 @@ function App() {
           </main>
           <Footer />
         </div>
-      </AdminProvider>
+      </AuthProvider>
     </BrowserRouter>
   );
 }

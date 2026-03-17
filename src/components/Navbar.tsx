@@ -1,13 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Menu, X, LogIn, LogOut, ChevronDown } from 'lucide-react';
-import { useAdmin } from '../context/AdminContext';
+import { useAuth } from '../context/AuthContext';
 
 const Navbar: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [adminMenuOpen, setAdminMenuOpen] = useState(false);
-  const { isAdmin, logout } = useAdmin();
+  const { isAdmin, logout } = useAuth();
   const location = useLocation();
   const adminMenuRef = useRef<HTMLDivElement>(null);
 
@@ -35,10 +35,10 @@ const Navbar: React.FC = () => {
   const navItems = [
     { label: 'About', to: '/about' },
     { label: 'Activities', to: '/activities' },
-    { label: 'Projects', to: '/projects' },
+    { label: 'History', to: '/projects' },
     { label: 'Members', to: '/members' },
     { label: 'Team', to: '/team' },
-    { label: 'Board', to: '/board' },
+    { label: 'Community', to: '/board' },
     { label: 'Contact', to: '/contact' },
   ];
 

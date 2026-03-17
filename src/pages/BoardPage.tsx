@@ -3,7 +3,6 @@ import { Link } from 'react-router-dom';
 import { MessageSquare, Eye, Pin, ChevronRight, Search, PlusCircle } from 'lucide-react';
 import { supabase, Post } from '../lib/supabase';
 import AnimatedSection from '../components/AnimatedSection';
-import { useAdmin } from '../context/AdminContext';
 
 const CATEGORY_LABELS: Record<string, string> = {
   notice: 'Notice',
@@ -75,7 +74,6 @@ const BoardPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<'all' | 'notice' | 'activity' | 'study' | 'project'>('all');
   const [search, setSearch] = useState('');
-  const { isAdmin } = useAdmin();
 
   useEffect(() => {
     const fetchPosts = async () => {
@@ -116,19 +114,17 @@ const BoardPage: React.FC = () => {
           <AnimatedSection>
             <div className="inline-flex items-center gap-2 tag-blue mb-6">
               <MessageSquare size={12} />
-              <span>Board</span>
+              <span>Community</span>
             </div>
             <h1 className="section-title text-5xl mb-4">
               <span className="text-gradient">Community</span>
             </h1>
             <p className="section-subtitle">공지사항, 활동 후기, 스터디 자료를 공유합니다.</p>
           </AnimatedSection>
-          {isAdmin && (
-            <Link to="/admin/posts/new" className="btn-primary flex items-center gap-2 text-sm mt-auto">
-              <PlusCircle size={16} />
-              새 글 작성
-            </Link>
-          )}
+          <Link to="/board/new" className="btn-primary flex items-center gap-2 text-sm mt-auto">
+            <PlusCircle size={16} />
+            새 글 작성
+          </Link>
         </div>
       </section>
 

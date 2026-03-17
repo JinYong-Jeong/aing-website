@@ -59,32 +59,32 @@ const TeamPage: React.FC = () => {
     }
     setSubmitting(true);
     try {
+      // ilike search — case-insensitive name match
       const { data: memberData, error: memberError } = await supabase
         .from('members')
-        .select('id, password_hash')
-        .eq('name', form.author_name.trim())
+        .select('id, name, password_hash')
+        .ilike('name', form.author_name.trim())
         .single();
+
       if (memberError || !memberData) {
         setFormError('해당 이름의 멤버를 찾을 수 없습니다.');
         setSubmitting(false);
         return;
       }
-      if (!memberData.password_hash) {
-        setFormError('비밀번호가 설정되지 않은 계정입니다. 먼저 프로필 수정에서 비밀번호를 설정해주세요.');
+
+      // password_hash가 없으면 비번 없이 작성 허용
+      if (memberData.password_hash && memberData.password_hash !== form.author_password) {
+        setFormError('비밀번호가 틀렸습니다.');
         setSubmitting(false);
         return;
       }
-      if (form.author_password !== memberData.password_hash) {
-        setFormError('비밀번호가 일치하지 않습니다.');
-        setSubmitting(false);
-        return;
-      }
+
       const skillsArr = form.required_skills
         .split(',')
         .map((s) => s.trim())
         .filter(Boolean);
-      const { error: insertError } = await supabase.from('team_posts').insert({
-        author_id: memberData.id,
+
+      const insertPayload: Record<string, unknown> = {
         title: form.title,
         description: form.description,
         required_skills: skillsArr,
@@ -92,8 +92,21 @@ const TeamPage: React.FC = () => {
         current_members: 1,
         status: 'open',
         contact: form.contact,
+        author_id: memberData.id ?? null,
+      };
+
+      // Try insert with author_name column (may not exist)
+      const { error: insertError } = await supabase.from('team_posts').insert({
+        ...insertPayload,
+        author_name: form.author_name.trim(),
       });
-      if (insertError) throw insertError;
+
+      if (insertError) {
+        // Fallback without author_name column
+        const { error: insertError2 } = await supabase.from('team_posts').insert(insertPayload);
+        if (insertError2) throw insertError2;
+      }
+
       setForm({
         title: '',
         description: '',
@@ -262,8 +275,8 @@ const TeamPage: React.FC = () => {
                       <Users size={11} />
                       {post.current_members} / {post.max_members}명
                     </span>
-                    {post.author && (
-                      <span>작성자: {post.author.name}</span>
+                    {(post.author_name || post.author) && (
+                      <span>작성자: {post.author_name || post.author?.name}</span>
                     )}
                     {post.contact && (
                       <span className="flex items-center gap-1">
@@ -346,12 +359,12 @@ const TeamPage: React.FC = () => {
                 />
               </div>
               <div>
-                <label className="text-xs text-aing-muted mb-1 block">연락처 (카카오/이메일)</label>
+                <label className="text-xs text-aing-muted mb-1 block">연락수단</label>
                 <input
                   type="text"
                   value={form.contact}
                   onChange={(e) => setForm({ ...form, contact: e.target.value })}
-                  placeholder="오픈채팅 링크 또는 이메일"
+                  placeholder="연락수단 링크 또는 이메일"
                   className="w-full border border-aing-border rounded-xl px-3 py-2 text-sm text-aing-text bg-aing-bg outline-none focus:border-aing-blue"
                 />
               </div>

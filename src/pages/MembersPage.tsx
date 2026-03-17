@@ -8,32 +8,34 @@ const TRACK_LABELS: Record<string, string> = {
   junior: 'Junior',
   senior: 'Senior',
   admin: 'Admin',
+  ob: 'OB',
 };
 
 const TRACK_COLORS: Record<string, string> = {
   junior: 'text-aing-blue border-blue-200 bg-aing-blue-light',
   senior: 'text-purple-500 border-purple-200 bg-purple-50',
   admin: 'text-green-500 border-green-200 bg-green-50',
+  ob: 'text-gray-500 border-gray-200 bg-gray-50',
 };
 
 const STATUS_COLORS: Record<string, string> = {
-  active: 'bg-green-100 text-green-700 border-green-200',
   busy: 'bg-red-100 text-red-700 border-red-200',
-  open: 'bg-blue-100 text-blue-700 border-blue-200',
+  mid: 'bg-yellow-100 text-yellow-700 border-yellow-200',
+  free: 'bg-green-100 text-green-700 border-green-200',
 };
 
 const STATUS_LABELS: Record<string, string> = {
-  active: 'Active',
-  busy: 'Busy',
-  open: 'Open',
+  busy: '바쁨',
+  mid: '프로젝트 관심',
+  free: '프로젝트 희망',
 };
 
 const demoMembers: Member[] = [
-  { id: '1', name: '송이두', role: 'President', track: 'admin', semester: '2026 Spring', github: 'https://github.com', is_active: true, created_at: '', interests: ['CV', 'NLP'], workload: 3, status: 'active' },
-  { id: '2', name: '정진용', role: 'Researcher', track: 'senior', semester: '2026 Spring', github: 'https://github.com/JinYong-Jeong', bio: 'On-Device AI Agent, Federated Learning', is_active: true, created_at: '', interests: ['RL', 'CV'], workload: 2, status: 'open', looking_for_team: true },
-  { id: '3', name: 'Member 3', role: 'Junior', track: 'junior', semester: '2026 Spring', is_active: true, created_at: '', interests: ['NLP'], workload: 1, status: 'active' },
+  { id: '1', name: '송이두', role: 'President', track: 'admin', semester: '2026 Spring', github: 'https://github.com', is_active: true, created_at: '', interests: ['CV', 'NLP'], workload: 3, status: 'mid' },
+  { id: '2', name: '정진용', role: 'Researcher', track: 'senior', semester: '2026 Spring', github: 'https://github.com/JinYong-Jeong', bio: 'On-Device AI Agent, Federated Learning', is_active: true, created_at: '', interests: ['RL', 'CV'], workload: 2, status: 'free', looking_for_team: true },
+  { id: '3', name: 'Member 3', role: 'Junior', track: 'junior', semester: '2026 Spring', is_active: true, created_at: '', interests: ['NLP'], workload: 1, status: 'mid' },
   { id: '4', name: 'Member 4', role: 'Senior', track: 'senior', semester: '2026 Spring', is_active: true, created_at: '', interests: ['CV', 'RL'], workload: 4, status: 'busy' },
-  { id: '5', name: 'Member 5', role: 'Junior', track: 'junior', semester: '2026 Spring', is_active: true, created_at: '', interests: ['NLP', 'CV'], workload: 0, status: 'open', looking_for_team: true },
+  { id: '5', name: 'Member 5', role: 'Junior', track: 'junior', semester: '2026 Spring', is_active: true, created_at: '', interests: ['NLP', 'CV'], workload: 0, status: 'free', looking_for_team: true },
   { id: '6', name: 'Member 6', role: 'Junior', track: 'junior', semester: '2026 Spring', is_active: true, created_at: '', interests: ['CV'], workload: 5, status: 'busy' },
 ];
 
@@ -56,10 +58,10 @@ const MembersPage: React.FC = () => {
   const [filtersOpen, setFiltersOpen] = useState(true);
 
   // Filters
-  const [trackFilter, setTrackFilter] = useState<'all' | 'junior' | 'senior' | 'admin'>('all');
+  const [trackFilter, setTrackFilter] = useState<'all' | 'junior' | 'senior' | 'admin' | 'ob'>('all');
   const [interestFilter, setInterestFilter] = useState<string>('');
   const [workloadFilter, setWorkloadFilter] = useState<'' | 'light' | 'normal' | 'heavy'>('');
-  const [statusFilter, setStatusFilter] = useState<'' | 'active' | 'busy' | 'open'>('');
+  const [statusFilter, setStatusFilter] = useState<'' | 'busy' | 'mid' | 'free'>('');
 
   useEffect(() => {
     const fetchMembers = async () => {
@@ -167,7 +169,7 @@ const MembersPage: React.FC = () => {
               {/* Track filter */}
               <div className="flex items-center gap-2 flex-wrap">
                 <span className="text-xs text-aing-muted w-14 shrink-0">트랙</span>
-                {(['all', 'admin', 'senior', 'junior'] as const).map(f => (
+                {(['all', 'admin', 'senior', 'junior', 'ob'] as const).map(f => (
                   <button
                     key={f}
                     onClick={() => setTrackFilter(f)}
@@ -240,10 +242,10 @@ const MembersPage: React.FC = () => {
                 <span className="text-xs text-aing-muted w-14 shrink-0">상태</span>
                 {([
                   { value: '', label: 'All' },
-                  { value: 'active', label: 'Active' },
-                  { value: 'busy', label: 'Busy' },
-                  { value: 'open', label: 'Open (팀원구함)' },
-                ] as { value: '' | 'active' | 'busy' | 'open'; label: string }[]).map(opt => (
+                  { value: 'busy', label: '바쁨' },
+                  { value: 'mid', label: '프로젝트 관심' },
+                  { value: 'free', label: '프로젝트 희망' },
+                ] as { value: '' | 'busy' | 'mid' | 'free'; label: string }[]).map(opt => (
                   <button
                     key={opt.value}
                     onClick={() => setStatusFilter(opt.value)}
@@ -283,7 +285,7 @@ const MembersPage: React.FC = () => {
           ) : (
             <div className="grid md:grid-cols-3 lg:grid-cols-4 gap-4">
               {filtered.map((member, i) => {
-                const status = member.status ?? 'active';
+                const status = member.status ?? 'free';
                 const workload = member.workload ?? 0;
                 const interests = member.interests ?? [];
                 return (

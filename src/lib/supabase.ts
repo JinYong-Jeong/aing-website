@@ -9,7 +9,7 @@ export type Member = {
   id: string;
   name: string;
   role: string;
-  track: 'junior' | 'senior' | 'admin';
+  track: 'junior' | 'senior' | 'admin' | 'ob';
   semester: string;
   github?: string;
   avatar_url?: string;
@@ -19,17 +19,18 @@ export type Member = {
   password_hash?: string;
   interests?: string[];
   workload?: number;
-  status?: 'active' | 'busy' | 'open';
+  status?: 'busy' | 'mid' | 'free';
   skills?: string[];
   looking_for_team?: boolean;
   project_idea?: string;
-  contact_kakao?: string;
+  contact_info?: string;
   contact_email?: string;
 };
 
 export type TeamPost = {
   id: string;
   author_id: string | null;
+  author_name?: string;
   title: string;
   description: string;
   required_skills: string[];
@@ -46,6 +47,8 @@ export type Post = {
   title: string;
   content: string;
   author_id: string | null;
+  author_name?: string;
+  author_password?: string;
   category: 'notice' | 'activity' | 'study' | 'project';
   tags: string[];
   is_pinned: boolean;

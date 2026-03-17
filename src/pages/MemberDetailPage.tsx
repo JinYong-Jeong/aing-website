@@ -7,24 +7,26 @@ const TRACK_LABELS: Record<string, string> = {
   junior: 'Junior',
   senior: 'Senior',
   admin: 'Admin',
+  ob: 'OB',
 };
 
 const TRACK_COLORS: Record<string, string> = {
   junior: 'text-aing-blue border-blue-200 bg-aing-blue-light',
   senior: 'text-purple-500 border-purple-200 bg-purple-50',
   admin: 'text-green-500 border-green-200 bg-green-50',
+  ob: 'text-gray-500 border-gray-200 bg-gray-50',
 };
 
 const STATUS_LABELS: Record<string, string> = {
-  active: '활동중',
   busy: '바쁨',
-  open: '팀원 구함',
+  mid: '프로젝트 관심',
+  free: '프로젝트 희망',
 };
 
 const STATUS_COLORS: Record<string, string> = {
-  active: 'bg-green-100 text-green-700 border-green-200',
   busy: 'bg-red-100 text-red-700 border-red-200',
-  open: 'bg-blue-100 text-blue-700 border-blue-200',
+  mid: 'bg-yellow-100 text-yellow-700 border-yellow-200',
+  free: 'bg-green-100 text-green-700 border-green-200',
 };
 
 const WORKLOAD_COLORS = [
@@ -107,7 +109,7 @@ const MemberDetailPage: React.FC = () => {
   }
 
   const workload = member.workload ?? 0;
-  const status = member.status ?? 'active';
+  const status = member.status ?? 'free';
 
   return (
     <div className="min-h-screen bg-aing-bg pt-20">
@@ -244,15 +246,15 @@ const MemberDetailPage: React.FC = () => {
                 GitHub
               </a>
             )}
-            {member.contact_kakao && (
+            {member.contact_info && (
               <a
-                href={member.contact_kakao}
+                href={member.contact_info.startsWith('http') ? member.contact_info : `#`}
                 target="_blank"
                 rel="noreferrer"
                 className="flex items-center gap-1.5 text-sm text-aing-muted hover:text-yellow-600 transition-colors"
               >
                 <MessageCircle size={14} />
-                KakaoTalk
+                연락수단
               </a>
             )}
             {member.contact_email && (
