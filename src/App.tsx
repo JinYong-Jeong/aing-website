@@ -12,9 +12,11 @@ import PostDetailPage from './pages/PostDetailPage';
 import ContactPage from './pages/ContactPage';
 import AdminLoginPage from './pages/admin/AdminLoginPage';
 import AdminDashboard from './pages/admin/AdminDashboard';
+import AdminPosts from './pages/admin/AdminPosts';
 import AdminPostEditor from './pages/admin/AdminPostEditor';
 import AdminMembers from './pages/admin/AdminMembers';
 import AdminMessages from './pages/admin/AdminMessages';
+import AdminComments from './pages/admin/AdminComments';
 
 function App() {
   return (
@@ -33,9 +35,11 @@ function App() {
               <Route path="/contact" element={<ContactPage />} />
               <Route path="/admin/login" element={<AdminLoginPage />} />
               <Route path="/admin" element={<AdminDashboard />} />
+              <Route path="/admin/posts" element={<AdminPosts />} />
               <Route path="/admin/posts/new" element={<AdminPostEditor />} />
               <Route path="/admin/posts/edit/:id" element={<AdminPostEditor />} />
               <Route path="/admin/members" element={<AdminMembers />} />
+              <Route path="/admin/comments" element={<AdminComments />} />
               <Route path="/admin/messages" element={<AdminMessages />} />
               <Route path="*" element={
                 <div className="min-h-screen flex items-center justify-center">
