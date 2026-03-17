@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Users, Plus, X, Trash2, MessageCircle, Mail, Calendar } from 'lucide-react';
 import { supabase, Member, TeamPost } from '../lib/supabase';
 import AnimatedSection from '../components/AnimatedSection';
@@ -233,7 +234,7 @@ const TeamPage: React.FC = () => {
           ) : (
             filtered.map((post, i) => (
               <AnimatedSection key={post.id} delay={i * 50}>
-                <div className="bg-aing-card border border-aing-border rounded-2xl p-6 hover:border-blue-200 transition-colors">
+                <Link to={`/team/${post.id}`} className="bg-aing-card border border-aing-border rounded-2xl p-6 hover:border-blue-200 transition-colors block">
                   <div className="flex items-start justify-between gap-4 mb-3">
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1 flex-wrap">
@@ -299,7 +300,7 @@ const TeamPage: React.FC = () => {
                       {formatDate(post.created_at)}
                     </span>
                   </div>
-                </div>
+                </Link>
               </AnimatedSection>
             ))
           )}

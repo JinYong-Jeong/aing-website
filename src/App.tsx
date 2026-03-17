@@ -10,6 +10,7 @@ import MembersPage from './pages/MembersPage';
 import MemberDetailPage from './pages/MemberDetailPage';
 import MemberProfilePage from './pages/MemberProfilePage';
 import TeamPage from './pages/TeamPage';
+import TeamPostDetailPage from './pages/TeamPostDetailPage';
 import BoardPage from './pages/BoardPage';
 import NewPostPage from './pages/NewPostPage';
 import PostDetailPage from './pages/PostDetailPage';
@@ -45,6 +46,7 @@ function App() {
               <Route path="/members/:id" element={<MemberDetailPage />} />
               <Route path="/members/:id/edit" element={<MemberProfilePage />} />
               <Route path="/team" element={<TeamPage />} />
+              <Route path="/team/:id" element={<TeamPostDetailPage />} />
               <Route path="/board" element={<BoardPage />} />
               <Route path="/board/new" element={<NewPostPage />} />
               <Route path="/board/:id" element={<PostDetailPage />} />

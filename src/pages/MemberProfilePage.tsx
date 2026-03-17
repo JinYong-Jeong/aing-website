@@ -137,7 +137,6 @@ const MemberProfilePage: React.FC = () => {
         looking_for_team: form.looking_for_team,
         project_idea: form.project_idea,
         contact_info: form.contact_info,
-        contact_email: form.contact_email,
       };
 
       if (isSettingPassword && password.trim()) {
@@ -154,7 +153,9 @@ const MemberProfilePage: React.FC = () => {
       if (error) throw error;
       navigate(`/members/${id}`);
     } catch (err: unknown) {
-      alert('저장 실패: ' + (err instanceof Error ? err.message : '알 수 없는 오류'));
+      const msg = err instanceof Error ? err.message : String(err);
+      console.error('Profile save error:', msg);
+      alert('저장 실패: ' + msg);
     }
     setSaving(false);
   };

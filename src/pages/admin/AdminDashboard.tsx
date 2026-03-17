@@ -5,11 +5,11 @@ import {
   XCircle, Eye, LogOut, TrendingUp, BarChart2, BookOpen, Code2
 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
-import { useAdmin } from '../../context/AdminContext';
+import { useAuth } from '../../context/AuthContext';
 import AnimatedSection from '../../components/AnimatedSection';
 
 const AdminDashboard: React.FC = () => {
-  const { isAdmin, logout } = useAdmin();
+  const { isAdmin, logout } = useAuth();
   const navigate = useNavigate();
   const [stats, setStats] = useState({ members: 0, posts: 0, comments: 0, messages: 0, activities: 0 });
   const [pendingComments, setPendingComments] = useState<any[]>([]);

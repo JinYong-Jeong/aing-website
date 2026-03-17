@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { ArrowLeft, PlusCircle, Trash2, Pencil, X, Check } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
-import { useAdmin } from '../../context/AdminContext';
+import { useAuth } from '../../context/AuthContext';
 
 type Activity = {
   id: string;
@@ -39,7 +39,7 @@ const STATUS_COLORS: Record<string, string> = {
 };
 
 const AdminActivities: React.FC = () => {
-  const { isAdmin } = useAdmin();
+  const { isAdmin } = useAuth();
   const navigate = useNavigate();
   const [activities, setActivities] = useState<Activity[]>([]);
   const [loading, setLoading] = useState(true);

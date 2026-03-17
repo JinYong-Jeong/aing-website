@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
 import { ArrowLeft, Save, Tag } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
-import { useAdmin } from '../../context/AdminContext';
+import { useAuth } from '../../context/AuthContext';
 
 type Category = 'notice' | 'activity' | 'study' | 'project';
 
@@ -10,7 +10,7 @@ const AdminPostEditor: React.FC = () => {
   const { id } = useParams();
   const isEdit = Boolean(id);
   const navigate = useNavigate();
-  const { isAdmin } = useAdmin();
+  const { isAdmin } = useAuth();
   const [form, setForm] = useState({
     title: '',
     content: '',

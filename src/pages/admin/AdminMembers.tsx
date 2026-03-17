@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { ArrowLeft, PlusCircle, Trash2, UserCheck, UserX } from 'lucide-react';
 import { supabase, Member } from '../../lib/supabase';
-import { useAdmin } from '../../context/AdminContext';
+import { useAuth } from '../../context/AuthContext';
 
 const TRACK_COLORS: Record<string, string> = {
   junior: 'text-aing-blue border-blue-200 bg-aing-blue-light',
@@ -11,7 +11,7 @@ const TRACK_COLORS: Record<string, string> = {
 };
 
 const AdminMembers: React.FC = () => {
-  const { isAdmin } = useAdmin();
+  const { isAdmin } = useAuth();
   const navigate = useNavigate();
   const [members, setMembers] = useState<Member[]>([]);
   const [loading, setLoading] = useState(true);

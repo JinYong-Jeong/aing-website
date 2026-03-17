@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { ArrowLeft, Save, RefreshCw } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
-import { useAdmin } from '../../context/AdminContext';
+import { useAuth } from '../../context/AuthContext';
 
 type Setting = {
   id: string;
@@ -22,7 +22,7 @@ const SETTING_LABELS: Record<string, string> = {
 const SETTING_KEYS = ['tagline', 'description', 'email', 'github', 'location'];
 
 const AdminSettings: React.FC = () => {
-  const { isAdmin } = useAdmin();
+  const { isAdmin } = useAuth();
   const navigate = useNavigate();
   const [settings, setSettings] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);

@@ -2,10 +2,10 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { ArrowLeft, XCircle, MessageSquare } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
-import { useAdmin } from '../../context/AdminContext';
+import { useAuth } from '../../context/AuthContext';
 
 const AdminComments: React.FC = () => {
-  const { isAdmin } = useAdmin();
+  const { isAdmin } = useAuth();
   const navigate = useNavigate();
   const [comments, setComments] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);

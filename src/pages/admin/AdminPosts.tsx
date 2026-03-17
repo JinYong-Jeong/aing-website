@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { ArrowLeft, PlusCircle, Pencil, Trash2, Pin } from 'lucide-react';
 import { supabase, Post } from '../../lib/supabase';
-import { useAdmin } from '../../context/AdminContext';
+import { useAuth } from '../../context/AuthContext';
 
 const CATEGORY_COLORS: Record<string, string> = {
   notice: 'text-red-500 border-red-200 bg-red-50',
@@ -12,7 +12,7 @@ const CATEGORY_COLORS: Record<string, string> = {
 };
 
 const AdminPosts: React.FC = () => {
-  const { isAdmin } = useAdmin();
+  const { isAdmin } = useAuth();
   const navigate = useNavigate();
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);

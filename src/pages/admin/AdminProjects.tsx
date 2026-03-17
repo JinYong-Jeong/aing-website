@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Plus, Pencil, Trash2, ChevronLeft, Github, ExternalLink, ChevronRight, X, Check } from 'lucide-react';
 import { supabase, Project, Member } from '../../lib/supabase';
-import { useAdmin } from '../../context/AdminContext';
+import { useAuth } from '../../context/AuthContext';
 import AnimatedSection from '../../components/AnimatedSection';
 
 const STATUS_LABELS: Record<string, string> = {
@@ -48,7 +48,7 @@ const emptyForm: Omit<Project, 'id' | 'created_at' | 'updated_at' | 'project_mem
 };
 
 const AdminProjects: React.FC = () => {
-  const { isAdmin } = useAdmin();
+  const { isAdmin } = useAuth();
   const navigate = useNavigate();
   const [projects, setProjects] = useState<Project[]>([]);
   const [allMembers, setAllMembers] = useState<Member[]>([]);
