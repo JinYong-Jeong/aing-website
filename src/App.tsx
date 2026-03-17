@@ -28,6 +28,7 @@ import AdminComments from './pages/admin/AdminComments';
 import AdminActivities from './pages/admin/AdminActivities';
 import AdminSettings from './pages/admin/AdminSettings';
 import AdminProjects from './pages/admin/AdminProjects';
+import AdminTeamPosts from './pages/admin/AdminTeamPosts';
 
 function App() {
   return (
@@ -63,6 +64,7 @@ function App() {
               <Route path="/admin/activities" element={<AdminActivities />} />
               <Route path="/admin/settings" element={<AdminSettings />} />
               <Route path="/admin/projects" element={<AdminProjects />} />
+              <Route path="/admin/team" element={<AdminTeamPosts />} />
               <Route path="*" element={
                 <div className="min-h-screen flex items-center justify-center">
                   <div className="text-center">

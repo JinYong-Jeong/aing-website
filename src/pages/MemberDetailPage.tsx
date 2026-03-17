@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Github, Mail, MessageCircle, Users, ChevronLeft, Pencil, Code2, ExternalLink } from 'lucide-react';
-import { supabase, Member, Project } from '../lib/supabase';
+import { supabase, Member, Project, TeamPost } from '../lib/supabase';
 
 const TRACK_LABELS: Record<string, string> = {
   junior: 'Junior',
@@ -44,6 +44,7 @@ const MemberDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const [member, setMember] = useState<Member | null>(null);
   const [projects, setProjects] = useState<Project[]>([]);
+  const [teamPosts, setTeamPosts] = useState<Pick<TeamPost, 'id' | 'title' | 'status' | 'created_at'>[]>([]);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
 
@@ -74,6 +75,30 @@ const MemberDetailPage: React.FC = () => {
             }
           } catch {
             // projects fetch failed silently
+          }
+
+          // Fetch team posts by author_id
+          try {
+            let teamPostsData: Pick<TeamPost, 'id' | 'title' | 'status' | 'created_at'>[] = [];
+            const { data: tpById } = await supabase
+              .from('team_posts')
+              .select('id, title, status, created_at')
+              .eq('author_id', id)
+              .order('created_at', { ascending: false });
+            if (tpById && tpById.length > 0) {
+              teamPostsData = tpById;
+            } else {
+              // fallback: author_name match
+              const { data: tpByName } = await supabase
+                .from('team_posts')
+                .select('id, title, status, created_at')
+                .ilike('author_name', data.name)
+                .order('created_at', { ascending: false });
+              if (tpByName) teamPostsData = tpByName;
+            }
+            setTeamPosts(teamPostsData);
+          } catch {
+            // team posts fetch failed silently
           }
         }
       } catch {
@@ -307,6 +332,36 @@ const MemberDetailPage: React.FC = () => {
                     'bg-gray-100 text-gray-500 border-gray-200'
                   }`}>
                     {project.status === 'ongoing' ? '진행중' : project.status === 'completed' ? '완료' : project.status}
+                  </span>
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Team Posts */}
+        {teamPosts.length > 0 && (
+          <div className="mt-6 bg-aing-card border border-aing-border rounded-2xl p-6">
+            <h2 className="text-sm font-semibold text-aing-text mb-4 flex items-center gap-2">
+              <Users size={14} className="text-aing-blue" />
+              팀원 모집 ({teamPosts.length})
+            </h2>
+            <div className="space-y-3">
+              {teamPosts.map(tp => (
+                <Link
+                  key={tp.id}
+                  to={`/team/${tp.id}`}
+                  className="flex items-center gap-3 p-3 rounded-xl border border-aing-border hover:border-blue-200 transition-colors"
+                >
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm font-medium text-aing-text truncate">{tp.title}</div>
+                  </div>
+                  <span className={`text-xs px-2 py-0.5 rounded-full border font-medium ${
+                    tp.status === 'open'
+                      ? 'bg-green-100 text-green-700 border-green-200'
+                      : 'bg-gray-100 text-gray-500 border-gray-200'
+                  }`}>
+                    {tp.status === 'open' ? '모집중' : '마감'}
                   </span>
                 </Link>
               ))}

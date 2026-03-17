@@ -28,6 +28,17 @@ export type Member = {
   contact_email?: string;
 };
 
+export type TeamApplication = {
+  id: string;
+  team_post_id: string;
+  applicant_id: string | null;
+  applicant_name: string;
+  message?: string;
+  status: 'pending' | 'accepted' | 'rejected';
+  created_at: string;
+  applicant?: Member;
+};
+
 export type TeamPost = {
   id: string;
   author_id: string | null;
@@ -41,6 +52,7 @@ export type TeamPost = {
   contact: string | null;
   created_at: string;
   author?: Member;
+  applications?: TeamApplication[];
 };
 
 export type Post = {

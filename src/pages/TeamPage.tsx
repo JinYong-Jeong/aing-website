@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Users, Plus, X, Trash2, MessageCircle, Mail, Calendar } from 'lucide-react';
-import { supabase, Member, TeamPost } from '../lib/supabase';
+import { Users, Plus, X, Calendar } from 'lucide-react';
+import { supabase, Member, TeamPost, TeamApplication } from '../lib/supabase';
 import AnimatedSection from '../components/AnimatedSection';
+import { useAuth } from '../context/AuthContext';
 
 const TeamPage: React.FC = () => {
-  const [posts, setPosts] = useState<(TeamPost & { author?: Member })[]>([]);
+  const { user } = useAuth();
+  const [posts, setPosts] = useState<(TeamPost & { author?: Member; applications?: TeamApplication[] })[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [filterStatus, setFilterStatus] = useState<'all' | 'open' | 'closed'>('all');
@@ -22,16 +24,20 @@ const TeamPage: React.FC = () => {
   const [formError, setFormError] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
-  const [deleteId, setDeleteId] = useState<string | null>(null);
-  const [deletePassword, setDeletePassword] = useState('');
-  const [deleteError, setDeleteError] = useState('');
-  const [deleting, setDeleting] = useState(false);
+  // Apply modal state
+  const [applyTarget, setApplyTarget] = useState<string | null>(null);
+  const [showApplyModal, setShowApplyModal] = useState(false);
+  const [applyName, setApplyName] = useState('');
+  const [applyPassword, setApplyPassword] = useState('');
+  const [applyMessage, setApplyMessage] = useState('');
+  const [applyError, setApplyError] = useState('');
+  const [applySubmitting, setApplySubmitting] = useState(false);
 
   const fetchPosts = async () => {
     try {
       const { data, error } = await supabase
         .from('team_posts')
-        .select('*, author:members(*)')
+        .select('*, author:members(*), applications:team_applications(*)')
         .order('created_at', { ascending: false });
       if (error) throw error;
       setPosts(data ?? []);
@@ -60,7 +66,6 @@ const TeamPage: React.FC = () => {
     }
     setSubmitting(true);
     try {
-      // ilike search — case-insensitive name match
       const { data: memberData, error: memberError } = await supabase
         .from('members')
         .select('id, name, password_hash')
@@ -73,7 +78,6 @@ const TeamPage: React.FC = () => {
         return;
       }
 
-      // password_hash가 없으면 비번 없이 작성 허용
       if (memberData.password_hash && memberData.password_hash !== form.author_password) {
         setFormError('비밀번호가 틀렸습니다.');
         setSubmitting(false);
@@ -96,14 +100,12 @@ const TeamPage: React.FC = () => {
         author_id: memberData.id ?? null,
       };
 
-      // Try insert with author_name column (may not exist)
       const { error: insertError } = await supabase.from('team_posts').insert({
         ...insertPayload,
         author_name: form.author_name.trim(),
       });
 
       if (insertError) {
-        // Fallback without author_name column
         const { error: insertError2 } = await supabase.from('team_posts').insert(insertPayload);
         if (insertError2) throw insertError2;
       }
@@ -126,54 +128,99 @@ const TeamPage: React.FC = () => {
     }
   };
 
-  const handleDelete = async () => {
-    if (!deleteId) return;
-    setDeleteError('');
-    if (!deletePassword.trim()) {
-      setDeleteError('비밀번호를 입력해주세요.');
+  const handleApply = async (postId: string) => {
+    if (user) {
+      if (!window.confirm('참여 희망 신청을 하시겠습니까?')) return;
+      const memberName = user.name;
+      const memberId = user.member_id || null;
+      const { error } = await supabase.from('team_applications').insert({
+        team_post_id: postId,
+        applicant_id: memberId,
+        applicant_name: memberName,
+        status: 'pending',
+      });
+      if (error?.code === '23505') {
+        alert('이미 신청하셨습니다.');
+      } else if (!error) {
+        alert('신청이 완료되었습니다. 작성자의 수락을 기다려주세요.');
+        fetchPosts();
+      } else {
+        alert('신청 중 오류가 발생했습니다.');
+      }
+    } else {
+      setApplyTarget(postId);
+      setApplyName('');
+      setApplyPassword('');
+      setApplyMessage('');
+      setApplyError('');
+      setShowApplyModal(true);
+    }
+  };
+
+  const handleApplyModalSubmit = async () => {
+    if (!applyTarget) return;
+    setApplyError('');
+    if (!applyName.trim() || !applyPassword.trim()) {
+      setApplyError('이름과 비밀번호를 입력해주세요.');
       return;
     }
-    setDeleting(true);
+    setApplySubmitting(true);
     try {
-      const post = posts.find((p) => p.id === deleteId);
-      if (!post || !post.author_id) {
-        setDeleteError('게시물 정보를 찾을 수 없습니다.');
-        setDeleting(false);
-        return;
-      }
       const { data: memberData, error: memberError } = await supabase
         .from('members')
-        .select('password_hash')
-        .eq('id', post.author_id)
+        .select('id, name, password_hash')
+        .ilike('name', applyName.trim())
         .single();
+
       if (memberError || !memberData) {
-        setDeleteError('작성자 정보를 찾을 수 없습니다.');
-        setDeleting(false);
+        setApplyError('해당 이름의 멤버를 찾을 수 없습니다.');
+        setApplySubmitting(false);
         return;
       }
-      if (deletePassword !== memberData.password_hash) {
-        setDeleteError('비밀번호가 일치하지 않습니다.');
-        setDeleting(false);
+
+      if (memberData.password_hash && memberData.password_hash !== applyPassword) {
+        setApplyError('비밀번호가 틀렸습니다.');
+        setApplySubmitting(false);
         return;
       }
-      const { error: deleteErr } = await supabase
-        .from('team_posts')
-        .delete()
-        .eq('id', deleteId);
-      if (deleteErr) throw deleteErr;
-      setDeleteId(null);
-      setDeletePassword('');
-      await fetchPosts();
-    } catch (e: unknown) {
-      setDeleteError(e instanceof Error ? e.message : '삭제 중 오류가 발생했습니다.');
-    } finally {
-      setDeleting(false);
+
+      const { error } = await supabase.from('team_applications').insert({
+        team_post_id: applyTarget,
+        applicant_id: memberData.id,
+        applicant_name: memberData.name,
+        message: applyMessage.trim() || null,
+        status: 'pending',
+      });
+
+      if (error?.code === '23505') {
+        setApplyError('이미 신청하셨습니다.');
+      } else if (!error) {
+        setShowApplyModal(false);
+        alert('신청이 완료되었습니다. 작성자의 수락을 기다려주세요.');
+        fetchPosts();
+      } else {
+        setApplyError('신청 중 오류가 발생했습니다.');
+      }
+    } catch {
+      setApplyError('신청 중 오류가 발생했습니다.');
     }
+    setApplySubmitting(false);
   };
 
   const formatDate = (iso: string) => {
     const d = new Date(iso);
     return `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')}`;
+  };
+
+  const getAcceptedCount = (post: TeamPost & { applications?: TeamApplication[] }) => {
+    return (post.applications || []).filter(a => a.status === 'accepted').length;
+  };
+
+  const isMyPost = (post: TeamPost) => {
+    if (!user) return false;
+    if (user.member_id && post.author_id === user.member_id) return true;
+    if (post.author_name && post.author_name === user.name) return true;
+    return false;
   };
 
   return (
@@ -196,7 +243,7 @@ const TeamPage: React.FC = () => {
 
       {/* Filter + New Post Button */}
       <section className="py-6 px-6 border-b border-aing-border sticky top-16 z-30 glass">
-        <div className="max-w-4xl mx-auto flex items-center gap-3">
+        <div className="max-w-4xl mx-auto flex items-center gap-3 flex-wrap">
           {(['all', 'open', 'closed'] as const).map((f) => (
             <button
               key={f}
@@ -232,77 +279,111 @@ const TeamPage: React.FC = () => {
               모집 글이 없습니다.
             </div>
           ) : (
-            filtered.map((post, i) => (
-              <AnimatedSection key={post.id} delay={i * 50}>
-                <Link to={`/team/${post.id}`} className="bg-aing-card border border-aing-border rounded-2xl p-6 hover:border-blue-200 transition-colors block">
-                  <div className="flex items-start justify-between gap-4 mb-3">
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1 flex-wrap">
-                        <h3 className="font-semibold text-aing-text">{post.title}</h3>
-                        <span
-                          className={`text-xs px-2 py-0.5 rounded-full border font-medium ${
-                            post.status === 'open'
-                              ? 'bg-green-100 text-green-700 border-green-200'
-                              : 'bg-gray-100 text-gray-500 border-gray-200'
-                          }`}
-                        >
-                          {post.status === 'open' ? '모집중' : '마감'}
-                        </span>
-                      </div>
-                      <p className="text-aing-muted text-sm leading-relaxed line-clamp-2">{post.description}</p>
-                    </div>
-                    <button
-                      onClick={() => { setDeleteId(post.id); setDeletePassword(''); setDeleteError(''); }}
-                      className="text-aing-muted hover:text-red-500 transition-colors shrink-0"
-                      title="삭제"
-                    >
-                      <Trash2 size={14} />
-                    </button>
-                  </div>
+            filtered.map((post, i) => {
+              const acceptedApps = (post.applications || []).filter(a => a.status === 'accepted');
+              const acceptedCount = getAcceptedCount(post);
+              const filled = post.current_members + acceptedCount;
+              const authorName = post.author_name || post.author?.name || '익명';
+              const myPost = isMyPost(post);
 
-                  {/* Skills */}
-                  {post.required_skills && post.required_skills.length > 0 && (
-                    <div className="flex flex-wrap gap-1.5 mb-3">
-                      {post.required_skills.map((s, idx) => (
-                        <span key={idx} className="text-xs px-2 py-0.5 rounded-full bg-purple-50 text-purple-600 border border-purple-200">
-                          {s}
-                        </span>
-                      ))}
-                    </div>
-                  )}
-
-                  <div className="flex items-center gap-4 text-xs text-aing-muted flex-wrap">
-                    <span className="flex items-center gap-1">
-                      <Users size={11} />
-                      {post.current_members} / {post.max_members}명
-                    </span>
-                    {(post.author_name || post.author) && (
-                      <span>작성자: {post.author_name || post.author?.name}</span>
-                    )}
-                    {post.contact && (
-                      <span className="flex items-center gap-1">
-                        {post.contact.includes('kakao') ? (
-                          <MessageCircle size={11} />
-                        ) : (
-                          <Mail size={11} />
-                        )}
-                        {post.contact.startsWith('http') ? (
-                          <a href={post.contact} target="_blank" rel="noreferrer" className="hover:text-aing-text transition-colors">
-                            연락처
-                          </a>
-                        ) : (
-                          <span>{post.contact}</span>
-                        )}
+              return (
+                <AnimatedSection key={post.id} delay={i * 50}>
+                  <div className="bg-aing-card border border-aing-border rounded-2xl p-6 hover:border-blue-200 transition-colors">
+                    {/* Top row: badges */}
+                    <div className="flex items-center gap-2 mb-2 flex-wrap">
+                      <span
+                        className={`text-xs px-2 py-0.5 rounded-full border font-medium ${
+                          post.status === 'open'
+                            ? 'bg-green-100 text-green-700 border-green-200'
+                            : 'bg-gray-100 text-gray-500 border-gray-200'
+                        }`}
+                      >
+                        {post.status === 'open' ? '모집중' : '마감'}
                       </span>
+                      {myPost && (
+                        <span className="text-xs px-2 py-0.5 rounded-full bg-yellow-100 text-yellow-700 border border-yellow-200 font-medium">
+                          내 글
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Title */}
+                    <Link to={`/team/${post.id}`}>
+                      <h3 className="font-semibold text-aing-text hover:text-aing-blue transition-colors mb-1 cursor-pointer">
+                        {post.title}
+                      </h3>
+                    </Link>
+                    <p className="text-aing-muted text-sm leading-relaxed line-clamp-2 mb-3">{post.description}</p>
+
+                    {/* Skills */}
+                    {post.required_skills && post.required_skills.length > 0 && (
+                      <div className="flex flex-wrap gap-1.5 mb-3">
+                        {post.required_skills.map((s, idx) => (
+                          <span key={idx} className="text-xs px-2 py-0.5 rounded-full bg-purple-50 text-purple-600 border border-purple-200">
+                            {s}
+                          </span>
+                        ))}
+                      </div>
                     )}
-                    <span className="flex items-center gap-1 ml-auto">
-                      <Calendar size={11} />
-                      {formatDate(post.created_at)}
-                    </span>
+
+                    {/* Members visualization */}
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="flex items-center gap-1">
+                        {Array.from({ length: post.max_members }).map((_, idx) => {
+                          const app = acceptedApps[idx - 1];
+                          if (idx === 0) {
+                            // Author slot (always filled)
+                            return (
+                              <div key={idx} className="w-7 h-7 rounded-full bg-aing-blue border-2 border-aing-blue flex items-center justify-center text-white text-xs font-semibold" title={authorName}>
+                                {authorName[0]}
+                              </div>
+                            );
+                          } else if (app) {
+                            return (
+                              <div key={idx} className="w-7 h-7 rounded-full bg-green-500 border-2 border-green-500 flex items-center justify-center text-white text-xs font-semibold" title={app.applicant_name}>
+                                {app.applicant_name[0]}
+                              </div>
+                            );
+                          } else {
+                            return (
+                              <div key={idx} className="w-7 h-7 rounded-full bg-white border-2 border-aing-border flex items-center justify-center">
+                                <span className="text-aing-muted text-xs">○</span>
+                              </div>
+                            );
+                          }
+                        })}
+                      </div>
+                      <span className="text-xs text-aing-muted">
+                        {Math.min(filled, post.max_members)}/{post.max_members}명
+                      </span>
+                      <span className="text-xs text-aing-muted ml-auto">작성자: {authorName}</span>
+                    </div>
+
+                    {/* Actions row */}
+                    <div className="flex items-center gap-3 flex-wrap">
+                      <button
+                        onClick={() => handleApply(post.id)}
+                        disabled={post.status === 'closed'}
+                        className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full bg-aing-blue text-white hover:opacity-90 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed font-medium"
+                      >
+                        <Users size={11} />
+                        참여 희망
+                      </button>
+                      <Link
+                        to={`/team/${post.id}`}
+                        className="flex items-center gap-1 text-xs text-aing-blue hover:opacity-80 transition-opacity font-medium"
+                      >
+                        자세히 보기 →
+                      </Link>
+                      <span className="flex items-center gap-1 text-xs text-aing-muted ml-auto">
+                        <Calendar size={11} />
+                        {formatDate(post.created_at)}
+                      </span>
+                    </div>
                   </div>
-                </Link>
-              </AnimatedSection>
-            ))
+                </AnimatedSection>
+              );
+            })
           )}
         </div>
       </section>
@@ -401,32 +482,48 @@ const TeamPage: React.FC = () => {
         </div>
       )}
 
-      {/* Delete Confirm Modal */}
-      {deleteId && (
+      {/* Apply Modal (비로그인) */}
+      {showApplyModal && (
         <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
           <div className="bg-aing-card border border-aing-border rounded-2xl p-6 w-full max-w-sm">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="font-bold text-aing-text">게시물 삭제</h2>
-              <button onClick={() => setDeleteId(null)} className="text-aing-muted hover:text-aing-text">
+              <h2 className="font-bold text-aing-text">참여 희망 신청</h2>
+              <button onClick={() => setShowApplyModal(false)} className="text-aing-muted hover:text-aing-text">
                 <X size={18} />
               </button>
             </div>
-            <p className="text-aing-muted text-sm mb-4">본인 확인을 위해 비밀번호를 입력해주세요.</p>
-            <input
-              type="password"
-              value={deletePassword}
-              onChange={(e) => setDeletePassword(e.target.value)}
-              placeholder="비밀번호"
-              className="w-full border border-aing-border rounded-xl px-3 py-2 text-sm text-aing-text bg-aing-bg outline-none focus:border-red-400 mb-3"
-            />
-            {deleteError && <p className="text-red-500 text-xs mb-3">{deleteError}</p>}
-            <button
-              onClick={handleDelete}
-              disabled={deleting}
-              className="w-full bg-red-500 text-white rounded-xl py-2.5 text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-50"
-            >
-              {deleting ? '삭제 중...' : '삭제하기'}
-            </button>
+            <p className="text-aing-muted text-xs mb-4">멤버 확인을 위해 이름과 비밀번호를 입력해주세요.</p>
+            <div className="space-y-3">
+              <input
+                type="text"
+                value={applyName}
+                onChange={(e) => setApplyName(e.target.value)}
+                placeholder="이름"
+                className="w-full border border-aing-border rounded-xl px-3 py-2 text-sm text-aing-text bg-aing-bg outline-none focus:border-aing-blue"
+              />
+              <input
+                type="password"
+                value={applyPassword}
+                onChange={(e) => setApplyPassword(e.target.value)}
+                placeholder="비밀번호"
+                className="w-full border border-aing-border rounded-xl px-3 py-2 text-sm text-aing-text bg-aing-bg outline-none focus:border-aing-blue"
+              />
+              <textarea
+                value={applyMessage}
+                onChange={(e) => setApplyMessage(e.target.value)}
+                placeholder="신청 메시지 (선택)"
+                rows={2}
+                className="w-full border border-aing-border rounded-xl px-3 py-2 text-sm text-aing-text bg-aing-bg outline-none focus:border-aing-blue resize-none"
+              />
+              {applyError && <p className="text-red-500 text-xs">{applyError}</p>}
+              <button
+                onClick={handleApplyModalSubmit}
+                disabled={applySubmitting}
+                className="w-full bg-aing-blue text-white rounded-xl py-2.5 text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-50"
+              >
+                {applySubmitting ? '신청 중...' : '신청하기'}
+              </button>
+            </div>
           </div>
         </div>
       )}

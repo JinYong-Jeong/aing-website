@@ -84,6 +84,7 @@ const Navbar: React.FC = () => {
     { label: 'Posts', to: '/admin/posts' },
     { label: 'Members', to: '/admin/members' },
     { label: 'Projects', to: '/admin/projects' },
+    { label: 'Team', to: '/admin/team' },
     { label: 'Activities', to: '/admin/activities' },
     { label: 'Comments', to: '/admin/comments' },
     { label: 'Messages', to: '/admin/messages' },
