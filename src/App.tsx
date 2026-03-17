@@ -7,6 +7,9 @@ import HomePage from './pages/HomePage';
 import AboutPage from './pages/AboutPage';
 import ActivitiesPage from './pages/ActivitiesPage';
 import MembersPage from './pages/MembersPage';
+import MemberDetailPage from './pages/MemberDetailPage';
+import MemberProfilePage from './pages/MemberProfilePage';
+import TeamPage from './pages/TeamPage';
 import BoardPage from './pages/BoardPage';
 import PostDetailPage from './pages/PostDetailPage';
 import ContactPage from './pages/ContactPage';
@@ -32,6 +35,9 @@ function App() {
               <Route path="/about" element={<AboutPage />} />
               <Route path="/activities" element={<ActivitiesPage />} />
               <Route path="/members" element={<MembersPage />} />
+              <Route path="/members/:id" element={<MemberDetailPage />} />
+              <Route path="/members/:id/edit" element={<MemberProfilePage />} />
+              <Route path="/team" element={<TeamPage />} />
               <Route path="/board" element={<BoardPage />} />
               <Route path="/board/:id" element={<PostDetailPage />} />
               <Route path="/contact" element={<ContactPage />} />

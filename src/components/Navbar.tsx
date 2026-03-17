@@ -36,6 +36,7 @@ const Navbar: React.FC = () => {
     { label: 'About', to: '/about' },
     { label: 'Activities', to: '/activities' },
     { label: 'Members', to: '/members' },
+    { label: 'Team', to: '/team' },
     { label: 'Board', to: '/board' },
     { label: 'Contact', to: '/contact' },
   ];
@@ -60,9 +61,6 @@ const Navbar: React.FC = () => {
         {/* Logo */}
         <Link to="/" className="flex items-center gap-2 group shrink-0">
           <img src="/logo.png" alt="A.ing" className="h-10 w-auto opacity-90 group-hover:opacity-100 transition-opacity" />
-          <span className="text-xs font-mono text-aing-muted group-hover:text-aing-blue transition-colors leading-none">
-            @ Gachon
-          </span>
         </Link>
 
         {/* Desktop Nav */}

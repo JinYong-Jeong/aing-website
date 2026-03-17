@@ -16,6 +16,29 @@ export type Member = {
   bio?: string;
   is_active: boolean;
   created_at: string;
+  password_hash?: string;
+  interests?: string[];
+  workload?: number;
+  status?: 'active' | 'busy' | 'open';
+  skills?: string[];
+  looking_for_team?: boolean;
+  project_idea?: string;
+  contact_kakao?: string;
+  contact_email?: string;
+};
+
+export type TeamPost = {
+  id: string;
+  author_id: string | null;
+  title: string;
+  description: string;
+  required_skills: string[];
+  max_members: number;
+  current_members: number;
+  status: 'open' | 'closed';
+  contact: string | null;
+  created_at: string;
+  author?: Member;
 };
 
 export type Post = {

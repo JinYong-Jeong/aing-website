@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { Github, Users } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Github, Users, Pencil } from 'lucide-react';
 import { supabase, Member } from '../lib/supabase';
 import AnimatedSection from '../components/AnimatedSection';
 
@@ -113,59 +114,69 @@ const MembersPage: React.FC = () => {
             <div className="grid md:grid-cols-3 lg:grid-cols-4 gap-4">
               {filtered.map((member, i) => (
                 <AnimatedSection key={member.id} delay={i * 50}>
-                  <div className="card group hover:border-blue-200">
-                    {/* Avatar */}
-                    <div className="mb-4">
-                      {member.avatar_url ? (
-                        <img
-                          src={member.avatar_url}
-                          alt={member.name}
-                          className="w-16 h-16 rounded-2xl object-cover"
-                        />
-                      ) : (
-                        <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-100 to-purple-100 border border-aing-border flex items-center justify-center">
-                          <span className="text-aing-text font-semibold text-lg">
-                            {getInitials(member.name)}
-                          </span>
-                        </div>
+                  <div className="card group hover:border-blue-200 flex flex-col">
+                    <Link to={`/members/${member.id}`} className="flex-1 block">
+                      {/* Avatar */}
+                      <div className="mb-4">
+                        {member.avatar_url ? (
+                          <img
+                            src={member.avatar_url}
+                            alt={member.name}
+                            className="w-16 h-16 rounded-2xl object-cover"
+                          />
+                        ) : (
+                          <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-100 to-purple-100 border border-aing-border flex items-center justify-center">
+                            <span className="text-aing-text font-semibold text-lg">
+                              {getInitials(member.name)}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Info */}
+                      <div className="mb-3">
+                        <h3 className="font-semibold text-aing-text text-sm">{member.name}</h3>
+                        <p className="text-aing-muted text-xs mt-0.5">{member.role}</p>
+                      </div>
+
+                      {/* Tags */}
+                      <div className="flex flex-wrap gap-2 mb-4">
+                        <span className={`text-xs px-2 py-0.5 rounded-full border font-mono ${TRACK_COLORS[member.track]}`}>
+                          {TRACK_LABELS[member.track]}
+                        </span>
+                        <span className="text-xs px-2 py-0.5 rounded-full border border-aing-border text-aing-muted font-mono">
+                          {member.semester}
+                        </span>
+                      </div>
+
+                      {/* Bio */}
+                      {member.bio && (
+                        <p className="text-aing-muted text-xs leading-relaxed mb-3 line-clamp-2">
+                          {member.bio}
+                        </p>
                       )}
-                    </div>
 
-                    {/* Info */}
-                    <div className="mb-3">
-                      <h3 className="font-semibold text-aing-text text-sm">{member.name}</h3>
-                      <p className="text-aing-muted text-xs mt-0.5">{member.role}</p>
-                    </div>
-
-                    {/* Tags */}
-                    <div className="flex flex-wrap gap-2 mb-4">
-                      <span className={`text-xs px-2 py-0.5 rounded-full border font-mono ${TRACK_COLORS[member.track]}`}>
-                        {TRACK_LABELS[member.track]}
-                      </span>
-                      <span className="text-xs px-2 py-0.5 rounded-full border border-aing-border text-aing-muted font-mono">
-                        {member.semester}
-                      </span>
-                    </div>
-
-                    {/* Bio */}
-                    {member.bio && (
-                      <p className="text-aing-muted text-xs leading-relaxed mb-3 line-clamp-2">
-                        {member.bio}
-                      </p>
-                    )}
-
-                    {/* Links */}
-                    {member.github && (
-                      <a
-                        href={member.github}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="flex items-center gap-1 text-xs text-aing-muted hover:text-aing-text transition-colors"
+                      {/* Links */}
+                      {member.github && (
+                        <span
+                          className="flex items-center gap-1 text-xs text-aing-muted"
+                        >
+                          <Github size={12} />
+                          GitHub
+                        </span>
+                      )}
+                    </Link>
+                    {/* Profile Edit Link */}
+                    <div className="mt-3 pt-3 border-t border-aing-border flex justify-end">
+                      <Link
+                        to={`/members/${member.id}/edit`}
+                        className="flex items-center gap-1 text-xs text-aing-muted hover:text-aing-blue transition-colors"
+                        onClick={(e) => e.stopPropagation()}
                       >
-                        <Github size={12} />
-                        GitHub
-                      </a>
-                    )}
+                        <Pencil size={10} />
+                        프로필 수정
+                      </Link>
+                    </div>
                   </div>
                 </AnimatedSection>
               ))}
