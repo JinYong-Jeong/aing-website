@@ -70,7 +70,6 @@ const PostDetailPage: React.FC = () => {
           .from('comments')
           .select('*')
           .eq('post_id', id)
-          .eq('is_approved', true)
           .order('created_at', { ascending: true });
         setComments(cmts || []);
       } catch {
@@ -92,11 +91,22 @@ const PostDetailPage: React.FC = () => {
         author_name: commentForm.name,
         author_email: commentForm.email,
         content: commentForm.content,
-        is_approved: false,
+        is_approved: true,
       });
       if (!error) {
-        setSubmitted(true);
+        const newComment = {
+          id: Date.now().toString(),
+          post_id: id!,
+          author_name: commentForm.name,
+          author_email: commentForm.email,
+          content: commentForm.content,
+          is_approved: true,
+          created_at: new Date().toISOString(),
+        };
+        setComments(prev => [...prev, newComment]);
         setCommentForm({ name: '', email: '', content: '' });
+        setSubmitted(true);
+        setTimeout(() => setSubmitted(false), 3000);
       }
     } catch {}
     setSubmitting(false);
@@ -237,7 +247,7 @@ const PostDetailPage: React.FC = () => {
             <h3 className="text-sm font-semibold text-aing-text mb-4">댓글 작성</h3>
             {submitted ? (
               <p className="text-aing-muted text-sm py-4 text-center">
-                댓글이 등록되었습니다. 관리자 승인 후 표시됩니다.
+                댓글이 등록되었습니다.
               </p>
             ) : (
               <form onSubmit={handleComment} className="space-y-3">
