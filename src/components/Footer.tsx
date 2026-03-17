@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Github, Mail, MapPin } from 'lucide-react';
+import { Github, MapPin, Instagram } from 'lucide-react';
 
 const Footer: React.FC = () => {
   return (
@@ -51,11 +51,13 @@ const Footer: React.FC = () => {
             <h4 className="text-sm font-semibold text-aing-text">Contact</h4>
             <div className="space-y-3">
               <a
-                href="mailto:gachon.aing@gmail.com"
+                href="https://www.instagram.com/aing_gc/"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="flex items-center gap-2 text-aing-muted hover:text-aing-text text-sm transition-colors"
               >
-                <Mail size={14} />
-                gachon.aing@gmail.com
+                <Instagram size={14} />
+                @aing_gc
               </a>
               <a
                 href="https://github.com/aing-gachon"

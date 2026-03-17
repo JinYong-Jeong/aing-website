@@ -361,14 +361,18 @@ const TeamPage: React.FC = () => {
 
                     {/* Actions row */}
                     <div className="flex items-center gap-3 flex-wrap">
-                      <button
-                        onClick={() => handleApply(post.id)}
-                        disabled={post.status === 'closed'}
-                        className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full bg-aing-blue text-white hover:opacity-90 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed font-medium"
-                      >
-                        <Users size={11} />
-                        참여 희망
-                      </button>
+                      {!myPost ? (
+                        <button
+                          onClick={() => handleApply(post.id)}
+                          disabled={post.status === 'closed'}
+                          className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full bg-aing-blue text-white hover:opacity-90 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed font-medium"
+                        >
+                          <Users size={11} />
+                          참여 희망
+                        </button>
+                      ) : (
+                        <span className="text-xs text-aing-muted">내가 작성한 글입니다</span>
+                      )}
                       <Link
                         to={`/team/${post.id}`}
                         className="flex items-center gap-1 text-xs text-aing-blue hover:opacity-80 transition-opacity font-medium"

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Mail, MapPin, Github, Send, CheckCircle } from 'lucide-react';
+import { Mail, MapPin, Github, Send, CheckCircle, Instagram } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import AnimatedSection from '../components/AnimatedSection';
 
@@ -59,16 +59,18 @@ const ContactPage: React.FC = () => {
                   <h2 className="text-xl font-semibold text-aing-text mb-6">Contact Info</h2>
                   <div className="space-y-4">
                     <a
-                      href="mailto:gachon.aing@gmail.com"
+                      href="https://www.instagram.com/aing_gc/"
+                      target="_blank"
+                      rel="noopener noreferrer"
                       className="flex items-center gap-4 group"
                     >
                       <div className="p-3 rounded-xl bg-aing-bg-alt border border-aing-border group-hover:border-blue-200 transition-colors">
-                        <Mail size={18} className="text-aing-blue" />
+                        <Instagram size={18} className="text-aing-blue" />
                       </div>
                       <div>
-                        <p className="text-xs text-aing-muted mb-0.5">Email</p>
+                        <p className="text-xs text-aing-muted mb-0.5">Instagram</p>
                         <p className="text-sm text-aing-text group-hover:text-aing-blue transition-colors">
-                          gachon.aing@gmail.com
+                          @aing_gc
                         </p>
                       </div>
                     </a>

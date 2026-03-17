@@ -261,6 +261,15 @@ const TeamPostDetailPage: React.FC = () => {
     setShowAuthorAuth(false);
   };
 
+  const handleRemoveApplicant = async (applicationId: string) => {
+    if (!window.confirm('이 참여자를 제외하시겠습니까?')) return;
+    await supabase.from('team_applications').update({ status: 'rejected' }).eq('id', applicationId);
+    if (post) {
+      await supabase.from('team_posts').update({ current_members: Math.max(0, (post.current_members || 1) - 1) }).eq('id', post.id);
+    }
+    fetchPost();
+  };
+
   const handleAccept = async (appId: string) => {
     await supabase.from('team_applications').update({ status: 'accepted' }).eq('id', appId);
     // increment current_members
@@ -415,6 +424,15 @@ const TeamPostDetailPage: React.FC = () => {
                         {app.applicant_name[0]}
                       </div>
                       <span className="text-sm text-aing-text font-medium">{app.applicant_name}</span>
+                      {canManage && (
+                        <button
+                          onClick={() => handleRemoveApplicant(app.id)}
+                          className="ml-1 text-red-400 hover:text-red-600 transition-colors"
+                          title="제외"
+                        >
+                          <X size={14} />
+                        </button>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -504,14 +522,19 @@ const TeamPostDetailPage: React.FC = () => {
 
             {/* Action buttons */}
             <div className="pt-4 border-t border-aing-border flex items-center gap-3 flex-wrap">
-              <button
-                onClick={handleApply}
-                disabled={post.status === 'closed'}
-                className="flex items-center gap-1.5 bg-aing-blue text-white px-4 py-2 rounded-xl text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed"
-              >
-                <Users size={14} />
-                참여 희망하기
-              </button>
+              {!isAuthor && (
+                <button
+                  onClick={handleApply}
+                  disabled={post.status === 'closed'}
+                  className="flex items-center gap-1.5 bg-aing-blue text-white px-4 py-2 rounded-xl text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  <Users size={14} />
+                  참여 희망하기
+                </button>
+              )}
+              {isAuthor && (
+                <span className="text-xs text-aing-muted">내가 작성한 글입니다</span>
+              )}
 
               {(isAdminUser || isAuthor) && (
                 <button

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
   Users, ChevronDown, ChevronUp, CheckCircle, XCircle,
-  Trash2, ArrowLeft, RefreshCw
+  Trash2, ArrowLeft, RefreshCw, X
 } from 'lucide-react';
 import { supabase, TeamPost, TeamApplication } from '../../lib/supabase';
 import { useAuth } from '../../context/AuthContext';
@@ -59,6 +59,16 @@ const AdminTeamPosts: React.FC = () => {
 
   const handleReject = async (appId: string) => {
     await supabase.from('team_applications').update({ status: 'rejected' }).eq('id', appId);
+    fetchPosts();
+  };
+
+  const handleRemoveApplicant = async (applicationId: string, postId: string) => {
+    if (!window.confirm('이 참여자를 제외하시겠습니까?')) return;
+    await supabase.from('team_applications').update({ status: 'rejected' }).eq('id', applicationId);
+    const post = posts.find(p => p.id === postId);
+    if (post) {
+      await supabase.from('team_posts').update({ current_members: Math.max(0, (post.current_members || 1) - 1) }).eq('id', postId);
+    }
     fetchPosts();
   };
 
@@ -239,6 +249,15 @@ const AdminTeamPosts: React.FC = () => {
                                     <XCircle size={16} />
                                   </button>
                                 </div>
+                              )}
+                              {app.status === 'accepted' && (
+                                <button
+                                  onClick={() => handleRemoveApplicant(app.id, post.id)}
+                                  className="text-red-400 hover:text-red-600 transition-colors shrink-0"
+                                  title="제외"
+                                >
+                                  <X size={14} />
+                                </button>
                               )}
                             </div>
                           ))}
