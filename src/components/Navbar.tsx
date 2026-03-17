@@ -1,13 +1,15 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Menu, X, LogIn, LogOut } from 'lucide-react';
+import { Menu, X, LogIn, LogOut, ChevronDown } from 'lucide-react';
 import { useAdmin } from '../context/AdminContext';
 
 const Navbar: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [adminMenuOpen, setAdminMenuOpen] = useState(false);
   const { isAdmin, logout } = useAdmin();
   const location = useLocation();
+  const adminMenuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20);
@@ -17,7 +19,18 @@ const Navbar: React.FC = () => {
 
   useEffect(() => {
     setIsOpen(false);
+    setAdminMenuOpen(false);
   }, [location]);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (adminMenuRef.current && !adminMenuRef.current.contains(e.target as Node)) {
+        setAdminMenuOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const navItems = [
     { label: 'About', to: '/about' },
@@ -25,6 +38,16 @@ const Navbar: React.FC = () => {
     { label: 'Members', to: '/members' },
     { label: 'Board', to: '/board' },
     { label: 'Contact', to: '/contact' },
+  ];
+
+  const adminMenuItems = [
+    { label: 'Dashboard', to: '/admin' },
+    { label: 'Posts', to: '/admin/posts' },
+    { label: 'Members', to: '/admin/members' },
+    { label: 'Activities', to: '/admin/activities' },
+    { label: 'Comments', to: '/admin/comments' },
+    { label: 'Messages', to: '/admin/messages' },
+    { label: 'Settings', to: '/admin/settings' },
   ];
 
   const isActive = (path: string) => location.pathname === path;
@@ -35,9 +58,9 @@ const Navbar: React.FC = () => {
     }`}>
       <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
         {/* Logo */}
-        <Link to="/" className="flex items-center gap-3 group">
+        <Link to="/" className="flex items-center gap-2 group shrink-0">
           <img src="/logo.png" alt="A.ing" className="h-10 w-auto opacity-90 group-hover:opacity-100 transition-opacity" />
-          <span className="text-sm font-mono text-aing-muted group-hover:text-aing-blue transition-colors">
+          <span className="text-xs font-mono text-aing-muted group-hover:text-aing-blue transition-colors leading-none">
             @ Gachon
           </span>
         </Link>
@@ -58,12 +81,37 @@ const Navbar: React.FC = () => {
         {/* Right side */}
         <div className="hidden md:flex items-center gap-4">
           {isAdmin ? (
-            <>
-              <Link to="/admin" className="nav-link text-aing-blue">Admin</Link>
-              <button onClick={logout} className="nav-link flex items-center gap-1">
-                <LogOut size={14} />
+            <div className="relative" ref={adminMenuRef}>
+              <button
+                onClick={() => setAdminMenuOpen(!adminMenuOpen)}
+                className="nav-link text-aing-blue flex items-center gap-1"
+              >
+                Admin
+                <ChevronDown size={12} className={`transition-transform ${adminMenuOpen ? 'rotate-180' : ''}`} />
               </button>
-            </>
+              {adminMenuOpen && (
+                <div className="absolute right-0 top-full mt-2 w-44 glass border border-aing-border rounded-xl shadow-xl py-1 z-50">
+                  {adminMenuItems.map(item => (
+                    <Link
+                      key={item.to}
+                      to={item.to}
+                      className="block px-4 py-2 text-xs text-aing-muted hover:text-aing-text hover:bg-white/5 transition-colors"
+                    >
+                      {item.label}
+                    </Link>
+                  ))}
+                  <div className="border-t border-aing-border mt-1 pt-1">
+                    <button
+                      onClick={logout}
+                      className="w-full text-left px-4 py-2 text-xs text-aing-muted hover:text-red-400 hover:bg-white/5 transition-colors flex items-center gap-2"
+                    >
+                      <LogOut size={12} />
+                      로그아웃
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
           ) : (
             <Link to="/admin/login" className="nav-link flex items-center gap-1 hover:text-aing-text">
               <LogIn size={14} />
@@ -101,6 +149,19 @@ const Navbar: React.FC = () => {
               {item.label}
             </Link>
           ))}
+          {isAdmin && (
+            <div className="pt-2 border-t border-aing-border flex flex-col gap-2">
+              {adminMenuItems.map(item => (
+                <Link
+                  key={item.to}
+                  to={item.to}
+                  className="text-xs text-aing-blue hover:text-aing-text transition-colors"
+                >
+                  {item.label}
+                </Link>
+              ))}
+            </div>
+          )}
           <div className="pt-2 border-t border-aing-border">
             <Link to="/contact" className="btn-primary text-sm inline-block text-center w-full">
               Join Us

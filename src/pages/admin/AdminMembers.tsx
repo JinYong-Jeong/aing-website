@@ -16,7 +16,7 @@ const AdminMembers: React.FC = () => {
   const [members, setMembers] = useState<Member[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAdd, setShowAdd] = useState(false);
-  const [form, setForm] = useState({ name: '', role: '', track: 'junior' as Member['track'], semester: '2026 Spring', github: '', bio: '' });
+  const [form, setForm] = useState({ name: '', role: '', track: 'junior' as Member['track'], semester: '2026 Spring', github: '', bio: '', avatar_url: '' });
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -52,7 +52,7 @@ const AdminMembers: React.FC = () => {
     });
     if (!error) {
       setShowAdd(false);
-      setForm({ name: '', role: '', track: 'junior', semester: '2026 Spring', github: '', bio: '' });
+      setForm({ name: '', role: '', track: 'junior', semester: '2026 Spring', github: '', bio: '', avatar_url: '' });
       fetchMembers();
     }
     setSaving(false);
@@ -98,6 +98,8 @@ const AdminMembers: React.FC = () => {
               className="input-field" placeholder="GitHub URL" />
             <input value={form.bio} onChange={e => setForm(p => ({ ...p, bio: e.target.value }))}
               className="input-field" placeholder="한 줄 소개" />
+            <input value={form.avatar_url} onChange={e => setForm(p => ({ ...p, avatar_url: e.target.value }))}
+              className="input-field" placeholder="아바타 이미지 URL" />
             <div className="sm:col-span-2 flex gap-3">
               <button type="submit" disabled={saving} className="btn-primary text-sm">
                 {saving ? '추가 중...' : '추가'}

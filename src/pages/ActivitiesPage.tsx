@@ -1,35 +1,58 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 
 import { Calendar, BookOpen, Code2, Users2, ArrowRight, Github } from 'lucide-react';
 import AnimatedSection from '../components/AnimatedSection';
+import { supabase } from '../lib/supabase';
 
-const activities = [
+type Activity = {
+  id: string;
+  semester: string;
+  title: string;
+  type: string;
+  description: string;
+  tags: string[];
+  github: string;
+  status: string;
+};
+
+type GroupedActivities = {
+  semester: string;
+  items: Activity[];
+};
+
+const hardcodedFallback: GroupedActivities[] = [
   {
     semester: '2026 Spring',
     items: [
       {
+        id: '1',
         type: 'study',
         title: 'ResNet Study',
-        desc: 'ResNet-50 논문 분석 및 PyTorch 구현',
+        description: 'ResNet-50 논문 분석 및 PyTorch 구현',
         tags: ['CV', 'ResNet', 'PyTorch'],
         github: 'https://github.com/aing-gachon/26-Spring-ResNet-Study',
         status: 'ongoing',
+        semester: '2026 Spring',
       },
       {
+        id: '2',
         type: 'study',
         title: 'Transformer Study',
-        desc: 'Attention is All You Need 구현',
+        description: 'Attention is All You Need 구현',
         tags: ['NLP', 'Transformer', 'Attention'],
         github: 'https://github.com/aing-gachon/26-Spring-Transformer-Study',
         status: 'ongoing',
+        semester: '2026 Spring',
       },
       {
+        id: '3',
         type: 'project',
         title: 'Senior Session',
-        desc: 'CV/NLP/RL 팀별 SOTA 모델 커스터마이징',
+        description: 'CV/NLP/RL 팀별 SOTA 모델 커스터마이징',
         tags: ['Senior', 'Project', 'Research'],
         github: 'https://github.com/aing-gachon/26-Spring-Senior-Session',
         status: 'ongoing',
+        semester: '2026 Spring',
       },
     ],
   },
@@ -47,7 +70,33 @@ const STATUS_COLORS: Record<string, string> = {
   upcoming: 'text-yellow-500',
 };
 
+function groupBySemester(data: Activity[]): GroupedActivities[] {
+  const map: Record<string, Activity[]> = {};
+  data.forEach(a => {
+    if (!map[a.semester]) map[a.semester] = [];
+    map[a.semester].push(a);
+  });
+  return Object.entries(map).map(([semester, items]) => ({ semester, items }));
+}
+
 const ActivitiesPage: React.FC = () => {
+  const [activities, setActivities] = useState<GroupedActivities[]>(hardcodedFallback);
+
+  useEffect(() => {
+    const loadActivities = async () => {
+      const { data } = await supabase
+        .from('activities')
+        .select('*')
+        .order('created_at', { ascending: false });
+      if (data && data.length > 0) {
+        setActivities(groupBySemester(data as Activity[]));
+      } else {
+        setActivities(hardcodedFallback);
+      }
+    };
+    loadActivities();
+  }, []);
+
   return (
     <div className="min-h-screen bg-aing-bg pt-20">
       {/* Header */}
@@ -104,25 +153,25 @@ const ActivitiesPage: React.FC = () => {
 
               <div className="grid md:grid-cols-3 gap-6">
                 {semester.items.map((item, i) => (
-                  <AnimatedSection key={item.title} delay={i * 150}>
+                  <AnimatedSection key={item.id || item.title} delay={i * 150}>
                     <div className="card group h-full flex flex-col">
                       {/* Header */}
                       <div className="flex items-start justify-between mb-4">
-                        <span className={`text-xs px-2 py-0.5 rounded-full border font-mono ${TYPE_COLORS[item.type]}`}>
+                        <span className={`text-xs px-2 py-0.5 rounded-full border font-mono ${TYPE_COLORS[item.type] || ''}`}>
                           {item.type}
                         </span>
-                        <span className={`text-xs font-mono flex items-center gap-1 ${STATUS_COLORS[item.status]}`}>
+                        <span className={`text-xs font-mono flex items-center gap-1 ${STATUS_COLORS[item.status] || 'text-aing-muted'}`}>
                           <span className="w-1.5 h-1.5 rounded-full bg-current" />
                           {item.status}
                         </span>
                       </div>
 
                       <h3 className="text-base font-semibold text-aing-text mb-2">{item.title}</h3>
-                      <p className="text-aing-muted text-sm mb-4 leading-relaxed flex-1">{item.desc}</p>
+                      <p className="text-aing-muted text-sm mb-4 leading-relaxed flex-1">{item.description}</p>
 
                       {/* Tags */}
                       <div className="flex flex-wrap gap-2 mb-4">
-                        {item.tags.map(tag => (
+                        {(item.tags || []).map(tag => (
                           <span key={tag} className="tag">{tag}</span>
                         ))}
                       </div>

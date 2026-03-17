@@ -17,6 +17,8 @@ import AdminPostEditor from './pages/admin/AdminPostEditor';
 import AdminMembers from './pages/admin/AdminMembers';
 import AdminMessages from './pages/admin/AdminMessages';
 import AdminComments from './pages/admin/AdminComments';
+import AdminActivities from './pages/admin/AdminActivities';
+import AdminSettings from './pages/admin/AdminSettings';
 
 function App() {
   return (
@@ -41,6 +43,8 @@ function App() {
               <Route path="/admin/members" element={<AdminMembers />} />
               <Route path="/admin/comments" element={<AdminComments />} />
               <Route path="/admin/messages" element={<AdminMessages />} />
+              <Route path="/admin/activities" element={<AdminActivities />} />
+              <Route path="/admin/settings" element={<AdminSettings />} />
               <Route path="*" element={
                 <div className="min-h-screen flex items-center justify-center">
                   <div className="text-center">

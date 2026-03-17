@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
   Users, MessageSquare, Mail, PlusCircle, CheckCircle,
-  XCircle, Eye, LogOut, TrendingUp, BarChart2
+  XCircle, Eye, LogOut, TrendingUp, BarChart2, BookOpen
 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useAdmin } from '../../context/AdminContext';
@@ -11,7 +11,7 @@ import AnimatedSection from '../../components/AnimatedSection';
 const AdminDashboard: React.FC = () => {
   const { isAdmin, logout } = useAdmin();
   const navigate = useNavigate();
-  const [stats, setStats] = useState({ members: 0, posts: 0, comments: 0, messages: 0 });
+  const [stats, setStats] = useState({ members: 0, posts: 0, comments: 0, messages: 0, activities: 0 });
   const [pendingComments, setPendingComments] = useState<any[]>([]);
   const [unreadMessages, setUnreadMessages] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -28,11 +28,13 @@ const AdminDashboard: React.FC = () => {
           supabase.from('comments').select('*').eq('is_approved', false).order('created_at', { ascending: false }).limit(5),
           supabase.from('contact_messages').select('*').eq('is_read', false).order('created_at', { ascending: false }).limit(5),
         ]);
+        const act = await supabase.from('activities').select('*', { count: 'exact', head: true });
         setStats({
           members: m.count || 0,
           posts: p.count || 0,
           comments: c.count || 0,
           messages: msg.count || 0,
+          activities: act.count || 0,
         });
         setPendingComments(pc.data || []);
         setUnreadMessages(um.data || []);
@@ -80,12 +82,13 @@ const AdminDashboard: React.FC = () => {
         </AnimatedSection>
 
         {/* Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-10">
           {[
             { label: 'Members', value: stats.members, icon: Users, color: 'text-aing-blue', to: '/admin/members' },
             { label: 'Posts', value: stats.posts, icon: MessageSquare, color: 'text-purple-500', to: '/admin/posts' },
             { label: 'Comments', value: stats.comments, icon: BarChart2, color: 'text-green-500', to: '/admin/comments' },
             { label: 'Messages', value: stats.messages, icon: Mail, color: 'text-orange-500', to: '/admin/messages' },
+            { label: 'Activities', value: stats.activities, icon: BookOpen, color: 'text-teal-500', to: '/admin/activities' },
           ].map((s, i) => (
             <AnimatedSection key={s.label} delay={i * 80}>
               <Link to={s.to} className="card group hover:border-blue-200 block">
@@ -114,6 +117,10 @@ const AdminDashboard: React.FC = () => {
               <Link to="/admin/members" className="btn-ghost flex items-center gap-2 text-sm">
                 <Users size={14} />
                 부원 관리
+              </Link>
+              <Link to="/admin/activities" className="btn-ghost flex items-center gap-2 text-sm">
+                <BookOpen size={14} />
+                활동 관리
               </Link>
               <Link to="/admin/messages" className="btn-ghost flex items-center gap-2 text-sm">
                 <Mail size={14} />
