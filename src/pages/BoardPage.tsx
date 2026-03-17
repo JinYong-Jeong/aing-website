@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { MessageSquare, Eye, Pin, Tag, ChevronRight, Search, PlusCircle } from 'lucide-react';
+import { MessageSquare, Eye, Pin, ChevronRight, Search, PlusCircle } from 'lucide-react';
 import { supabase, Post } from '../lib/supabase';
 import AnimatedSection from '../components/AnimatedSection';
 import { useAdmin } from '../context/AdminContext';

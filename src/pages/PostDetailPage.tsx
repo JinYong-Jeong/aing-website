@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Eye, MessageSquare, Trash2, Pin, Tag } from 'lucide-react';
+import { ArrowLeft, Eye, MessageSquare, Trash2, Pin } from 'lucide-react';
 import { supabase, Post, Comment } from '../lib/supabase';
 import AnimatedSection from '../components/AnimatedSection';
 import { useAdmin } from '../context/AdminContext';

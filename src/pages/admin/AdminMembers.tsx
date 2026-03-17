@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { ArrowLeft, PlusCircle, Pencil, Trash2, UserCheck, UserX } from 'lucide-react';
+import { ArrowLeft, PlusCircle, Trash2, UserCheck, UserX } from 'lucide-react';
 import { supabase, Member } from '../../lib/supabase';
 import { useAdmin } from '../../context/AdminContext';
 
