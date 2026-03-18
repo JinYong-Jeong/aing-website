@@ -8,9 +8,11 @@ const Navbar: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [adminMenuOpen, setAdminMenuOpen] = useState(false);
+  const [aboutMenuOpen, setAboutMenuOpen] = useState(false);
   const { user, isAdmin, logout } = useAuth();
   const location = useLocation();
   const adminMenuRef = useRef<HTMLDivElement>(null);
+  const aboutMenuRef = useRef<HTMLDivElement>(null);
 
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [memberId, setMemberId] = useState<string | null>(null);
@@ -57,6 +59,7 @@ const Navbar: React.FC = () => {
   useEffect(() => {
     setIsOpen(false);
     setAdminMenuOpen(false);
+    setAboutMenuOpen(false);
   }, [location]);
 
   useEffect(() => {
@@ -64,19 +67,28 @@ const Navbar: React.FC = () => {
       if (adminMenuRef.current && !adminMenuRef.current.contains(e.target as Node)) {
         setAdminMenuOpen(false);
       }
+      if (aboutMenuRef.current && !aboutMenuRef.current.contains(e.target as Node)) {
+        setAboutMenuOpen(false);
+      }
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
   const navItems = [
-    { label: 'About', to: '/about' },
+    { label: 'About', to: '/about', hasDropdown: true },
     { label: 'Activities', to: '/activities' },
-    { label: 'History', to: '/projects' },
+    { label: 'History', to: '/history' },
     { label: 'Members', to: '/members' },
     { label: 'Team', to: '/team' },
     { label: 'Community', to: '/board' },
     { label: 'Contact', to: '/contact' },
+  ];
+
+  const aboutSubItems = [
+    { label: 'About', to: '/about' },
+    { label: 'Ops Team', to: '/about/ops' },
+    { label: 'Ex-Ops', to: '/about/ex-ops' },
   ];
 
   const adminMenuItems = [
@@ -108,13 +120,38 @@ const Navbar: React.FC = () => {
         {/* Desktop Nav */}
         <div className="hidden md:flex items-center gap-8">
           {navItems.map(item => (
-            <Link
-              key={item.to}
-              to={item.to}
-              className={`nav-link ${isActive(item.to) ? 'text-aing-text' : ''}`}
-            >
-              {item.label}
-            </Link>
+            item.hasDropdown ? (
+              <div key={item.to} className="relative" ref={aboutMenuRef}>
+                <button
+                  onClick={() => setAboutMenuOpen(!aboutMenuOpen)}
+                  className={`nav-link flex items-center gap-1 ${location.pathname.startsWith('/about') ? 'text-aing-text' : ''}`}
+                >
+                  {item.label}
+                  <ChevronDown size={12} className={`transition-transform ${aboutMenuOpen ? 'rotate-180' : ''}`} />
+                </button>
+                {aboutMenuOpen && (
+                  <div className="absolute left-0 top-full mt-2 w-36 glass border border-aing-border rounded-xl shadow-xl py-1 z-50">
+                    {aboutSubItems.map(sub => (
+                      <Link
+                        key={sub.to}
+                        to={sub.to}
+                        className="block px-4 py-2 text-xs text-aing-muted hover:text-aing-text hover:bg-white/5 transition-colors"
+                      >
+                        {sub.label}
+                      </Link>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ) : (
+              <Link
+                key={item.to}
+                to={item.to}
+                className={`nav-link ${isActive(item.to) ? 'text-aing-text' : ''}`}
+              >
+                {item.label}
+              </Link>
+            )
           ))}
         </div>
 
@@ -195,15 +232,32 @@ const Navbar: React.FC = () => {
       {isOpen && (
         <div className="md:hidden glass border-t border-aing-border px-6 py-6 flex flex-col gap-4">
           {navItems.map(item => (
-            <Link
-              key={item.to}
-              to={item.to}
-              className={`text-base font-medium transition-colors ${
-                isActive(item.to) ? 'text-aing-text' : 'text-aing-muted hover:text-aing-text'
-              }`}
-            >
-              {item.label}
-            </Link>
+            item.hasDropdown ? (
+              <div key={item.to}>
+                <span className="text-base font-medium text-aing-muted mb-2 block">{item.label}</span>
+                <div className="flex flex-col gap-2 pl-3 border-l border-aing-border">
+                  {aboutSubItems.map(sub => (
+                    <Link
+                      key={sub.to}
+                      to={sub.to}
+                      className={`text-sm transition-colors ${isActive(sub.to) ? 'text-aing-text' : 'text-aing-muted hover:text-aing-text'}`}
+                    >
+                      {sub.label}
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <Link
+                key={item.to}
+                to={item.to}
+                className={`text-base font-medium transition-colors ${
+                  isActive(item.to) ? 'text-aing-text' : 'text-aing-muted hover:text-aing-text'
+                }`}
+              >
+                {item.label}
+              </Link>
+            )
           ))}
           {user ? (
             <div className="pt-2 border-t border-aing-border flex flex-col gap-3">

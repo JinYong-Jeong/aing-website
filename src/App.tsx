@@ -5,7 +5,10 @@ import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import HomePage from './pages/HomePage';
 import AboutPage from './pages/AboutPage';
+import AboutOpsPage from './pages/AboutOpsPage';
+import ExOpsPage from './pages/ExOpsPage';
 import ActivitiesPage from './pages/ActivitiesPage';
+import HistoryPage from './pages/HistoryPage';
 import MembersPage from './pages/MembersPage';
 import MemberDetailPage from './pages/MemberDetailPage';
 import MemberProfilePage from './pages/MemberProfilePage';
@@ -40,7 +43,10 @@ function App() {
             <Routes>
               <Route path="/" element={<HomePage />} />
               <Route path="/about" element={<AboutPage />} />
+              <Route path="/about/ops" element={<AboutOpsPage />} />
+              <Route path="/about/ex-ops" element={<ExOpsPage />} />
               <Route path="/activities" element={<ActivitiesPage />} />
+              <Route path="/history" element={<HistoryPage />} />
               <Route path="/projects" element={<ProjectsPage />} />
               <Route path="/projects/:id" element={<ProjectDetailPage />} />
               <Route path="/members" element={<MembersPage />} />

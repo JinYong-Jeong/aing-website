@@ -4,7 +4,7 @@ import { supabase } from '../lib/supabase';
 interface AuthUser {
   id: string;
   name: string;
-  role: 'admin' | 'member' | 'ob';
+  role: 'admin' | 'ops' | 'member' | 'ob';
   member_id: string | null;
 }
 
@@ -50,7 +50,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const u: AuthUser = {
           id: userData.id,
           name: userData.name,
-          role: userData.role as 'admin' | 'member' | 'ob',
+          role: userData.role as 'admin' | 'ops' | 'member' | 'ob',
           member_id: userData.member_id,
         };
         setUser(u);
@@ -70,7 +70,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         .single();
 
       if (memberData && memberData.password_hash === password) {
-        const role: 'admin' | 'member' | 'ob' =
+        const role: 'admin' | 'ops' | 'member' | 'ob' =
           memberData.track === 'admin' ? 'admin' :
           memberData.track === 'ob' ? 'ob' : 'member';
         const u: AuthUser = {
@@ -104,8 +104,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     sessionStorage.removeItem('aing_admin');
   };
 
+  const isAdmin = user?.role === 'admin' || user?.role === 'ops';
+
   return (
-    <AuthContext.Provider value={{ user, isAdmin: user?.role === 'admin', login, logout }}>
+    <AuthContext.Provider value={{ user, isAdmin, login, logout }}>
       {children}
     </AuthContext.Provider>
   );

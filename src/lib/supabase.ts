@@ -119,3 +119,44 @@ export type ProjectMember = {
   joined_at: string;
   member?: Member;
 };
+
+export type Activity = {
+  id: string;
+  semester: string;
+  title: string;
+  type: 'study' | 'project' | 'competition' | 'seminar';
+  description: string;
+  tags: string[];
+  github?: string;
+  status: 'ongoing' | 'completed' | 'upcoming';
+  created_at?: string;
+  // New optional fields
+  detail_url?: string;
+  start_date?: string;
+  end_date?: string;
+  participants?: number;
+  result?: string;
+  image_url?: string;
+};
+
+export type OpsTeamMember = {
+  id: string;
+  name: string;
+  role: string;
+  responsibilities: string;
+  level: 'president' | 'vp' | 'lead' | 'member';
+  order: number;
+  generation: number;
+  avatar_url?: string;
+  created_at?: string;
+};
+
+export type ExOpsMember = {
+  id: string;
+  name: string;
+  role: string;
+  generation: string;
+  term: string;
+  description: string;
+  created_at?: string;
+};

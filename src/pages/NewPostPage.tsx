@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { ArrowLeft, Send } from 'lucide-react';
+import { ArrowLeft, Send, Eye, Code } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
 import AnimatedSection from '../components/AnimatedSection';
@@ -32,6 +32,7 @@ const NewPostPage: React.FC = () => {
   const [password, setPassword] = useState('');
   const [authError, setAuthError] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [showPreview, setShowPreview] = useState(false);
 
   // 로그인 상태면 작성자 자동 설정
   useEffect(() => {
@@ -39,6 +40,15 @@ const NewPostPage: React.FC = () => {
       setAuthorName(user.name);
     }
   }, [user]);
+
+  const renderPreview = (content: string) => {
+    return content
+      .replace(/\*\*(.*?)\*\*/g, '<strong class="text-aing-text">$1</strong>')
+      .replace(/## (.*)/g, '<h2 class="text-lg font-semibold text-aing-text mt-6 mb-3">$1</h2>')
+      .replace(/# (.*)/g, '<h1 class="text-xl font-semibold text-aing-text mt-6 mb-3">$1</h1>')
+      .replace(/- (.*)/g, '<li class="ml-4 list-disc text-aing-muted">$1</li>')
+      .replace(/\n/g, '<br/>');
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -173,15 +183,34 @@ const NewPostPage: React.FC = () => {
 
               {/* 내용 */}
               <div>
-                <label className="block text-xs text-aing-muted mb-2">내용 *</label>
-                <textarea
-                  value={form.content}
-                  onChange={e => setForm(p => ({ ...p, content: e.target.value }))}
-                  className="input-field resize-none"
-                  rows={12}
-                  placeholder="내용을 입력하세요..."
-                  required
-                />
+                <div className="flex items-center justify-between mb-2">
+                  <label className="block text-xs text-aing-muted">내용 *</label>
+                  <button
+                    type="button"
+                    onClick={() => setShowPreview(p => !p)}
+                    className={`flex items-center gap-1.5 text-xs px-2 py-1 rounded-lg border transition-colors ${
+                      showPreview ? 'bg-aing-dark text-white border-aing-dark' : 'border-aing-border text-aing-muted hover:text-aing-text'
+                    }`}
+                  >
+                    {showPreview ? <Code size={12} /> : <Eye size={12} />}
+                    {showPreview ? '편집' : '미리보기'}
+                  </button>
+                </div>
+                {showPreview ? (
+                  <div
+                    className="min-h-[240px] p-3 rounded-xl border border-aing-border bg-aing-bg text-sm text-aing-muted leading-relaxed"
+                    dangerouslySetInnerHTML={{ __html: form.content ? renderPreview(form.content) : '<span class="opacity-40">미리보기...</span>' }}
+                  />
+                ) : (
+                  <textarea
+                    value={form.content}
+                    onChange={e => setForm(p => ({ ...p, content: e.target.value }))}
+                    className="input-field resize-none"
+                    rows={12}
+                    placeholder="내용을 입력하세요... (마크다운 지원: **굵게**, ## 제목, - 목록)"
+                    required
+                  />
+                )}
               </div>
             </div>
 

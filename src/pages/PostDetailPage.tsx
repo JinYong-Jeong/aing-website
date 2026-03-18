@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Eye, MessageSquare, Trash2, Pin, User } from 'lucide-react';
+import { ArrowLeft, Eye, MessageSquare, Trash2, Pin, User, Heart, Download } from 'lucide-react';
 import { supabase, Post, Comment } from '../lib/supabase';
 import AnimatedSection from '../components/AnimatedSection';
 import { useAuth } from '../context/AuthContext';
@@ -18,19 +18,7 @@ const CATEGORY_COLORS: Record<string, string> = {
 const demoPost: Post = {
   id: '1',
   title: '[공지] 2026 Spring 신규 부원 모집 안내',
-  content: `안녕하세요, **A.ing**입니다.
-
-2026 Spring 학기 신규 부원을 모집합니다.
-
-## 모집 대상
-- 가천대학교 재학생 (학년 무관)
-- Python 기초 지식 보유자
-- AI/ML에 관심 있는 분
-
-## 지원 방법
-아래 Contact 페이지를 통해 지원해주세요.
-
-A.ing에서 함께 성장해요! 🚀`,
+  content: `안녕하세요, **A.ing**입니다.\n\n2026 Spring 학기 신규 부원을 모집합니다.\n\n## 모집 대상\n- 가천대학교 재학생 (학년 무관)\n- Python 기초 지식 보유자\n- AI/ML에 관심 있는 분\n\n## 지원 방법\n아래 Contact 페이지를 통해 지원해주세요.\n\nA.ing에서 함께 성장해요! 🚀`,
   author_id: null,
   category: 'notice',
   tags: ['모집', '2026', 'Spring'],
@@ -40,10 +28,36 @@ A.ing에서 함께 성장해요! 🚀`,
   updated_at: '2026-03-01T00:00:00Z',
 };
 
+function getLike(postId: string) { try { return parseInt(localStorage.getItem(`like_${postId}`) || '0'); } catch { return 0; } }
+function setLike(postId: string, n: number) { try { localStorage.setItem(`like_${postId}`, String(n)); } catch {} }
+function getHasLiked(postId: string) { try { return localStorage.getItem(`liked_${postId}`) === '1'; } catch { return false; } }
+function setHasLiked(postId: string, v: boolean) { try { v ? localStorage.setItem(`liked_${postId}`, '1') : localStorage.removeItem(`liked_${postId}`); } catch {} }
+
+function formatDatetime(d: string) {
+  return new Date(d).toLocaleDateString('ko-KR', {
+    year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit',
+  });
+}
+
+function toSlug(title: string) {
+  return title.toLowerCase().replace(/[^a-z0-9가-힣]/g, '-').replace(/-+/g, '-').slice(0, 50);
+}
+
+function generatePostMD(post: Post, comments: Comment[]): string {
+  const date = formatDatetime(post.created_at);
+  const tagStr = (post.tags || []).map(t => `#${t}`).join(' ');
+  const cmtSection = comments.length > 0
+    ? `\n\n## 댓글 (${comments.length}개)\n\n` + comments.map(c =>
+        `### ${c.author_name} · ${formatDatetime(c.created_at)}\n${c.content}`
+      ).join('\n\n')
+    : '';
+  return `# ${post.title}\n\n**작성일**: ${date}\n**카테고리**: ${CATEGORY_LABELS[post.category] || post.category}\n**태그**: ${tagStr}\n\n---\n\n${post.content}${cmtSection}`;
+}
+
 const PostDetailPage: React.FC = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { isAdmin } = useAuth();
+  const { isAdmin, user } = useAuth();
   const [post, setPost] = useState<Post | null>(null);
   const [comments, setComments] = useState<Comment[]>([]);
   const [loading, setLoading] = useState(true);
@@ -51,6 +65,21 @@ const PostDetailPage: React.FC = () => {
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [authorMemberId, setAuthorMemberId] = useState<string | null>(null);
+  const [likeCount, setLikeCount] = useState(0);
+  const [liked, setLiked] = useState(false);
+
+  useEffect(() => {
+    if (user) {
+      setCommentForm(prev => ({ ...prev, name: user.name }));
+    }
+  }, [user]);
+
+  useEffect(() => {
+    if (id) {
+      setLikeCount(getLike(id));
+      setLiked(getHasLiked(id));
+    }
+  }, [id]);
 
   useEffect(() => {
     const fetchPost = async () => {
@@ -63,26 +92,16 @@ const PostDetailPage: React.FC = () => {
         if (error || !data) { setPost(demoPost); }
         else {
           setPost(data);
-          // increment view
           await supabase.from('posts').update({ views: (data.views || 0) + 1 }).eq('id', id);
-
-          // 작성자 멤버 ID 탐색
           const authorName = data.author_name || (data.author as any)?.name;
           if (authorName && authorName !== 'admin') {
             const { data: memberData } = await supabase
-              .from('members')
-              .select('id')
-              .ilike('name', authorName)
-              .single();
+              .from('members').select('id').ilike('name', authorName).single();
             if (memberData) setAuthorMemberId(memberData.id);
           }
         }
-        // fetch comments
         const { data: cmts } = await supabase
-          .from('comments')
-          .select('*')
-          .eq('post_id', id)
-          .order('created_at', { ascending: true });
+          .from('comments').select('*').eq('post_id', id).order('created_at', { ascending: true });
         setComments(cmts || []);
       } catch {
         setPost(demoPost);
@@ -92,6 +111,27 @@ const PostDetailPage: React.FC = () => {
     };
     fetchPost();
   }, [id]);
+
+  const handleLike = () => {
+    const next = liked ? Math.max(0, likeCount - 1) : likeCount + 1;
+    setLikeCount(next);
+    setLiked(!liked);
+    if (id) { setLike(id, next); setHasLiked(id, !liked); }
+  };
+
+  const handleExportMD = () => {
+    if (!post) return;
+    const md = generatePostMD(post, comments);
+    const date = post.created_at.slice(0, 10).replace(/-/g, '');
+    const slug = toSlug(post.title);
+    const blob = new Blob([md], { type: 'text/markdown;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${date}-${slug}.md`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
 
   const handleComment = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -116,7 +156,7 @@ const PostDetailPage: React.FC = () => {
           created_at: new Date().toISOString(),
         };
         setComments(prev => [...prev, newComment]);
-        setCommentForm({ name: '', email: '', content: '' });
+        setCommentForm(prev => ({ ...prev, content: '' }));
         setSubmitted(true);
         setTimeout(() => setSubmitted(false), 3000);
       }
@@ -132,10 +172,6 @@ const PostDetailPage: React.FC = () => {
     } catch {}
   };
 
-  const formatDate = (d: string) => new Date(d).toLocaleDateString('ko-KR', {
-    year: 'numeric', month: 'long', day: 'numeric',
-  });
-
   const renderContent = (content: string) => {
     return content
       .replace(/\*\*(.*?)\*\*/g, '<strong class="text-aing-text">$1</strong>')
@@ -150,7 +186,6 @@ const PostDetailPage: React.FC = () => {
       <div className="text-aing-muted">Loading...</div>
     </div>
   );
-
   if (!post) return (
     <div className="min-h-screen bg-aing-bg pt-32 flex items-center justify-center">
       <div className="text-aing-muted">Post not found.</div>
@@ -162,7 +197,6 @@ const PostDetailPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-aing-bg pt-20">
       <div className="max-w-3xl mx-auto px-6 py-12">
-        {/* Back */}
         <AnimatedSection>
           <Link to="/board" className="flex items-center gap-2 text-aing-muted hover:text-aing-text text-sm transition-colors mb-8">
             <ArrowLeft size={14} />
@@ -170,10 +204,8 @@ const PostDetailPage: React.FC = () => {
           </Link>
         </AnimatedSection>
 
-        {/* Post */}
         <AnimatedSection delay={100}>
           <article className="card mb-8">
-            {/* Meta */}
             <div className="flex items-center gap-3 mb-6 flex-wrap">
               <span className={`text-xs px-2 py-0.5 rounded-full border font-mono ${CATEGORY_COLORS[post.category]}`}>
                 {CATEGORY_LABELS[post.category]}
@@ -183,63 +215,68 @@ const PostDetailPage: React.FC = () => {
                   <Pin size={10} /> Pinned
                 </span>
               )}
-              <span className="text-xs text-aing-muted ml-auto">{formatDate(post.created_at)}</span>
+              <span className="text-xs text-aing-muted ml-auto">{formatDatetime(post.created_at)}</span>
               {authorName && (
                 authorMemberId ? (
-                  <Link
-                    to={`/members/${authorMemberId}`}
-                    className="flex items-center gap-1 text-xs text-aing-muted hover:text-aing-blue transition-colors"
-                  >
-                    <User size={10} />
-                    {authorName}
+                  <Link to={`/members/${authorMemberId}`} className="flex items-center gap-1 text-xs text-aing-muted hover:text-aing-blue transition-colors">
+                    <User size={10} />{authorName}
                   </Link>
                 ) : (
                   <span className="flex items-center gap-1 text-xs text-aing-muted">
-                    <User size={10} />
-                    {authorName}
+                    <User size={10} />{authorName}
                   </span>
                 )
               )}
             </div>
 
-            {/* Title */}
-            <h1 className="text-2xl font-semibold text-aing-text mb-4 leading-tight">
-              {post.title}
-            </h1>
+            <h1 className="text-2xl font-semibold text-aing-text mb-4 leading-tight">{post.title}</h1>
 
-            {/* Tags */}
             {post.tags && post.tags.length > 0 && (
               <div className="flex flex-wrap gap-2 mb-6">
-                {post.tags.map(tag => (
-                  <span key={tag} className="tag">#{tag}</span>
-                ))}
+                {post.tags.map(tag => <span key={tag} className="tag">#{tag}</span>)}
               </div>
             )}
 
             <div className="gradient-line mb-6" />
 
-            {/* Content */}
-            <div
-              className="text-aing-muted text-sm leading-relaxed"
-              dangerouslySetInnerHTML={{ __html: renderContent(post.content) }}
-            />
+            <div className="text-aing-muted text-sm leading-relaxed"
+              dangerouslySetInnerHTML={{ __html: renderContent(post.content) }} />
 
-            {/* Footer */}
-            <div className="flex items-center justify-between mt-8 pt-6 border-t border-aing-border">
+            <div className="flex items-center justify-between mt-8 pt-6 border-t border-aing-border flex-wrap gap-3">
               <div className="flex items-center gap-4 text-xs text-aing-muted">
                 <span className="flex items-center gap-1"><Eye size={12} /> {post.views}</span>
                 <span className="flex items-center gap-1"><MessageSquare size={12} /> {comments.length}</span>
+                {/* Like button */}
+                <button
+                  onClick={handleLike}
+                  className={`flex items-center gap-1 transition-colors ${liked ? 'text-red-400' : 'text-aing-muted hover:text-red-400'}`}
+                  title="좋아요"
+                >
+                  <Heart size={12} className={liked ? 'fill-current' : ''} />
+                  <span>{likeCount}</span>
+                </button>
               </div>
-              {isAdmin && (
-                <div className="flex gap-3">
-                  <Link to={`/admin/posts/edit/${post.id}`} className="text-xs text-aing-muted hover:text-aing-text transition-colors">
-                    수정
-                  </Link>
-                  <button onClick={handleDelete} className="text-xs text-red-500 hover:text-red-400 flex items-center gap-1 transition-colors">
-                    <Trash2 size={12} /> 삭제
+              <div className="flex items-center gap-3">
+                {/* MD export for study posts when logged in */}
+                {user && post.category === 'study' && (
+                  <button
+                    onClick={handleExportMD}
+                    className="flex items-center gap-1 text-xs text-aing-muted hover:text-aing-text transition-colors"
+                    title="Markdown으로 내보내기"
+                  >
+                    <Download size={12} />
+                    Export MD
                   </button>
-                </div>
-              )}
+                )}
+                {isAdmin && (
+                  <>
+                    <Link to={`/admin/posts/edit/${post.id}`} className="text-xs text-aing-muted hover:text-aing-text transition-colors">수정</Link>
+                    <button onClick={handleDelete} className="text-xs text-red-500 hover:text-red-400 flex items-center gap-1 transition-colors">
+                      <Trash2 size={12} /> 삭제
+                    </button>
+                  </>
+                )}
+              </div>
             </div>
           </article>
         </AnimatedSection>
@@ -259,9 +296,7 @@ const PostDetailPage: React.FC = () => {
                   <div key={c.id} className="card">
                     <div className="flex items-center justify-between mb-2">
                       <span className="text-sm font-medium text-aing-text">{c.author_name}</span>
-                      <span className="text-xs text-aing-muted">
-                        {new Date(c.created_at).toLocaleDateString('ko-KR')}
-                      </span>
+                      <span className="text-xs text-aing-muted font-mono">{formatDatetime(c.created_at)}</span>
                     </div>
                     <p className="text-sm text-aing-muted leading-relaxed">{c.content}</p>
                   </div>
@@ -276,9 +311,7 @@ const PostDetailPage: React.FC = () => {
           <div className="card">
             <h3 className="text-sm font-semibold text-aing-text mb-4">댓글 작성</h3>
             {submitted ? (
-              <p className="text-aing-muted text-sm py-4 text-center">
-                댓글이 등록되었습니다.
-              </p>
+              <p className="text-aing-muted text-sm py-4 text-center">댓글이 등록되었습니다.</p>
             ) : (
               <form onSubmit={handleComment} className="space-y-3">
                 <div className="grid sm:grid-cols-2 gap-3">
@@ -289,6 +322,7 @@ const PostDetailPage: React.FC = () => {
                     onChange={e => setCommentForm(p => ({ ...p, name: e.target.value }))}
                     className="input-field text-sm"
                     required
+                    readOnly={!!user}
                   />
                   <input
                     type="email"
@@ -306,11 +340,7 @@ const PostDetailPage: React.FC = () => {
                   rows={4}
                   required
                 />
-                <button
-                  type="submit"
-                  disabled={submitting}
-                  className="btn-primary text-sm disabled:opacity-50"
-                >
+                <button type="submit" disabled={submitting} className="btn-primary text-sm disabled:opacity-50">
                   {submitting ? '등록 중...' : '댓글 등록'}
                 </button>
               </form>

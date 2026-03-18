@@ -1,5 +1,5 @@
 import React from 'react';
-import { Brain, Code, Target, Layers, ArrowRight } from 'lucide-react';
+import { Brain, Code, Target, Layers, ArrowRight, ChevronRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import AnimatedSection from '../components/AnimatedSection';
 
@@ -32,6 +32,14 @@ const AboutPage: React.FC = () => {
       <section className="py-20 px-6 border-b border-aing-border">
         <div className="max-w-4xl mx-auto">
           <AnimatedSection>
+            {/* Sub-navigation */}
+            <div className="flex items-center gap-2 mb-6 text-xs text-aing-muted flex-wrap">
+              <Link to="/about" className="hover:text-aing-text transition-colors text-aing-text font-medium">About</Link>
+              <ChevronRight size={12} />
+              <Link to="/about/ops" className="hover:text-aing-text transition-colors">Ops Team</Link>
+              <ChevronRight size={12} />
+              <Link to="/about/ex-ops" className="hover:text-aing-text transition-colors">Ex-Ops</Link>
+            </div>
             <div className="inline-flex items-center gap-2 tag-blue mb-6">
               <span>About</span>
             </div>
