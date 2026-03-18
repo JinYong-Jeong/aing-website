@@ -1,6 +1,45 @@
 # WORK_LOG - aing-website
 
-## 상태: ✅ Team 기능 업그레이드 완료 (2026-03-17 ~19:45 KST)
+## 상태: ✅ 완료 (2026-03-17 ~20:20 KST)
+
+### 완료
+- [x] 수락된 참여자 제외 기능 (TeamPostDetailPage + AdminTeamPosts)
+- [x] 작성자 참여 지원 불가 (TeamPage + TeamPostDetailPage)
+- [x] Admin 멤버 수정 폼 개선 (AdminMembers - 수정 버튼, 전체 필드, OB 트랙)
+- [x] 이메일 → 인스타그램(@aing_gc) 변경 (ContactPage + Footer)
+- [x] 빌드 성공 (CI=true)
+- [x] git push → main
+- [x] Vercel 배포 완료 → https://aing-website.vercel.app
+
+### 변경 내용 상세
+
+#### 작업 1: 수락된 참여자 제외
+- `TeamPostDetailPage.tsx`: acceptedApplications 각 항목에 canManage일 때 X(제외) 버튼 추가
+- `TeamPostDetailPage.tsx`: handleRemoveApplicant() - status→rejected, current_members -1, fetchPost()
+- `AdminTeamPosts.tsx`: handleRemoveApplicant() 동일 로직, 수락된 신청자 행에 X 버튼 표시
+
+#### 작업 2: 작성자 참여 지원 불가
+- `TeamPage.tsx`: myPost일 때 참여 희망 버튼 숨기고 "내가 작성한 글입니다" 표시
+- `TeamPostDetailPage.tsx`: isAuthor일 때 참여 희망하기 버튼 숨기고 텍스트 표시
+
+#### 작업 3: Admin 멤버 수정 폼 개선
+- `AdminMembers.tsx`: 전면 재작성
+  - 트랙에 OB 옵션 추가
+  - 수정 버튼 (Pencil) 추가 → 기존 값 pre-fill
+  - 폼 필드: 이름/역할, 트랙/기수, GitHub/한줄소개, 아바타URL, 비밀번호/상태, 활성여부
+  - 추가/수정/취소 버튼 처리
+
+#### 작업 4: 이메일 → 인스타그램
+- `ContactPage.tsx`: Mail 카드 → Instagram 카드 (@aing_gc 링크)
+- `Footer.tsx`: Mail 아이콘/링크 → Instagram 아이콘/@aing_gc 링크
+
+### 배포 URL
+- Production: https://aing-website.vercel.app
+- Inspect: https://vercel.com/jinyong-jeongs-projects/aing-website/5WnijuduYbdEvhodeFfgqbinReqQ
+
+---
+
+## 이전 작업 (2026-03-17 ~19:45 KST)
 
 ### 완료
 - [x] team_applications 테이블 (supabase_schema_v7.sql)
@@ -14,25 +53,10 @@
 - [x] Navbar admin 드롭다운에 Team 링크 추가
 - [x] 빌드 성공 (CI=true)
 - [x] git push → main
-- [x] Vercel 배포 완료 → https://aing-website.vercel.app
+- [x] Vercel 배포 완료
 
 ### Supabase 실행 필요
 ```
 supabase_schema_v7.sql
 ```
 팀원 신청 기능 사용 전 Supabase 대시보드에서 실행해야 합니다.
-
-### 배포 URL
-- Production: https://aing-website.vercel.app
-- Inspect: https://vercel.com/jinyong-jeongs-projects/aing-website/CcRqHMuuHvH7Y3KWtXaaA71J3Ha1
-
-### 변경 파일
-- `supabase_schema_v7.sql` (신규)
-- `src/lib/supabase.ts` (TeamApplication 타입, TeamPost.applications 필드)
-- `src/pages/TeamPage.tsx` (전면 재작성)
-- `src/pages/TeamPostDetailPage.tsx` (전면 재작성)
-- `src/pages/MemberDetailPage.tsx` (팀원 모집 섹션 추가)
-- `src/pages/admin/AdminTeamPosts.tsx` (신규)
-- `src/pages/admin/AdminDashboard.tsx` (Team 통계 + Quick Action)
-- `src/App.tsx` (/admin/team 라우트)
-- `src/components/Navbar.tsx` (admin 드롭다운 Team 링크)
