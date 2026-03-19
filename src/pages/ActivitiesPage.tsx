@@ -71,6 +71,7 @@ const EMPTY_FORM = {
   result: '',
   detail_url: '',
   image_url: '',
+  detail_content: '',
 };
 
 function formatDateRange(start?: string, end?: string) {
