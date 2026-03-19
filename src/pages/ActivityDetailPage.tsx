@@ -36,7 +36,8 @@ const EMPTY_FORM = {
   start_date: '', end_date: '', participants: '',
   participants_type: 'single' as 'single'|'min'|'max'|'range',
   participants_min: '', participants_max: '',
-  result: '', detail_url: '', image_url: '', detail_content: '',
+  result: '', detail_url: '', image_url: '',
+  detail_content: '', instagram_url: '', slug: '',
 };
 
 const ActivityDetailPage: React.FC = () => {
@@ -96,8 +97,8 @@ const ActivityDetailPage: React.FC = () => {
       detail_url: activity.detail_url || '',
       image_url: activity.image_url || '',
       detail_content: activity.detail_content || '',
-      instagram_url: activity.instagram_url || '',
-      slug: (activity as any).slug || '',
+      instagram_url: (activity as any).instagram_url as string || '',
+      slug: (activity as any).slug as string || '',
     });
     setShowEditModal(true);
   };
