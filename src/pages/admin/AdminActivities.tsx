@@ -81,6 +81,7 @@ const AdminActivities: React.FC = () => {
       result: a.result || '',
       detail_url: a.detail_url || '',
       image_url: a.image_url || '',
+      detail_content: a.detail_content || '',
     });
     setShowForm(true);
   };
