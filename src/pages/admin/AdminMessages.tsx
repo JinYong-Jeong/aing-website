@@ -37,9 +37,9 @@ const AdminMessages: React.FC = () => {
     setMessages(prev => prev.filter(m => m.id !== id));
   };
 
-  const filtered = filter === 'unread' ? messages.filter(m => !m.is_read) : messages;
+  const filtered = (filter === 'unread' ? messages.filter(m => !m.is_read) : messages)
+    .filter(m => !search || (m as any).message?.toLowerCase().includes(search.toLowerCase()) || (m as any).name?.toLowerCase().includes(search.toLowerCase()) || (m as any).email?.toLowerCase().includes(search.toLowerCase()));
 
-  const filteredData = search ? messages.filter(item => (item as any).message?.toLowerCase().includes(search.toLowerCase()) || (item as any).name?.toLowerCase().includes(search.toLowerCase()) || (item as any).email?.toLowerCase().includes(search.toLowerCase())) : messages;
 
   if (!isAdmin) return null;
 
