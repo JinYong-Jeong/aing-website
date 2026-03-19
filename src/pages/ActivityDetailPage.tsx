@@ -382,21 +382,16 @@ const ActivityDetailPage: React.FC = () => {
           {/* Detail Content (Markdown) */}
           {activity.detail_content && (
             <AnimatedSection>
-              <div className="card prose prose-sm max-w-none">
-                <div
-                  className="text-aing-text text-sm leading-relaxed whitespace-pre-wrap"
-                  style={{fontFamily:'inherit'}}
-                  dangerouslySetInnerHTML={{
-                    __html: activity.detail_content
-                      .replace(/^### (.+)$/gm, '<h3 class="font-semibold text-base mt-4 mb-2">$1</h3>')
-                      .replace(/^## (.+)$/gm, '<h2 class="font-bold text-lg mt-6 mb-3">$1</h2>')
-                      .replace(/^# (.+)$/gm, '<h1 class="font-bold text-xl mt-6 mb-3">$1</h1>')
-                      .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-                      .replace(/\*(.+?)\*/g, '<em>$1</em>')
-                      .replace(/^- (.+)$/gm, '<li class="ml-4 list-disc">$1</li>')
-                      .replace(/
-
-/g, '<br/><br/>')
+                <div className="text-aing-text text-sm leading-relaxed">
+                  {activity.detail_content.split("\n").map((line, i) => {
+                    if (line.startsWith("## ")) return <h2 key={i} className="font-bold text-lg mt-5 mb-2">{line.slice(3)}</h2>;
+                    if (line.startsWith("### ")) return <h3 key={i} className="font-semibold text-base mt-4 mb-1">{line.slice(4)}</h3>;
+                    if (line.startsWith("- ")) return <li key={i} className="ml-5 list-disc text-aing-muted">{line.slice(2)}</li>;
+                    if (line === "") return <br key={i} />;
+                    return <p key={i} className="mb-1">{line}</p>;
+                  })
+                  }
+                </div>
                   }}
                 />
               </div>
