@@ -69,15 +69,6 @@ const AdminSettings: React.FC = () => {
     setLoading(false);
   };
 
-  const saveSetting = async (key: string) => {
-    setSaving(key);
-    const value = settings[key] || '';
-    await supabase.from('site_settings').upsert({ key, value, updated_at: new Date().toISOString() }, { onConflict: 'key' });
-    setSaving(null);
-    setSaved(prev => [...prev, key]);
-    setTimeout(() => setSaved(prev => prev.filter(k => k !== key)), 2000);
-  };
-
   const saveSection = async (sectionId: string) => {
     const section = SECTIONS.find(s => s.id === sectionId);
     if (!section) return;
