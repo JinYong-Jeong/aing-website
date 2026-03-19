@@ -102,6 +102,7 @@ const AdminActivities: React.FC = () => {
       result: form.result || null,
       detail_url: form.detail_url || null,
       image_url: form.image_url || null,
+      detail_content: form.detail_content || null,
     };
     if (editId) {
       await supabase.from('activities').update(payload).eq('id', editId);
@@ -181,10 +182,7 @@ const AdminActivities: React.FC = () => {
             <input value={form.detail_url} onChange={e => setForm(p => ({ ...p, detail_url: e.target.value }))} className="input-field" placeholder="대회/상세 페이지 URL" />
             <input value={form.image_url} onChange={e => setForm(p => ({ ...p, image_url: e.target.value }))} className="input-field" placeholder="이미지 URL" />
           <label className="text-xs text-aing-muted mt-2 block">상세 내용 (Markdown)</label>
-          <textarea name="detail_content" value={form.detail_content || ''} onChange={e => setForm(p => ({ ...p, detail_content: e.target.value }))} className="input-field w-full resize-none font-mono text-xs" rows={6} placeholder="## 활동 소개
-
-자세한 내용을 작성하세요." />
-          <input style={{display:'none' />
+          <textarea value={form.detail_content || ''} onChange={e => setForm(p => ({ ...p, detail_content: e.target.value }))} className="input-field w-full resize-none font-mono text-xs" rows={6} placeholder="## 활동 소개&#10;&#10;자세한 내용을 작성하세요." />
             <div className="sm:col-span-2 flex gap-3">
               <button type="submit" disabled={saving} className="btn-primary text-sm flex items-center gap-2">
                 <Check size={14} />
