@@ -43,7 +43,9 @@ const HomePage: React.FC = () => {
   const tagline = s.tagline || 'Theory to Code. Code to Insight.';
   const recruitOpen = s.recruit_open === 'true';
   const recruitUrl = s.recruit_url || '/contact';
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const instagramUrl = s.instagram || 'https://www.instagram.com/aing_gc/';
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const githubUrl = s.github || 'https://github.com/aing-gachon';
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
 
@@ -85,7 +87,7 @@ const HomePage: React.FC = () => {
           {/* Badge */}
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-blue-200 bg-aing-blue-light text-aing-blue text-xs font-mono mb-8 animate-fade-in">
             <span className="w-1.5 h-1.5 rounded-full bg-aing-blue animate-pulse" />
-            Gachon University · AI Academic Society
+            {tagline || 'Gachon University · AI Academic Society'}
           </div>
 
           {/* Logo */}
@@ -103,6 +105,7 @@ const HomePage: React.FC = () => {
             <br />
             <span className="text-aing-muted">Code to Insight.</span>
           </h1>
+          {heroSubtitle && <p className="text-aing-muted text-lg mt-2">{heroSubtitle}</p>}
 
           <p className="text-aing-muted text-lg md:text-xl max-w-2xl mx-auto mb-12 leading-relaxed">
             인공지능의 이론적 토대를 견고히 다지고,<br className="hidden md:block" />
@@ -111,7 +114,7 @@ const HomePage: React.FC = () => {
 
           {/* CTA */}
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Link to="/contact" className="btn-primary flex items-center gap-2 text-sm">
+            <Link to={recruitUrl} className="btn-primary flex items-center gap-2 text-sm">
               Join A.ing
               <ArrowRight size={16} />
             </Link>
