@@ -338,6 +338,9 @@ const ActivitiesPage: React.FC = () => {
       detail_url: a.detail_url || '',
       image_url: a.image_url || '',
       detail_content: a.detail_content || '',
+      participants_type: (a.participants_type as any) || 'single',
+      participants_min: a.participants_min ? String(a.participants_min) : '',
+      participants_max: a.participants_max ? String(a.participants_max) : '',
     });
     setShowModal(true);
   };
@@ -370,6 +373,7 @@ const ActivitiesPage: React.FC = () => {
       result: form.result || undefined,
       detail_url: form.detail_url || undefined,
       image_url: form.image_url || undefined,
+      detail_content: form.detail_content || undefined,
     };
     if (editId && !editId.startsWith('test-')) {
       await supabase.from('activities').update(payload).eq('id', editId);
