@@ -112,7 +112,7 @@ const ContactPage: React.FC = () => {
                         <div>
                           <p className="text-xs text-aing-muted mb-0.5">Notion</p>
                           <p className="text-sm text-aing-text group-hover:text-aing-blue transition-colors">
-                            {notionUrl.replace('https://', '').replace('http://', '')}
+                            {notionUrl.replace(/^https?:\/\//, '')}
                           </p>
                         </div>
                       </a>

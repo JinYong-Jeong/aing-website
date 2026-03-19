@@ -92,10 +92,14 @@ const MembersPage: React.FC = () => {
     fetchMembers();
   }, []);
 
-  // Extract unique interests
-  const allInterests = Array.from(
-    new Set(members.flatMap(m => m.interests ?? []))
-  ).sort();
+  // Extract interests from site_settings (admin 관리) + 멤버 데이터 병합
+  const settingsInterests = siteSettings.interests_list
+    ? siteSettings.interests_list.split(',').map((s: string) => s.trim()).filter(Boolean)
+    : [];
+  const memberInterests = Array.from(new Set(members.flatMap(m => m.interests ?? []))).sort();
+  const allInterests = settingsInterests.length > 0
+    ? Array.from(new Set([...settingsInterests, ...memberInterests]))
+    : memberInterests;
 
   const filtered = members.filter(m => {
     if (trackFilter !== 'all' && m.track !== trackFilter) return false;
