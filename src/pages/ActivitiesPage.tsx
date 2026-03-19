@@ -68,7 +68,7 @@ const EMPTY_FORM = {
   start_date: '',
   end_date: '',
   participants: '',
-  participants_type: 'single' as 'single'|'min'|'max'|'range',
+  participants_type: 'min' as 'single'|'min'|'max'|'range',
   participants_min: '',
   participants_max: '',
   result: '',

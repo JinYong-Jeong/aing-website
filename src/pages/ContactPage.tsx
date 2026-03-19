@@ -2,8 +2,17 @@ import React, { useState } from 'react';
 import { Mail, MapPin, Github, Send, CheckCircle, Instagram } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import AnimatedSection from '../components/AnimatedSection';
+import { useSiteSettings } from '../context/SiteSettingsContext';
 
 const ContactPage: React.FC = () => {
+  const s = useSiteSettings();
+  const instagramUrl = s.instagram || instagramUrl;
+  const githubUrl = s.github || githubUrl;
+  const emailAddr = s.email || '{emailAddr}';
+  const locationStr = s.location || '{locationStr}';
+  const recruitUrl = s.recruit_url || '/contact';
+  const recruitOpen = s.recruit_open === 'true';
+
   const [form, setForm] = useState({ name: '', email: '', message: '' });
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
@@ -59,7 +68,7 @@ const ContactPage: React.FC = () => {
                   <h2 className="text-xl font-semibold text-aing-text mb-6">Contact Info</h2>
                   <div className="space-y-4">
                     <a
-                      href="https://www.instagram.com/aing_gc/"
+                      href={instagramUrl}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="flex items-center gap-4 group"
@@ -75,7 +84,7 @@ const ContactPage: React.FC = () => {
                       </div>
                     </a>
                     <a
-                      href="https://github.com/aing-gachon"
+                      href={githubUrl}
                       target="_blank"
                       rel="noreferrer"
                       className="flex items-center gap-4 group"
@@ -96,7 +105,7 @@ const ContactPage: React.FC = () => {
                       </div>
                       <div>
                         <p className="text-xs text-aing-muted mb-0.5">Location</p>
-                        <p className="text-sm text-aing-text">가천대학교 AI관</p>
+                        <p className="text-sm text-aing-text">{locationStr}</p>
                       </div>
                     </div>
                   </div>

@@ -408,7 +408,7 @@ const TeamPage: React.FC = () => {
             })
           )}
           {totalPages > 1 && (
-            <div className="flex items-center justify-center gap-2 mt-8 mb-16">
+            <div className="flex items-center justify-center gap-2 mt-12 pb-24">
               <button onClick={()=>setPage(p=>Math.max(1,p-1))} disabled={page===1} className="btn-ghost text-xs px-3 py-1.5 disabled:opacity-40">← 이전</button>
               {Array.from({length:totalPages},(_,i)=>i+1).map(n=>(
                 <button key={n} onClick={()=>setPage(n)} className={"text-xs px-3 py-1.5 rounded-lg border transition-all " + (page===n?'bg-aing-dark text-white':'border-aing-border text-aing-muted hover:border-aing-blue')}>{n}</button>

@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { SiteSettingsProvider } from './context/SiteSettingsContext';
 import Navbar from './components/Navbar';
@@ -35,9 +35,17 @@ import AdminSettings from './pages/admin/AdminSettings';
 import AdminProjects from './pages/admin/AdminProjects';
 import AdminTeamPosts from './pages/admin/AdminTeamPosts';
 
+function ScrollToTop() {
+  const { pathname } = useLocation();
+  React.useEffect(() => { window.scrollTo(0, 0); }, [pathname]);
+  return null;
+}
+
+
 function App() {
   return (
     <BrowserRouter>
+      <ScrollToTop />
       <SiteSettingsProvider>
       <AuthProvider>
         <div className="min-h-screen bg-aing-black flex flex-col">

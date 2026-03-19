@@ -34,7 +34,7 @@ const EMPTY_FORM = {
   semester: '', title: '', type: 'study' as Activity['type'],
   description: '', tags: '', github: '', status: 'ongoing' as Activity['status'],
   start_date: '', end_date: '', participants: '',
-  participants_type: 'single' as 'single'|'min'|'max'|'range',
+  participants_type: 'min' as 'single'|'min'|'max'|'range',
   participants_min: '', participants_max: '',
   result: '', detail_url: '', image_url: '',
   detail_content: '', instagram_url: '', slug: '',
@@ -225,7 +225,7 @@ const ActivityDetailPage: React.FC = () => {
                 <input value={form.result} onChange={e => setForm(p=>({...p,result:e.target.value}))} className="input-field" placeholder="결과 (예: 대상, 1st place)" />
                 <input value={(form as any).slug || ''} onChange={e=>setForm(p=>({...p,slug:e.target.value} as any))} className="input-field" placeholder="숫자 슬러그 (예: 29)" />
                 <input value={(form as any).instagram_url || ''} onChange={e=>setForm(p=>({...p,instagram_url:e.target.value} as any))} className="input-field" placeholder="Instagram URL" />
-                <input value={form.detail_url} onChange={e => setForm(p=>({...p,detail_url:e.target.value}))} className="input-field" placeholder="상세 URL" />
+                <input value={form.detail_url} onChange={e => setForm(p=>({...p,detail_url:e.target.value}))} className="input-field" placeholder="상세 URL (예: https://...)" />
                 <input value={form.image_url} onChange={e => setForm(p=>({...p,image_url:e.target.value}))} className="input-field sm:col-span-2" placeholder="이미지 URL" />
                 <div className="sm:col-span-2">
                   <label className="text-xs text-aing-muted block mb-1">상세 내용 (Markdown 지원)</label>

@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Github, Users, Pencil, ChevronDown, ChevronUp, X, Search } from 'lucide-react';
 import { supabase, Member } from '../lib/supabase';
 import AnimatedSection from '../components/AnimatedSection';
+import { useSiteSettings } from '../context/SiteSettingsContext';
 
 const TRACK_LABELS: Record<string, string> = {
   junior: 'Junior',
@@ -53,6 +54,8 @@ const WorkloadDots: React.FC<{ value: number }> = ({ value }) => {
 };
 
 const MembersPage: React.FC = () => {
+  const siteSettings = useSiteSettings();
+
   const [members, setMembers] = useState<Member[]>([]);
   const [loading, setLoading] = useState(true);
   const [filtersOpen, setFiltersOpen] = useState(true);
@@ -148,7 +151,7 @@ const MembersPage: React.FC = () => {
       </section>
 
       {/* Filters */}
-      <section className="py-6 px-6 border-b border-aing-border sticky top-16 z-30 glass">
+      <section className="py-6 px-6 border-b border-aing-border bg-aing-bg">
         <div className="max-w-6xl mx-auto">
           {/* Filter toggle header */}
           <div className="flex items-center justify-between mb-3">
@@ -418,7 +421,7 @@ const MembersPage: React.FC = () => {
         </div>
 
           {totalPages > 1 && (
-            <div className="flex items-center justify-center gap-2 mt-8 mb-16">
+            <div className="flex items-center justify-center gap-2 mt-12 pb-24">
               <button onClick={()=>setPage(p=>Math.max(1,p-1))} disabled={page===1} className="btn-ghost text-xs px-3 py-1.5 disabled:opacity-40">← 이전</button>
               {Array.from({length:totalPages},(_,i)=>i+1).map(p=>(
                 <button key={p} onClick={()=>setPage(p)} className={`text-xs px-3 py-1.5 rounded-lg border transition-all ${page===p?'bg-aing-dark text-white':'border-aing-border text-aing-muted hover:border-aing-blue'}`}>{p}</button>
