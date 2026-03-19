@@ -167,7 +167,6 @@ const MembersPage: React.FC = () => {
               <option value={24}>24개</option>
               <option value={48}>48개</option>
             </select>
-            </button>
             <div className="flex items-center gap-3">
               {hasFilters && (
                 <button
