@@ -96,6 +96,8 @@ const ActivityDetailPage: React.FC = () => {
       detail_url: activity.detail_url || '',
       image_url: activity.image_url || '',
       detail_content: activity.detail_content || '',
+      instagram_url: activity.instagram_url || '',
+      slug: (activity as any).slug || '',
     });
     setShowEditModal(true);
   };
@@ -120,6 +122,8 @@ const ActivityDetailPage: React.FC = () => {
       detail_url: form.detail_url || null as any,
       image_url: form.image_url || null as any,
       detail_content: form.detail_content || null as any,
+      instagram_url: (form as any).instagram_url || null,
+      slug: (form as any).slug || null,
     };
     await supabase.from('activities').update(payload).eq('id', activity.id);
     setActivity(prev => prev ? { ...prev, ...payload } : prev);
@@ -218,6 +222,8 @@ const ActivityDetailPage: React.FC = () => {
                   </div>
                 </div>
                 <input value={form.result} onChange={e => setForm(p=>({...p,result:e.target.value}))} className="input-field" placeholder="결과 (예: 대상, 1st place)" />
+                <input value={(form as any).slug || ''} onChange={e=>setForm(p=>({...p,slug:e.target.value} as any))} className="input-field" placeholder="숫자 슬러그 (예: 29)" />
+                <input value={(form as any).instagram_url || ''} onChange={e=>setForm(p=>({...p,instagram_url:e.target.value} as any))} className="input-field" placeholder="Instagram URL" />
                 <input value={form.detail_url} onChange={e => setForm(p=>({...p,detail_url:e.target.value}))} className="input-field" placeholder="상세 URL" />
                 <input value={form.image_url} onChange={e => setForm(p=>({...p,image_url:e.target.value}))} className="input-field sm:col-span-2" placeholder="이미지 URL" />
                 <div className="sm:col-span-2">
@@ -415,6 +421,11 @@ const ActivityDetailPage: React.FC = () => {
                   <a href={activity.detail_url} target="_blank" rel="noreferrer"
                     className={`inline-flex items-center gap-2 text-sm font-medium px-4 py-2 rounded-lg border transition-colors ${activity.type==='competition'?'bg-amber-500 text-white border-amber-500 hover:bg-amber-600':'btn-primary'}`}>
                     {activity.type==='competition'?'대회 보기':'자세히 보기'}<ExternalLink size={13}/>
+                  </a>
+                )}
+                {(activity as any).instagram_url && (
+                  <a href={(activity as any).instagram_url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 text-sm btn-ghost">
+                    📷 Instagram
                   </a>
                 )}
                 {activity.github && (

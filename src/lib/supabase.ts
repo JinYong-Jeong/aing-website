@@ -141,6 +141,8 @@ export type Activity = {
   result?: string;
   image_url?: string;
   detail_content?: string;
+  slug?: string;
+  instagram_url?: string;
 };
 
 export type ActivityAward = {
