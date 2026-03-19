@@ -14,10 +14,7 @@ const SECTIONS = [
     label: '사이트 기본 정보',
     icon: Globe,
     fields: [
-      { key: 'tagline',             label: '태그라인',              type: 'text',     placeholder: 'Theory to Code. Code to Insight.' },
       { key: 'description',         label: '동아리 소개 문구',       type: 'textarea', placeholder: '동아리를 소개하는 한 단락' },
-      { key: 'home_hero_title',     label: '홈 히어로 제목',          type: 'text',     placeholder: 'Theory to Code.' },
-      { key: 'home_hero_subtitle',  label: '홈 히어로 서브타이틀',    type: 'textarea', placeholder: '' },
       { key: 'footer_text',         label: '푸터 텍스트',             type: 'text',     placeholder: 'A.ing © 2026.' },
     ],
   },
@@ -38,7 +35,7 @@ const SECTIONS = [
     label: '관심분야 목록',
     icon: Database,
     fields: [
-      { key: 'interests_list', label: '관심분야 (쉼표 구분)', type: 'text', placeholder: 'CV,NLP,RL,Agent,Transformer,Optimization,On-Device,Federated Learning' },
+      { key: 'interests_list', label: '관심분야 (쉼표로 구분)', type: 'text', placeholder: 'CV,NLP,RL,Agent,Transformer,On-Device' },
     ],
   },
   {

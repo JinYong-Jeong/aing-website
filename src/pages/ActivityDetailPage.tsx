@@ -419,13 +419,13 @@ const ActivityDetailPage: React.FC = () => {
             <AnimatedSection>
               <div className="card flex flex-wrap gap-3">
                 {activity.detail_url && (
-                  <a href={activity.detail_url} target="_blank" rel="noreferrer"
+                  <a href={!activity.detail_url || activity.detail_url.startsWith('http') ? activity.detail_url : 'https://' + activity.detail_url} target="_blank" rel="noreferrer"
                     className={`inline-flex items-center gap-2 text-sm font-medium px-4 py-2 rounded-lg border transition-colors ${activity.type==='competition'?'bg-amber-500 text-white border-amber-500 hover:bg-amber-600':'btn-primary'}`}>
                     {activity.type==='competition'?'대회 보기':'자세히 보기'}<ExternalLink size={13}/>
                   </a>
                 )}
                 {(activity as any).instagram_url && (
-                  <a href={(activity as any).instagram_url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 text-sm btn-ghost">
+                  <a href={!(activity as any).instagram_url || (activity as any).instagram_url.startsWith('http') ? (activity as any).instagram_url : 'https://' + (activity as any).instagram_url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 text-sm btn-ghost">
                     📷 Instagram
                   </a>
                 )}

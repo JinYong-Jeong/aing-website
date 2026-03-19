@@ -15,6 +15,7 @@ const ContactPage: React.FC = () => {
   const recruitUrl = s.recruit_url || '/contact';
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const recruitOpen = s.recruit_open === 'true';
+  const notionUrl = s.notion || '';
 
   const [form, setForm] = useState({ name: '', email: '', message: '' });
   const [submitting, setSubmitting] = useState(false);
@@ -102,6 +103,17 @@ const ContactPage: React.FC = () => {
                         </p>
                       </div>
                     </a>
+                    {notionUrl && (
+                      <a href={notionUrl.startsWith('http') ? notionUrl : 'https://' + notionUrl} target="_blank" rel="noreferrer" className="group flex items-center gap-4 p-4 rounded-xl hover:bg-aing-bg-alt transition-colors">
+                        <div className="p-3 rounded-xl bg-aing-bg-alt border border-aing-border">
+                          <span className="text-lg">📝</span>
+                        </div>
+                        <div>
+                          <p className="text-xs text-aing-muted mb-0.5">Notion</p>
+                          <p className="text-sm text-aing-text group-hover:text-aing-blue transition-colors">{notionUrl.replace('https://', '')}</p>
+                        </div>
+                      </a>
+                    )}
                     <div className="flex items-center gap-4">
                       <div className="p-3 rounded-xl bg-aing-bg-alt border border-aing-border">
                         <MapPin size={18} className="text-aing-blue" />

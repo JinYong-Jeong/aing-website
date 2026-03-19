@@ -3,8 +3,13 @@ import { Link, useLocation } from 'react-router-dom';
 import { Menu, X, LogIn, LogOut, ChevronDown } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabase';
+import { useSiteSettings } from '../context/SiteSettingsContext';
 
 const Navbar: React.FC = () => {
+  const s = useSiteSettings();
+  const recruitOpen = s.recruit_open === 'true';
+  const recruitUrl = s.recruit_url || '/contact';
+
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [adminMenuOpen, setAdminMenuOpen] = useState(false);
@@ -157,7 +162,18 @@ const Navbar: React.FC = () => {
 
         {/* Right side - Desktop */}
         <div className="hidden md:flex items-center gap-3">
-          {user ? (
+          {recruitOpen && (
+        <a
+          href={recruitUrl.startsWith('http') ? recruitUrl : 'https://' + recruitUrl}
+          target={recruitUrl.startsWith('http') ? '_blank' : '_self'}
+          rel="noreferrer"
+          className="hidden md:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-red-500 text-white text-xs font-semibold animate-pulse hover:bg-red-600 transition-colors"
+        >
+          <span className="w-1.5 h-1.5 rounded-full bg-white" />
+          모집중
+        </a>
+      )}
+      {user ? (
             <>
               {isAdmin && (
                 <div className="relative" ref={adminMenuRef}>

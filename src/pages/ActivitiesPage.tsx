@@ -170,7 +170,7 @@ const ActivityCard: React.FC<{
       <div className="flex flex-wrap items-center gap-3 mt-auto">
         {item.detail_url && (
           <a
-            href={item.detail_url}
+            href={!item.detail_url || item.detail_url.startsWith('http') ? item.detail_url : 'https://' + item.detail_url}
             target="_blank"
             rel="noreferrer"
             onClick={e => e.stopPropagation()}

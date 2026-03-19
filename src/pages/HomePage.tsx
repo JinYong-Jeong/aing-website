@@ -85,13 +85,7 @@ const HomePage: React.FC = () => {
         />
 
         <div className="relative z-10 max-w-4xl mx-auto text-center">
-          {/* Badge */}
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-blue-200 bg-aing-blue-light text-aing-blue text-xs font-mono mb-8 animate-fade-in">
-            <span className="w-1.5 h-1.5 rounded-full bg-aing-blue animate-pulse" />
-            {tagline || 'Gachon University · AI Academic Society'}
-          </div>
-
-          {/* Logo */}
+                    {/* Logo */}
           <div className="flex justify-center mb-8">
             <img
               src="/logo.png"
