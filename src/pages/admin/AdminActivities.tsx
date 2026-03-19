@@ -18,6 +18,7 @@ const EMPTY_FORM = {
   result: '',
   detail_url: '',
   image_url: '',
+  detail_content: '',
 };
 
 const TYPE_COLORS: Record<string, string> = {
@@ -179,6 +180,11 @@ const AdminActivities: React.FC = () => {
             <input value={form.result} onChange={e => setForm(p => ({ ...p, result: e.target.value }))} className="input-field" placeholder="결과 (예: 1st place, 대상)" />
             <input value={form.detail_url} onChange={e => setForm(p => ({ ...p, detail_url: e.target.value }))} className="input-field" placeholder="대회/상세 페이지 URL" />
             <input value={form.image_url} onChange={e => setForm(p => ({ ...p, image_url: e.target.value }))} className="input-field" placeholder="이미지 URL" />
+          <label className="text-xs text-aing-muted mt-2 block">상세 내용 (Markdown)</label>
+          <textarea name="detail_content" value={form.detail_content || ''} onChange={e => setForm(p => ({ ...p, detail_content: e.target.value }))} className="input-field w-full resize-none font-mono text-xs" rows={6} placeholder="## 활동 소개
+
+자세한 내용을 작성하세요." />
+          <input style={{display:'none' />
             <div className="sm:col-span-2 flex gap-3">
               <button type="submit" disabled={saving} className="btn-primary text-sm flex items-center gap-2">
                 <Check size={14} />

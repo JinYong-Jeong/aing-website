@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { ArrowLeft, CheckCircle, XCircle, Mail } from 'lucide-react';
+import { ArrowLeft, Search, CheckCircle, XCircle, Mail } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../context/AuthContext';
 
@@ -8,6 +8,7 @@ const AdminMessages: React.FC = () => {
   const { isAdmin } = useAuth();
   const navigate = useNavigate();
   const [messages, setMessages] = useState<any[]>([]);
+  const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<'all' | 'unread'>('unread');
 
@@ -38,6 +39,8 @@ const AdminMessages: React.FC = () => {
 
   const filtered = filter === 'unread' ? messages.filter(m => !m.is_read) : messages;
 
+  const filteredData = search ? messages.filter(item => (item as any).message?.toLowerCase().includes(search.toLowerCase()) || (item as any).name?.toLowerCase().includes(search.toLowerCase()) || (item as any).email?.toLowerCase().includes(search.toLowerCase())) : messages;
+
   if (!isAdmin) return null;
 
   return (
@@ -50,6 +53,10 @@ const AdminMessages: React.FC = () => {
 
         <div className="flex items-center justify-between mb-8">
           <h1 className="text-2xl font-semibold text-aing-text">문의 관리</h1>
+          <div className="relative mb-4">
+            <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-aing-muted"/>
+            <input type="text" value={search} onChange={e=>setSearch(e.target.value)} placeholder="내용, 이름 검색..." className="input-field pl-8 py-1.5 text-xs w-64"/>
+          </div>
           <div className="flex gap-2">
             {(['unread', 'all'] as const).map(f => (
               <button key={f} onClick={() => setFilter(f)}

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { ArrowLeft, XCircle, MessageSquare } from 'lucide-react';
+import { ArrowLeft, Search, XCircle, MessageSquare } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../context/AuthContext';
 
@@ -8,6 +8,7 @@ const AdminComments: React.FC = () => {
   const { isAdmin } = useAuth();
   const navigate = useNavigate();
   const [comments, setComments] = useState<any[]>([]);
+  const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -31,6 +32,8 @@ const AdminComments: React.FC = () => {
     setComments(prev => prev.filter(c => c.id !== id));
   };
 
+  const filteredData = search ? comments.filter(item => (item as any).content?.toLowerCase().includes(search.toLowerCase()) || (item as any).author_name?.toLowerCase().includes(search.toLowerCase())) : comments;
+
   if (!isAdmin) return null;
 
   return (
@@ -43,6 +46,10 @@ const AdminComments: React.FC = () => {
 
         <div className="flex items-center justify-between mb-8">
           <h1 className="text-2xl font-semibold text-aing-text">댓글 관리</h1>
+          <div className="relative mb-4">
+            <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-aing-muted"/>
+            <input type="text" value={search} onChange={e=>setSearch(e.target.value)} placeholder="내용, 작성자 검색..." className="input-field pl-8 py-1.5 text-xs w-64"/>
+          </div>
           <span className="text-sm text-aing-muted">{comments.length}개</span>
         </div>
 
@@ -55,7 +62,7 @@ const AdminComments: React.FC = () => {
           </div>
         ) : (
           <div className="space-y-3">
-            {comments.map(c => (
+            {filteredData.map(c => (
               <div key={c.id} className="card">
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex-1">

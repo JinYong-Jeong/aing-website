@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { ArrowLeft, PlusCircle, Pencil, Trash2, Pin } from 'lucide-react';
+import { ArrowLeft, Search, PlusCircle, Pencil, Trash2, Pin } from 'lucide-react';
 import { supabase, Post } from '../../lib/supabase';
 import { useAuth } from '../../context/AuthContext';
 
@@ -15,6 +15,7 @@ const AdminPosts: React.FC = () => {
   const { isAdmin } = useAuth();
   const navigate = useNavigate();
   const [posts, setPosts] = useState<Post[]>([]);
+  const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -43,6 +44,8 @@ const AdminPosts: React.FC = () => {
     setPosts(prev => prev.map(p => p.id === id ? { ...p, is_pinned: !current } : p));
   };
 
+  const filteredData = search ? posts.filter(item => (item as any).title?.toLowerCase().includes(search.toLowerCase()) || (item as any).category?.toLowerCase().includes(search.toLowerCase()) || (item as any).author_name?.toLowerCase().includes(search.toLowerCase())) : posts;
+
   if (!isAdmin) return null;
 
   return (
@@ -55,6 +58,10 @@ const AdminPosts: React.FC = () => {
 
         <div className="flex items-center justify-between mb-8">
           <h1 className="text-2xl font-semibold text-aing-text">게시글 관리</h1>
+          <div className="relative mb-4">
+            <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-aing-muted"/>
+            <input type="text" value={search} onChange={e=>setSearch(e.target.value)} placeholder="제목, 카테고리 검색..." className="input-field pl-8 py-1.5 text-xs w-64"/>
+          </div>
           <Link to="/admin/posts/new" className="btn-primary flex items-center gap-2 text-sm">
             <PlusCircle size={14} />
             새 게시글
@@ -69,7 +76,7 @@ const AdminPosts: React.FC = () => {
           <div className="card text-center py-16 text-aing-muted">게시글이 없습니다.</div>
         ) : (
           <div className="space-y-3">
-            {posts.map(post => (
+            {filteredData.map(post => (
               <div key={post.id} className="card flex items-center gap-4">
                 <span className={`text-xs px-2 py-0.5 rounded-full border font-mono shrink-0 ${CATEGORY_COLORS[post.category]}`}>
                   {post.category}

@@ -14,6 +14,7 @@ const AdminTeamPosts: React.FC = () => {
   const { isAdmin } = useAuth();
   const navigate = useNavigate();
   const [posts, setPosts] = useState<TeamPostWithApps[]>([]);
+  const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
@@ -76,6 +77,8 @@ const AdminTeamPosts: React.FC = () => {
     year: 'numeric', month: 'short', day: 'numeric',
   });
 
+  const filteredData = search ? posts.filter(item => (item as any).title?.toLowerCase().includes(search.toLowerCase()) || (item as any).author_name?.toLowerCase().includes(search.toLowerCase()) || (item as any).description?.toLowerCase().includes(search.toLowerCase())) : posts;
+
   if (!isAdmin) return null;
 
   return (
@@ -88,6 +91,10 @@ const AdminTeamPosts: React.FC = () => {
             </Link>
             <div className="flex-1">
               <h1 className="text-xl font-semibold text-aing-text">팀원 모집 관리</h1>
+          <div className="relative mb-4">
+            <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-aing-muted"/>
+            <input type="text" value={search} onChange={e=>setSearch(e.target.value)} placeholder="제목, 작성자 검색..." className="input-field pl-8 py-1.5 text-xs w-64"/>
+          </div>
               <p className="text-aing-muted text-sm mt-0.5">전체 팀원 모집 게시글 및 신청자 관리</p>
             </div>
             <button
@@ -133,7 +140,7 @@ const AdminTeamPosts: React.FC = () => {
           <div className="text-center py-16 text-aing-muted text-sm">게시글이 없습니다.</div>
         ) : (
           <div className="space-y-3">
-            {posts.map((post, i) => {
+            {filteredData.map((post, i) => {
               const pendingApps = (post.applications || []).filter(a => a.status === 'pending');
               const acceptedApps = (post.applications || []).filter(a => a.status === 'accepted');
               const totalApps = (post.applications || []).length;
