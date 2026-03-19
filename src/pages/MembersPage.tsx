@@ -57,6 +57,8 @@ const MembersPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [filtersOpen, setFiltersOpen] = useState(true);
   const [search, setSearch] = useState('');
+  const [pageSize, setPageSize] = useState(12);
+  const [page, setPage] = useState(1);
 
   // Filters
   const [trackFilter, setTrackFilter] = useState<'all' | 'junior' | 'senior' | 'admin' | 'ob'>('all');
@@ -112,6 +114,8 @@ const MembersPage: React.FC = () => {
     }
     return true;
   });
+  const totalPages = Math.ceil(filtered.length / pageSize);
+  const paginated = filtered.slice((page - 1) * pageSize, page * pageSize);
 
   const hasFilters = trackFilter !== 'all' || interestFilter !== '' || workloadFilter !== '' || statusFilter !== '';
 
@@ -298,7 +302,7 @@ const MembersPage: React.FC = () => {
             </div>
           ) : (
             <div className="grid md:grid-cols-3 lg:grid-cols-4 gap-4">
-              {filtered.map((member, i) => {
+              {paginated.map((member, i) => {
                 const status = member.status ?? 'free';
                 const workload = member.workload ?? 0;
                 const interests = member.interests ?? [];
@@ -407,6 +411,16 @@ const MembersPage: React.FC = () => {
             </div>
           )}
         </div>
+
+          {totalPages > 1 && (
+            <div className="flex items-center justify-center gap-2 mt-8">
+              <button onClick={()=>setPage(p=>Math.max(1,p-1))} disabled={page===1} className="btn-ghost text-xs px-3 py-1.5 disabled:opacity-40">← 이전</button>
+              {Array.from({length:totalPages},(_,i)=>i+1).map(p=>(
+                <button key={p} onClick={()=>setPage(p)} className={`text-xs px-3 py-1.5 rounded-lg border transition-all ${page===p?'bg-aing-dark text-white':'border-aing-border text-aing-muted hover:border-aing-blue'}`}>{p}</button>
+              ))}
+              <button onClick={()=>setPage(p=>Math.min(totalPages,p+1))} disabled={page===totalPages} className="btn-ghost text-xs px-3 py-1.5 disabled:opacity-40">다음 →</button>
+            </div>
+          )}
       </section>
     </div>
   );

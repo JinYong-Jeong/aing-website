@@ -10,6 +10,8 @@ const TeamPage: React.FC = () => {
   const [posts, setPosts] = useState<(TeamPost & { author?: Member; applications?: TeamApplication[] })[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
+  const [pageSize, setPageSize] = useState(10);
+  const [page, setPage] = useState(1);
   const [filterStatus, setFilterStatus] = useState<'all' | 'open' | 'closed'>('all');
   const [search, setSearch] = useState('');
 
@@ -63,6 +65,8 @@ const TeamPage: React.FC = () => {
         (p.required_skills || []).some((s: string) => s.toLowerCase().includes(q))
       );
     });
+  const totalPages = Math.ceil(filtered.length / pageSize);
+  const paginated = filtered.slice((page - 1) * pageSize, page * pageSize);
 
   const handleSubmit = async () => {
     setFormError('');

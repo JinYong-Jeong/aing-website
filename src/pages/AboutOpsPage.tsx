@@ -21,7 +21,7 @@ const LEVEL_CONFIG: Record<string, { label: string; color: string; bg: string }>
 const EMPTY_FORM = {
   name: '', role: '', responsibilities: '',
   level: 'member' as OpsTeamMember['level'],
-  order: 99, generation: 1,
+  order: 0, generation: 1,
 };
 
 const AboutOpsPage: React.FC = () => {

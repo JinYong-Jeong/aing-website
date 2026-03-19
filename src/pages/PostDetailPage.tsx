@@ -295,7 +295,10 @@ const PostDetailPage: React.FC = () => {
                 {comments.map(c => (
                   <div key={c.id} className="card">
                     <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm font-medium text-aing-text">{c.author_name}</span>
+                      <span className="text-sm font-medium text-aing-text">
+                        {c.author_name}
+                        {isAdmin && (c as any).author_id && <span className="text-xs text-aing-muted ml-1">(ID: {String((c as any).author_id).slice(0,8)})</span>}
+                      </span>
                       <span className="text-xs text-aing-muted font-mono">{formatDatetime(c.created_at)}</span>
                     </div>
                     <p className="text-sm text-aing-muted leading-relaxed">{c.content}</p>
@@ -312,6 +315,11 @@ const PostDetailPage: React.FC = () => {
             <h3 className="text-sm font-semibold text-aing-text mb-4">댓글 작성</h3>
             {submitted ? (
               <p className="text-aing-muted text-sm py-4 text-center">댓글이 등록되었습니다.</p>
+            ) : !user ? (
+              <div className="card border-dashed text-center py-6">
+                <p className="text-sm text-aing-muted mb-3">댓글을 작성하려면 로그인이 필요합니다.</p>
+                <a href="/login" className="btn-primary text-xs">로그인</a>
+              </div>
             ) : (
               <form onSubmit={handleComment} className="space-y-3">
                 <div className="grid sm:grid-cols-2 gap-3">

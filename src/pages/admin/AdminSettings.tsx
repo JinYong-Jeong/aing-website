@@ -34,6 +34,14 @@ const SECTIONS = [
     ],
   },
   {
+    id: 'interests',
+    label: '관심분야 목록',
+    icon: Database,
+    fields: [
+      { key: 'interests_list', label: '관심분야 (쉼표 구분)', type: 'text', placeholder: 'CV,NLP,RL,Agent,Transformer,Optimization,On-Device,Federated Learning' },
+    ],
+  },
+  {
     id: 'recruit',
     label: '모집 설정',
     icon: Users,

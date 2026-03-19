@@ -37,3 +37,8 @@ export const CATEGORY_COLORS: Record<string, string> = {
   study: 'text-aing-blue border-blue-200 bg-blue-50',
   project: 'text-purple-600 border-purple-200 bg-purple-50',
 };
+
+export const DEFAULT_INTERESTS: string[] = [
+  'CV', 'NLP', 'RL', 'Transformer', 'Agent', 'Optimization',
+  'On-Device', 'Federated Learning', 'Generative AI', 'MLOps',
+];

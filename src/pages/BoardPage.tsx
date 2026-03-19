@@ -67,6 +67,8 @@ const BoardPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<'all' | 'notice' | 'activity' | 'study' | 'project'>('all');
   const [search, setSearch] = useState('');
+  const [pageSize, setPageSize] = useState(10);
+  const [page, setPage] = useState(1);
   const [likeCounts, setLikeCounts] = useState<Record<string, number>>({});
   const [likedPosts, setLikedPosts] = useState<Record<string, boolean>>({});
   const [commentCounts, setCommentCounts] = useState<Record<string, number>>({});
@@ -130,6 +132,8 @@ const BoardPage: React.FC = () => {
   const filtered = posts
     .filter(p => filter === 'all' || p.category === filter)
     .filter(p => !search || p.title.toLowerCase().includes(search.toLowerCase()));
+  const totalPages = Math.ceil(filtered.length / pageSize);
+  const paginated = filtered.slice((page - 1) * pageSize, page * pageSize);
 
   const myStudyPosts = posts.filter(p => p.category === 'study' && (p.author_name === user?.name || (p as any).author?.name === user?.name));
 
@@ -254,6 +258,16 @@ const BoardPage: React.FC = () => {
               새 글 작성
             </Link>
           </div>
+
+          {totalPages > 1 && (
+            <div className="flex items-center justify-center gap-2 mt-6">
+              <button onClick={()=>setPage(p=>Math.max(1,p-1))} disabled={page===1} className="btn-ghost text-xs px-3 py-1.5 disabled:opacity-40">← 이전</button>
+              {Array.from({length:totalPages},(_,i)=>i+1).map(p=>(
+                <button key={p} onClick={()=>setPage(p)} className={`text-xs px-3 py-1.5 rounded-lg border transition-all ${page===p?'bg-aing-dark text-white':'border-aing-border text-aing-muted hover:border-aing-blue'}`}>{p}</button>
+              ))}
+              <button onClick={()=>setPage(p=>Math.min(totalPages,p+1))} disabled={page===totalPages} className="btn-ghost text-xs px-3 py-1.5 disabled:opacity-40">다음 →</button>
+            </div>
+          )}
         </div>
       </section>
 
@@ -274,6 +288,11 @@ const BoardPage: React.FC = () => {
             ))}
           </div>
           <div className="flex items-center gap-2 border border-aing-border rounded-xl px-3 py-2 bg-white w-full sm:w-64 ml-auto">
+            <select value={pageSize} onChange={e=>{setPageSize(Number(e.target.value));setPage(1);}} className="input-field py-1 text-xs w-20 mr-2">
+              <option value={5}>5개</option>
+              <option value={10}>10개</option>
+              <option value={20}>20개</option>
+            </select>
             <Search size={14} className="text-aing-muted shrink-0" />
             <input
               type="text"
@@ -300,7 +319,7 @@ const BoardPage: React.FC = () => {
             </div>
           ) : (
             <div className="space-y-3">
-              {filtered.map((post, i) => {
+              {paginated.map((post, i) => {
                 const authorName = getAuthorName(post);
                 const colorIdx = authorName ? authorName.charCodeAt(0) % AVATAR_COLORS.length : 0;
                 return (
