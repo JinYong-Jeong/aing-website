@@ -45,6 +45,7 @@ const MemberDetailPage: React.FC = () => {
   const [member, setMember] = useState<Member | null>(null);
   const [projects, setProjects] = useState<Project[]>([]);
   const [teamPosts, setTeamPosts] = useState<Pick<TeamPost, 'id' | 'title' | 'status' | 'created_at'>[]>([]);
+  const [awards, setAwards] = useState<(ActivityAward & { activity?: Activity })[]>([]);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
 
@@ -100,6 +101,13 @@ const MemberDetailPage: React.FC = () => {
           } catch {
             // team posts fetch failed silently
           }
+          try {
+            const { data: awardsData } = await supabase
+              .from('activity_awards')
+              .select('*, activity:activities(*)')
+              .eq('member_id', id);
+            if (awardsData) setAwards(awardsData as any);
+          } catch {}
         }
       } catch {
         setNotFound(true);
