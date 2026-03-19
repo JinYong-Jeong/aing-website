@@ -162,6 +162,12 @@ const MembersPage: React.FC = () => {
                 <span className="text-xs bg-aing-blue text-white rounded-full px-2 py-0.5">적용중</span>
               )}
             </button>
+            <select value={pageSize} onChange={e=>{setPageSize(Number(e.target.value));setPage(1);}} className="input-field py-1 text-xs w-20">
+              <option value={12}>12개</option>
+              <option value={24}>24개</option>
+              <option value={48}>48개</option>
+            </select>
+            </button>
             <div className="flex items-center gap-3">
               {hasFilters && (
                 <button
