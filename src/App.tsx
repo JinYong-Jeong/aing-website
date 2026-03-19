@@ -1,6 +1,7 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
+import { SiteSettingsProvider } from './context/SiteSettingsContext';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import HomePage from './pages/HomePage';
@@ -37,6 +38,7 @@ import AdminTeamPosts from './pages/admin/AdminTeamPosts';
 function App() {
   return (
     <BrowserRouter>
+      <SiteSettingsProvider>
       <AuthProvider>
         <div className="min-h-screen bg-aing-black flex flex-col">
           <Navbar />
@@ -87,6 +89,7 @@ function App() {
           <Footer />
         </div>
       </AuthProvider>
+      </SiteSettingsProvider>
     </BrowserRouter>
   );
 }

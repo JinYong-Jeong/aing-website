@@ -39,19 +39,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const login = async (name: string, password: string): Promise<boolean> => {
     // 1. users 테이블 확인
     try {
-      const { data: userData } = await supabase
-        .from('users')
-        .select('*')
-        .eq('name', name.trim())
-        .eq('password_hash', password)
-        .single();
+      // v11: bcrypt 해싱 검증 (check_user_password RPC)
+      const { data: rpcData } = await supabase.rpc('check_user_password', {
+        p_name: name.trim(),
+        p_password: password,
+      });
+      const userData = rpcData && rpcData.length > 0 ? rpcData[0] : null;
 
       if (userData) {
         const u: AuthUser = {
           id: userData.id,
           name: userData.name,
           role: userData.role as 'admin' | 'ops' | 'member' | 'ob',
-          member_id: userData.member_id,
+          member_id: userData.member_id || null,
         };
         setUser(u);
         sessionStorage.setItem('aing_user', JSON.stringify(u));

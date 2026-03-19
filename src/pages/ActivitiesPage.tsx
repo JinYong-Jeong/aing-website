@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Calendar, BookOpen, Code2, Users, Trophy, ArrowRight, Github, Pencil, PlusCircle, Trash2, X, Check, ExternalLink, Search } from 'lucide-react';
 import AnimatedSection from '../components/AnimatedSection';
 import { supabase, Activity } from '../lib/supabase';
@@ -96,8 +96,7 @@ const ActivityCard: React.FC<{
   const dateRange = formatDateRange(item.start_date, item.end_date);
 
   return (
-    <Link to={`/activities/${item.id}`} className="block h-full">
-    <div className="card group h-full flex flex-col relative cursor-pointer hover:border-aing-blue transition-colors">
+    <div className="card group h-full flex flex-col relative cursor-pointer hover:border-aing-blue transition-colors" onClick={() => { const slug = (item as any).slug || item.id; navigate(`/activities/${slug}`); }}>
       {/* Admin controls */}
       {isAdmin && (
         <div className="absolute top-3 right-3 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-10">
@@ -173,6 +172,7 @@ const ActivityCard: React.FC<{
             href={item.detail_url}
             target="_blank"
             rel="noreferrer"
+            onClick={e => e.stopPropagation()}
             className={`inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-lg border transition-colors ${
               item.type === 'competition'
                 ? 'bg-amber-500 text-white border-amber-500 hover:bg-amber-600'
@@ -188,6 +188,7 @@ const ActivityCard: React.FC<{
             href={item.github}
             target="_blank"
             rel="noreferrer"
+            onClick={e => e.stopPropagation()}
             className="flex items-center gap-1.5 text-xs text-aing-muted hover:text-aing-text transition-colors"
           >
             <Github size={12} />
@@ -197,7 +198,6 @@ const ActivityCard: React.FC<{
         )}
       </div>
     </div>
-    </Link>
   );
 };
 

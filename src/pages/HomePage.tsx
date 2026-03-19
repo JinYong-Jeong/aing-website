@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, Brain, Code, Users, Zap, ChevronDown } from 'lucide-react';
 import AnimatedSection from '../components/AnimatedSection';
+import { useSiteSettings } from '../context/SiteSettingsContext';
 
 const stats = [
   { label: 'Active Members', value: '40+' },
@@ -36,6 +37,14 @@ const tracks = [
 const interests = ['Computer Vision', 'NLP', 'Reinforcement Learning', 'HCI', 'Multi-Agent Systems'];
 
 const HomePage: React.FC = () => {
+  const s = useSiteSettings();
+  const heroTitle = s.home_hero_title || 'Theory to Code.';
+  const heroSubtitle = s.home_hero_subtitle || '';
+  const tagline = s.tagline || 'Theory to Code. Code to Insight.';
+  const recruitOpen = s.recruit_open === 'true';
+  const recruitUrl = s.recruit_url || '/contact';
+  const instagramUrl = s.instagram || 'https://www.instagram.com/aing_gc/';
+  const githubUrl = s.github || 'https://github.com/aing-gachon';
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
 
   useEffect(() => {
@@ -90,7 +99,7 @@ const HomePage: React.FC = () => {
 
           {/* Tagline */}
           <h1 className="text-4xl md:text-6xl lg:text-7xl font-semibold tracking-tight mb-6 leading-tight">
-            <span className="text-gradient">Theory to Code.</span>
+            <span className="text-gradient">{heroTitle}</span>
             <br />
             <span className="text-aing-muted">Code to Insight.</span>
           </h1>
