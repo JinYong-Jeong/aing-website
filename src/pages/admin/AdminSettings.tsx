@@ -53,7 +53,7 @@ const AdminSettings: React.FC = () => {
   const [settings, setSettings] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState<string | null>(null);
-  const [saved, setSaved] = useState<Set<string>>(new Set());
+  const [saved, setSaved] = useState<string[]>([]);
   const [openSections, setOpenSections] = useState<Set<string>>(new Set(['site', 'contact', 'recruit']));
 
   useEffect(() => {
@@ -75,8 +75,8 @@ const AdminSettings: React.FC = () => {
     const value = settings[key] || '';
     await supabase.from('site_settings').upsert({ key, value, updated_at: new Date().toISOString() }, { onConflict: 'key' });
     setSaving(null);
-    setSaved(prev => new Set([...prev, key]));
-    setTimeout(() => setSaved(prev => { const n = new Set(prev); n.delete(key); return n; }), 2000);
+    setSaved(prev => [...prev, key]);
+    setTimeout(() => setSaved(prev => prev.filter(k => k !== key)), 2000);
   };
 
   const saveSection = async (sectionId: string) => {
@@ -90,8 +90,8 @@ const AdminSettings: React.FC = () => {
     }));
     await supabase.from('site_settings').upsert(rows, { onConflict: 'key' });
     setSaving(null);
-    setSaved(prev => new Set([...prev, sectionId]));
-    setTimeout(() => setSaved(prev => { const n = new Set(prev); n.delete(sectionId); return n; }), 2000);
+    setSaved(prev => [...prev, sectionId]);
+    setTimeout(() => setSaved(prev => prev.filter(k => k !== sectionId)), 2000);
   };
 
   const toggleSection = (id: string) => {
@@ -184,10 +184,10 @@ const AdminSettings: React.FC = () => {
                         <button
                           onClick={() => saveSection(section.id)}
                           disabled={saving === section.id}
-                          className={`btn-primary text-xs flex items-center gap-1.5 transition-all ${saved.has(section.id) ? 'bg-green-600 border-green-500' : ''}`}
+                          className={`btn-primary text-xs flex items-center gap-1.5 transition-all ${saved.includes(section.id) ? 'bg-green-600 border-green-500' : ''}`}
                         >
-                          {saved.has(section.id) ? <Check size={12} /> : <Save size={12} />}
-                          {saving === section.id ? '저장 중...' : saved.has(section.id) ? '저장됨 ✓' : '섹션 저장'}
+                          {saved.includes(section.id) ? <Check size={12} /> : <Save size={12} />}
+                          {saving === section.id ? '저장 중...' : saved.includes(section.id) ? '저장됨 ✓' : '섹션 저장'}
                         </button>
                       </div>
                     </div>
