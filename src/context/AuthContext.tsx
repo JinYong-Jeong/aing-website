@@ -87,14 +87,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // ignore
     }
 
-    // 3. fallback: admin/2026
-    if (name.trim() === 'admin' && password === '2026') {
-      const u: AuthUser = { id: 'admin', name: 'admin', role: 'admin', member_id: null };
-      setUser(u);
-      sessionStorage.setItem('aing_user', JSON.stringify(u));
-      return true;
-    }
-
     return false;
   };
 

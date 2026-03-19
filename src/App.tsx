@@ -18,6 +18,7 @@ import BoardPage from './pages/BoardPage';
 import NewPostPage from './pages/NewPostPage';
 import PostDetailPage from './pages/PostDetailPage';
 import ContactPage from './pages/ContactPage';
+import ActivityDetailPage from './pages/ActivityDetailPage';
 import ProjectsPage from './pages/ProjectsPage';
 import ProjectDetailPage from './pages/ProjectDetailPage';
 import LoginPage from './pages/LoginPage';
@@ -46,6 +47,7 @@ function App() {
               <Route path="/about/ops" element={<AboutOpsPage />} />
               <Route path="/about/ex-ops" element={<ExOpsPage />} />
               <Route path="/activities" element={<ActivitiesPage />} />
+              <Route path="/activities/:id" element={<ActivityDetailPage />} />
               <Route path="/history" element={<HistoryPage />} />
               <Route path="/projects" element={<ProjectsPage />} />
               <Route path="/projects/:id" element={<ProjectDetailPage />} />

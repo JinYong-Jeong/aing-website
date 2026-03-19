@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Github, Users, Pencil, ChevronDown, ChevronUp, X } from 'lucide-react';
+import { Github, Users, Pencil, ChevronDown, ChevronUp, X, Search } from 'lucide-react';
 import { supabase, Member } from '../lib/supabase';
 import AnimatedSection from '../components/AnimatedSection';
 
@@ -56,6 +56,7 @@ const MembersPage: React.FC = () => {
   const [members, setMembers] = useState<Member[]>([]);
   const [loading, setLoading] = useState(true);
   const [filtersOpen, setFiltersOpen] = useState(true);
+  const [search, setSearch] = useState('');
 
   // Filters
   const [trackFilter, setTrackFilter] = useState<'all' | 'junior' | 'senior' | 'admin' | 'ob'>('all');
@@ -100,6 +101,15 @@ const MembersPage: React.FC = () => {
       if (workloadFilter === 'heavy' && w < 4) return false;
     }
     if (statusFilter && m.status !== statusFilter) return false;
+    if (search.trim()) {
+      const q = search.toLowerCase();
+      const match =
+        m.name.toLowerCase().includes(q) ||
+        (m.bio || '').toLowerCase().includes(q) ||
+        (m.role || '').toLowerCase().includes(q) ||
+        (m.interests || []).some((i: string) => i.toLowerCase().includes(q));
+      if (!match) return false;
+    }
     return true;
   });
 

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
-import { Calendar, BookOpen, Code2, Users, Trophy, ArrowRight, Github, Pencil, PlusCircle, Trash2, X, Check, ExternalLink } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Calendar, BookOpen, Code2, Users, Trophy, ArrowRight, Github, Pencil, PlusCircle, Trash2, X, Check, ExternalLink, Search } from 'lucide-react';
 import AnimatedSection from '../components/AnimatedSection';
 import { supabase, Activity } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
@@ -35,48 +35,6 @@ const hardcodedFallback: Activity[] = [
     description: 'CV/NLP/RL 팀별 SOTA 모델 커스터마이징',
     tags: ['Senior', 'Project', 'Research'],
     github: 'https://github.com/aing-gachon/26-Spring-Senior-Session',
-    status: 'ongoing',
-    semester: '2026 Spring',
-  },
-  // --- TEST ENTRIES (clearly labeled) ---
-  {
-    id: 'test-study-1',
-    type: 'study',
-    title: '[TEST] Test Study',
-    description: 'test - 더미 스터디 항목',
-    tags: ['test'],
-    status: 'ongoing',
-    semester: '2026 Spring',
-  },
-  {
-    id: 'test-project-1',
-    type: 'project',
-    title: '[TEST] Test Project',
-    description: 'test - 더미 프로젝트 항목',
-    tags: ['test'],
-    status: 'ongoing',
-    semester: '2026 Spring',
-  },
-  {
-    id: 'test-competition-1',
-    type: 'competition',
-    title: '[TEST] Test Competition',
-    description: 'test - 더미 대회 항목. 해커톤/경진대회 카드 디자인 확인용.',
-    tags: ['test'],
-    status: 'ongoing',
-    semester: '2026 Spring',
-    result: 'test (예: 1st place, 대상)',
-    participants: 2,
-    start_date: '2026-03-01',
-    end_date: '2026-03-31',
-    detail_url: '#',
-  },
-  {
-    id: 'test-seminar-1',
-    type: 'seminar',
-    title: '[TEST] Test Seminar',
-    description: 'test - 더미 세미나 항목',
-    tags: ['test'],
     status: 'ongoing',
     semester: '2026 Spring',
   },
@@ -134,19 +92,20 @@ const ActivityCard: React.FC<{
   const dateRange = formatDateRange(item.start_date, item.end_date);
 
   return (
-    <div className="card group h-full flex flex-col relative">
+    <Link to={`/activities/${item.id}`} className="block h-full">
+    <div className="card group h-full flex flex-col relative cursor-pointer hover:border-aing-blue transition-colors">
       {/* Admin controls */}
       {isAdmin && (
         <div className="absolute top-3 right-3 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-10">
           <button
-            onClick={() => onEdit?.(item)}
+            onClick={(e) => { e.preventDefault(); e.stopPropagation(); onEdit?.(item); }}
             className="p-1 rounded-lg border border-aing-border bg-white text-aing-muted hover:text-aing-blue hover:border-blue-200 transition-colors"
             title="수정"
           >
             <Pencil size={12} />
           </button>
           <button
-            onClick={() => onDelete?.(item.id)}
+            onClick={(e) => { e.preventDefault(); e.stopPropagation(); onDelete?.(item.id); }}
             className="p-1 rounded-lg border border-aing-border bg-white text-aing-muted hover:text-red-500 hover:border-red-200 transition-colors"
             title="삭제"
           >
@@ -234,6 +193,7 @@ const ActivityCard: React.FC<{
         )}
       </div>
     </div>
+    </Link>
   );
 };
 
@@ -293,6 +253,7 @@ const ActivitiesPage: React.FC = () => {
   const { isAdmin } = useAuth();
   const [allActivities, setAllActivities] = useState<Activity[]>(hardcodedFallback);
   const [filter, setFilter] = useState<FilterType>('all');
+  const [search, setSearch] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
   const [form, setForm] = useState(EMPTY_FORM);
@@ -313,7 +274,16 @@ const ActivitiesPage: React.FC = () => {
     loadActivities();
   }, []);
 
-  const filtered = filter === 'all' ? allActivities : allActivities.filter(a => a.type === filter);
+  const filtered = (filter === 'all' ? allActivities : allActivities.filter(a => a.type === filter))
+    .filter(a => {
+      if (!search.trim()) return true;
+      const q = search.toLowerCase();
+      return (
+        a.title.toLowerCase().includes(q) ||
+        (a.description || '').toLowerCase().includes(q) ||
+        (a.tags || []).some(t => t.toLowerCase().includes(q))
+      );
+    });
 
   // Group by semester for display
   const grouped: Record<string, Activity[]> = {};
@@ -477,7 +447,8 @@ const ActivitiesPage: React.FC = () => {
 
       {/* Filter Bar */}
       <section className="py-4 px-6 border-b border-aing-border sticky top-16 z-30 glass">
-        <div className="max-w-6xl mx-auto flex items-center gap-2 overflow-x-auto">
+        <div className="max-w-6xl mx-auto flex items-center gap-2 flex-wrap">
+          <div className="flex items-center gap-2 overflow-x-auto">
           {FILTER_OPTIONS.map(opt => {
             const Icon = opt.icon;
             return (
@@ -495,6 +466,17 @@ const ActivitiesPage: React.FC = () => {
               </button>
             );
           })}
+          </div>
+          <div className="relative ml-auto">
+            <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-aing-muted" />
+            <input
+              type="text"
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              placeholder="검색..."
+              className="input-field pl-8 py-1.5 text-xs w-44"
+            />
+          </div>
         </div>
       </section>
 

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Users, Plus, X, Calendar } from 'lucide-react';
+import { Users, Plus, X, Calendar, Search } from 'lucide-react';
 import { supabase, Member, TeamPost, TeamApplication } from '../lib/supabase';
 import AnimatedSection from '../components/AnimatedSection';
 import { useAuth } from '../context/AuthContext';
@@ -11,6 +11,7 @@ const TeamPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [filterStatus, setFilterStatus] = useState<'all' | 'open' | 'closed'>('all');
+  const [search, setSearch] = useState('');
 
   const [form, setForm] = useState({
     title: '',
@@ -52,7 +53,16 @@ const TeamPage: React.FC = () => {
     fetchPosts();
   }, []);
 
-  const filtered = filterStatus === 'all' ? posts : posts.filter((p) => p.status === filterStatus);
+  const filtered = (filterStatus === 'all' ? posts : posts.filter((p) => p.status === filterStatus))
+    .filter(p => {
+      if (!search.trim()) return true;
+      const q = search.toLowerCase();
+      return (
+        p.title.toLowerCase().includes(q) ||
+        p.description.toLowerCase().includes(q) ||
+        (p.required_skills || []).some((s: string) => s.toLowerCase().includes(q))
+      );
+    });
 
   const handleSubmit = async () => {
     setFormError('');
