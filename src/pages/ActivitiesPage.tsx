@@ -91,6 +91,7 @@ const ActivityCard: React.FC<{
   onDelete?: (id: string) => void;
   isAdmin: boolean;
 }> = ({ item, onEdit, onDelete, isAdmin }) => {
+  const navigate = useNavigate();
   const cfg = TYPE_CONFIG[item.type] || TYPE_CONFIG.study;
   const Icon = cfg.icon;
   const dateRange = formatDateRange(item.start_date, item.end_date);
