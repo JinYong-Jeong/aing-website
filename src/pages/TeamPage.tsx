@@ -297,7 +297,7 @@ const TeamPage: React.FC = () => {
               모집 글이 없습니다.
             </div>
           ) : (
-            filtered.map((post, i) => {
+            paginated.map((post, i) => {
               const acceptedApps = (post.applications || []).filter(a => a.status === 'accepted');
               const acceptedCount = getAcceptedCount(post);
               const filled = post.current_members + acceptedCount;
