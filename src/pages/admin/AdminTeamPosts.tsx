@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
   Users, ChevronDown, ChevronUp, CheckCircle, XCircle,
-  Trash2, ArrowLeft, RefreshCw, X
+  Trash2, ArrowLeft, RefreshCw, X, Search
 } from 'lucide-react';
 import { supabase, TeamPost, TeamApplication } from '../../lib/supabase';
 import { useAuth } from '../../context/AuthContext';
