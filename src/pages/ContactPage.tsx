@@ -117,10 +117,6 @@ const ContactPage: React.FC = () => {
                         </div>
                       </a>
                     )}
-                    </p>
-                        </div>
-                      </a>
-                    )}
                     <div className="flex items-center gap-4">
                       <div className="p-3 rounded-xl bg-aing-bg-alt border border-aing-border">
                         <MapPin size={18} className="text-aing-blue" />
