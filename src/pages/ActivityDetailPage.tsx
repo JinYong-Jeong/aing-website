@@ -382,18 +382,17 @@ const ActivityDetailPage: React.FC = () => {
           {/* Detail Content (Markdown) */}
           {activity.detail_content && (
             <AnimatedSection>
-                <div className="text-aing-text text-sm leading-relaxed">
-                  {activity.detail_content.split("\n").map((line, i) => {
-                    if (line.startsWith("## ")) return <h2 key={i} className="font-bold text-lg mt-5 mb-2">{line.slice(3)}</h2>;
-                    if (line.startsWith("### ")) return <h3 key={i} className="font-semibold text-base mt-4 mb-1">{line.slice(4)}</h3>;
-                    if (line.startsWith("- ")) return <li key={i} className="ml-5 list-disc text-aing-muted">{line.slice(2)}</li>;
-                    if (line === "") return <br key={i} />;
-                    return <p key={i} className="mb-1">{line}</p>;
-                  })
-                  }
+              <div className="card">
+                <p className="text-xs text-aing-muted font-mono mb-3">상세 내용</p>
+                <div className="text-aing-text text-sm leading-relaxed space-y-1">
+                  {activity.detail_content.split('\n').map((line, i) => {
+                    if (line.startsWith('## ')) return <h2 key={i} className="font-bold text-lg mt-4 mb-2">{line.slice(3)}</h2>;
+                    if (line.startsWith('### ')) return <h3 key={i} className="font-semibold text-base mt-3 mb-1">{line.slice(4)}</h3>;
+                    if (line.startsWith('- ')) return <li key={i} className="ml-5 list-disc text-aing-muted">{line.slice(2)}</li>;
+                    if (line === '') return <br key={i} />;
+                    return <p key={i}>{line}</p>;
+                  })}
                 </div>
-                  }}
-                />
               </div>
             </AnimatedSection>
           )}
