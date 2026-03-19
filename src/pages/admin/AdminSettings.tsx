@@ -1,25 +1,51 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { ArrowLeft, Save, RefreshCw } from 'lucide-react';
+import {
+  ArrowLeft, Save, RefreshCw, Globe, Users, Megaphone, Palette,
+  Bell, Database, ShieldCheck, ChevronDown, ChevronUp, Check
+} from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../context/AuthContext';
 
-type Setting = {
-  id: string;
-  key: string;
-  value: string;
-  updated_at: string;
-};
+type Setting = { id: string; key: string; value: string; updated_at: string };
 
-const SETTING_LABELS: Record<string, string> = {
-  tagline: '태그라인 (한 줄 슬로건)',
-  description: '동아리 소개 (About 페이지)',
-  email: '이메일 주소',
-  github: 'GitHub 조직 URL',
-  location: '위치 (학교/건물)',
-};
-
-const SETTING_KEYS = ['tagline', 'description', 'email', 'github', 'location'];
+const SECTIONS = [
+  {
+    id: 'site',
+    label: '사이트 기본 정보',
+    icon: Globe,
+    fields: [
+      { key: 'tagline',             label: '태그라인',              type: 'text',     placeholder: 'Theory to Code. Code to Insight.' },
+      { key: 'description',         label: '동아리 소개 문구',       type: 'textarea', placeholder: '동아리를 소개하는 한 단락' },
+      { key: 'home_hero_title',     label: '홈 히어로 제목',          type: 'text',     placeholder: 'Theory to Code.' },
+      { key: 'home_hero_subtitle',  label: '홈 히어로 서브타이틀',    type: 'textarea', placeholder: '' },
+      { key: 'footer_text',         label: '푸터 텍스트',             type: 'text',     placeholder: 'A.ing © 2026.' },
+    ],
+  },
+  {
+    id: 'contact',
+    label: '연락처 & SNS',
+    icon: Megaphone,
+    fields: [
+      { key: 'email',     label: '이메일',        type: 'text', placeholder: 'gachon.aing@gmail.com' },
+      { key: 'github',    label: 'GitHub URL',    type: 'text', placeholder: 'https://github.com/aing-gachon' },
+      { key: 'instagram', label: 'Instagram URL', type: 'text', placeholder: 'https://instagram.com/aing_gc' },
+      { key: 'notion',    label: 'Notion URL',    type: 'text', placeholder: 'https://notion.so/...' },
+      { key: 'location',  label: '위치',           type: 'text', placeholder: '가천대학교 AI관' },
+    ],
+  },
+  {
+    id: 'recruit',
+    label: '모집 설정',
+    icon: Users,
+    fields: [
+      { key: 'recruit_open', label: '모집 중 여부', type: 'toggle', placeholder: '' },
+      { key: 'recruit_url',  label: '지원 링크 URL', type: 'text', placeholder: 'https://forms.gle/...' },
+      { key: 'semester_current', label: '현재 학기', type: 'text', placeholder: '2026 Spring' },
+      { key: 'max_members', label: '최대 정원', type: 'text', placeholder: '30' },
+    ],
+  },
+];
 
 const AdminSettings: React.FC = () => {
   const { isAdmin } = useAuth();
@@ -27,7 +53,8 @@ const AdminSettings: React.FC = () => {
   const [settings, setSettings] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState<string | null>(null);
-  const [saved, setSaved] = useState<string | null>(null);
+  const [saved, setSaved] = useState<Set<string>>(new Set());
+  const [openSections, setOpenSections] = useState<Set<string>>(new Set(['site', 'contact', 'recruit']));
 
   useEffect(() => {
     if (!isAdmin) { navigate('/admin/login'); return; }
@@ -46,86 +73,163 @@ const AdminSettings: React.FC = () => {
   const saveSetting = async (key: string) => {
     setSaving(key);
     const value = settings[key] || '';
-    await supabase
-      .from('site_settings')
-      .upsert({ key, value, updated_at: new Date().toISOString() }, { onConflict: 'key' });
+    await supabase.from('site_settings').upsert({ key, value, updated_at: new Date().toISOString() }, { onConflict: 'key' });
     setSaving(null);
-    setSaved(key);
-    setTimeout(() => setSaved(null), 2000);
+    setSaved(prev => new Set([...prev, key]));
+    setTimeout(() => setSaved(prev => { const n = new Set(prev); n.delete(key); return n; }), 2000);
+  };
+
+  const saveSection = async (sectionId: string) => {
+    const section = SECTIONS.find(s => s.id === sectionId);
+    if (!section) return;
+    setSaving(sectionId);
+    const rows = section.fields.map(f => ({
+      key: f.key,
+      value: settings[f.key] || '',
+      updated_at: new Date().toISOString(),
+    }));
+    await supabase.from('site_settings').upsert(rows, { onConflict: 'key' });
+    setSaving(null);
+    setSaved(prev => new Set([...prev, sectionId]));
+    setTimeout(() => setSaved(prev => { const n = new Set(prev); n.delete(sectionId); return n; }), 2000);
+  };
+
+  const toggleSection = (id: string) => {
+    setOpenSections(prev => {
+      const n = new Set(prev);
+      if (n.has(id)) n.delete(id); else n.add(id);
+      return n;
+    });
   };
 
   if (!isAdmin) return null;
 
   return (
     <div className="min-h-screen bg-aing-bg pt-20">
-      <div className="max-w-4xl mx-auto px-6 py-12">
+      <div className="max-w-3xl mx-auto px-6 py-12">
         <Link to="/admin" className="flex items-center gap-2 text-aing-muted hover:text-aing-text text-sm mb-8 transition-colors">
-          <ArrowLeft size={14} />
-          Dashboard
+          <ArrowLeft size={14} /> Dashboard
         </Link>
 
         <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className="text-2xl font-semibold text-aing-text">사이트 설정</h1>
-            <p className="text-aing-muted text-sm mt-1">About 페이지 및 사이트 정보를 관리합니다.</p>
+            <p className="text-aing-muted text-sm mt-1">사이트 정보, SNS, 모집 설정을 관리합니다.</p>
           </div>
           <button onClick={fetchSettings} className="btn-ghost flex items-center gap-2 text-sm">
-            <RefreshCw size={14} />
-            새로고침
+            <RefreshCw size={14} /> 새로고침
           </button>
         </div>
 
         {loading ? (
-          <div className="space-y-4">
-            {[...Array(5)].map((_, i) => <div key={i} className="card animate-pulse h-20" />)}
-          </div>
+          <div className="space-y-4">{[...Array(3)].map((_, i) => <div key={i} className="card animate-pulse h-24" />)}</div>
         ) : (
           <div className="space-y-4">
-            {SETTING_KEYS.map(key => (
-              <div key={key} className="card">
-                <label className="block text-xs font-mono text-aing-muted mb-2">
-                  {SETTING_LABELS[key] || key}
-                  <span className="ml-2 text-aing-border">({key})</span>
-                </label>
-                {key === 'description' ? (
-                  <textarea
-                    value={settings[key] || ''}
-                    onChange={e => setSettings(p => ({ ...p, [key]: e.target.value }))}
-                    className="input-field w-full resize-none"
-                    rows={3}
-                    placeholder={SETTING_LABELS[key]}
-                  />
-                ) : (
-                  <input
-                    value={settings[key] || ''}
-                    onChange={e => setSettings(p => ({ ...p, [key]: e.target.value }))}
-                    className="input-field w-full"
-                    placeholder={SETTING_LABELS[key]}
-                  />
-                )}
-                <div className="flex justify-end mt-3">
+            {SECTIONS.map(section => {
+              const SIcon = section.icon;
+              const isOpen = openSections.has(section.id);
+              return (
+                <div key={section.id} className="card p-0 overflow-hidden">
+                  {/* Section Header */}
                   <button
-                    onClick={() => saveSetting(key)}
-                    disabled={saving === key}
-                    className={`btn-primary text-xs flex items-center gap-1.5 transition-all ${
-                      saved === key ? 'bg-green-600 border-green-500' : ''
-                    }`}
+                    onClick={() => toggleSection(section.id)}
+                    className="w-full flex items-center justify-between p-5 hover:bg-aing-bg transition-colors"
                   >
-                    <Save size={12} />
-                    {saving === key ? '저장 중...' : saved === key ? '저장됨 ✓' : '저장'}
+                    <div className="flex items-center gap-3">
+                      <SIcon size={16} className="text-aing-blue" />
+                      <span className="text-sm font-semibold text-aing-text">{section.label}</span>
+                    </div>
+                    {isOpen ? <ChevronUp size={15} className="text-aing-muted" /> : <ChevronDown size={15} className="text-aing-muted" />}
                   </button>
+
+                  {isOpen && (
+                    <div className="px-5 pb-5 space-y-4 border-t border-aing-border">
+                      <div className="pt-4 space-y-4">
+                        {section.fields.map(field => (
+                          <div key={field.key}>
+                            <label className="block text-xs text-aing-muted mb-1.5 font-mono">
+                              {field.label} <span className="text-aing-border">({field.key})</span>
+                            </label>
+                            {field.type === 'toggle' ? (
+                              <div className="flex items-center gap-3">
+                                <button
+                                  type="button"
+                                  onClick={() => setSettings(p => ({ ...p, [field.key]: p[field.key] === 'true' ? 'false' : 'true' }))}
+                                  className={`relative w-11 h-6 rounded-full transition-colors ${settings[field.key] === 'true' ? 'bg-aing-blue' : 'bg-aing-border'}`}
+                                >
+                                  <span className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-transform ${settings[field.key] === 'true' ? 'left-6' : 'left-1'}`} />
+                                </button>
+                                <span className="text-sm text-aing-text">{settings[field.key] === 'true' ? '모집 중' : '모집 마감'}</span>
+                              </div>
+                            ) : field.type === 'textarea' ? (
+                              <textarea
+                                value={settings[field.key] || ''}
+                                onChange={e => setSettings(p => ({ ...p, [field.key]: e.target.value }))}
+                                className="input-field w-full resize-none"
+                                rows={3}
+                                placeholder={field.placeholder}
+                              />
+                            ) : (
+                              <input
+                                value={settings[field.key] || ''}
+                                onChange={e => setSettings(p => ({ ...p, [field.key]: e.target.value }))}
+                                className="input-field w-full"
+                                placeholder={field.placeholder}
+                              />
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                      <div className="flex justify-end pt-2">
+                        <button
+                          onClick={() => saveSection(section.id)}
+                          disabled={saving === section.id}
+                          className={`btn-primary text-xs flex items-center gap-1.5 transition-all ${saved.has(section.id) ? 'bg-green-600 border-green-500' : ''}`}
+                        >
+                          {saved.has(section.id) ? <Check size={12} /> : <Save size={12} />}
+                          {saving === section.id ? '저장 중...' : saved.has(section.id) ? '저장됨 ✓' : '섹션 저장'}
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
+              );
+            })}
+
+            {/* 관리자 빠른 링크 */}
+            <div className="card">
+              <div className="flex items-center gap-2 mb-4">
+                <Database size={15} className="text-aing-blue" />
+                <h3 className="text-sm font-semibold text-aing-text">관리 바로가기</h3>
               </div>
-            ))}
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                {[
+                  { to: '/admin/members', label: '멤버 관리' },
+                  { to: '/admin/activities', label: '활동 관리' },
+                  { to: '/admin/posts', label: '게시글 관리' },
+                  { to: '/admin/projects', label: '프로젝트 관리' },
+                  { to: '/admin/team', label: '팀 모집 관리' },
+                  { to: '/admin/comments', label: '댓글 관리' },
+                  { to: '/admin/messages', label: '문의 메시지' },
+                ].map(item => (
+                  <Link key={item.to} to={item.to} className="btn-ghost text-xs text-center py-2">{item.label}</Link>
+                ))}
+              </div>
+            </div>
+
+            {/* 보안 */}
+            <div className="card border-yellow-200 bg-yellow-50">
+              <div className="flex items-center gap-2 mb-2">
+                <ShieldCheck size={15} className="text-yellow-600" />
+                <h3 className="text-sm font-semibold text-yellow-700">보안 안내</h3>
+              </div>
+              <p className="text-xs text-yellow-700 leading-relaxed">
+                현재 비밀번호는 평문 저장입니다. 프로덕션 전 Supabase Auth 또는 bcrypt 해싱으로 전환을 권장합니다.
+                admin 계정은 Supabase users 테이블에서 직접 관리하세요.
+              </p>
+            </div>
           </div>
         )}
-
-        <div className="mt-8 card border-dashed">
-          <p className="text-xs text-aing-muted">
-            💡 변경사항은 즉시 Supabase에 반영되며, About 페이지가 동적으로 이 데이터를 읽어오도록 설정하면 실시간 반영됩니다.
-            현재는 설정값 저장만 지원합니다.
-          </p>
-        </div>
       </div>
     </div>
   );

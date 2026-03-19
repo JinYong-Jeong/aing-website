@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { Github, Mail, MessageCircle, Users, ChevronLeft, Pencil, Code2, ExternalLink } from 'lucide-react';
-import { supabase, Member, Project, TeamPost } from '../lib/supabase';
+import { Github, Trophy, Mail, MessageCircle, Users, ChevronLeft, Pencil, Code2, ExternalLink } from 'lucide-react';
+import { supabase, Member, ActivityAward, Activity, Project, TeamPost } from '../lib/supabase';
 
 const TRACK_LABELS: Record<string, string> = {
   junior: 'Junior',

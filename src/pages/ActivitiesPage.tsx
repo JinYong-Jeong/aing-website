@@ -232,7 +232,28 @@ const ActivityModal: React.FC<{
           <input value={form.github} onChange={e => setForm(p => ({ ...p, github: e.target.value }))} className="input-field" placeholder="GitHub URL" />
           <input value={form.start_date} onChange={e => setForm(p => ({ ...p, start_date: e.target.value }))} className="input-field" placeholder="시작일 (YYYY-MM-DD)" />
           <input value={form.end_date} onChange={e => setForm(p => ({ ...p, end_date: e.target.value }))} className="input-field" placeholder="종료일 (YYYY-MM-DD)" />
-          <input value={form.participants} onChange={e => setForm(p => ({ ...p, participants: e.target.value }))} className="input-field" placeholder="팀 인원 수 (숫자)" type="number" min="1" />
+          <div className="sm:col-span-2 space-y-2">
+            <label className="text-xs text-aing-muted">팀 구성 방식</label>
+            <div className="flex gap-2 flex-wrap">
+              {(['single','min','max','range'] as const).map(t => (
+                <button key={t} type="button"
+                  onClick={() => setForm(p=>({...p, participants_type: t as any}))}
+                  className={\`px-3 py-1 rounded-full text-xs border transition-all \${(form as any).participants_type===t?'bg-aing-dark text-white':'border-aing-border text-aing-muted'}\`}>
+                  {t==='single'?'단일':t==='min'?'이상':t==='max'?'이하':'범위'}
+                </button>
+              ))}
+            </div>
+            <div className="flex gap-2">
+              {(form as any).participants_type==='single' && <input value={form.participants} onChange={e=>setForm(p=>({...p,participants:e.target.value}))} className="input-field w-32" placeholder="인원 수" type="number" min="1" />}
+              {(form as any).participants_type==='min' && <input value={(form as any).participants_min||''} onChange={e=>setForm(p=>({...p,participants_min:e.target.value} as any))} className="input-field w-32" placeholder="최소 인원" type="number" min="1" />}
+              {(form as any).participants_type==='max' && <input value={(form as any).participants_max||''} onChange={e=>setForm(p=>({...p,participants_max:e.target.value} as any))} className="input-field w-32" placeholder="최대 인원" type="number" min="1" />}
+              {(form as any).participants_type==='range' && <>
+                <input value={(form as any).participants_min||''} onChange={e=>setForm(p=>({...p,participants_min:e.target.value} as any))} className="input-field w-28" placeholder="최소" type="number" min="1" />
+                <span className="self-center text-aing-muted">~</span>
+                <input value={(form as any).participants_max||''} onChange={e=>setForm(p=>({...p,participants_max:e.target.value} as any))} className="input-field w-28" placeholder="최대" type="number" min="1" />
+              </>}
+            </div>
+          </div>
           <input value={form.result} onChange={e => setForm(p => ({ ...p, result: e.target.value }))} className="input-field" placeholder="결과 (예: 1st place, 대상)" />
           <input value={form.detail_url} onChange={e => setForm(p => ({ ...p, detail_url: e.target.value }))} className="input-field" placeholder="상세 페이지 URL (detail_url)" />
           <input value={form.image_url} onChange={e => setForm(p => ({ ...p, image_url: e.target.value }))} className="input-field" placeholder="이미지 URL (image_url)" />

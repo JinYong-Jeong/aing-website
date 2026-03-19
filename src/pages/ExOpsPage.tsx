@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Users, ChevronRight, PlusCircle, Pencil, Trash2, X, Check } from 'lucide-react';
 import AnimatedSection from '../components/AnimatedSection';
-import { supabase, ExOpsMember } from '../lib/supabase';
+import { supabase, ExOpsMember, Member } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
 
 const demoData: ExOpsMember[] = [
@@ -20,6 +20,24 @@ const ExOpsPage: React.FC = () => {
   const [editId, setEditId] = useState<string | null>(null);
   const [form, setForm] = useState(EMPTY_FORM);
   const [saving, setSaving] = useState(false);
+  const [selectedExOps, setSelectedExOps] = useState<ExOpsMember | null>(null);
+  const [exLinkedMember, setExLinkedMember] = useState<Member | null>(null);
+  const [loadingMember, setLoadingMember] = useState(false);
+
+  const handleCardClick = async (m: ExOpsMember) => {
+    setSelectedExOps(m);
+    setExLinkedMember(null);
+    setLoadingMember(true);
+    try {
+      const { data } = await supabase
+        .from('members')
+        .select('*')
+        .ilike('name', m.name.trim())
+        .single();
+      if (data) setExLinkedMember(data as Member);
+    } catch {}
+    setLoadingMember(false);
+  };
 
   useEffect(() => {
     const load = async () => {
@@ -74,6 +92,41 @@ const ExOpsPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-aing-bg pt-20">
+      {/* Member Detail Modal */}
+      {selectedExOps && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50" onClick={() => setSelectedExOps(null)}>
+          <div className="bg-white rounded-2xl border border-aing-border shadow-xl w-full max-w-md p-6" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-base font-semibold text-aing-text">{selectedExOps.name}</h3>
+              <button onClick={() => setSelectedExOps(null)} className="text-aing-muted hover:text-aing-text"><X size={18}/></button>
+            </div>
+            {loadingMember ? (
+              <div className="space-y-2">{[...Array(3)].map((_,i)=><div key={i} className="animate-pulse h-6 bg-aing-border rounded"/>)}</div>
+            ) : (
+              <div className="space-y-3">
+                <p className="text-sm text-aing-muted">{selectedExOps.role} · {selectedExOps.generation} · {selectedExOps.term}</p>
+                {selectedExOps.description && <p className="text-sm text-aing-text border-l-2 border-aing-blue pl-3">{selectedExOps.description}</p>}
+                {exLinkedMember ? (
+                  <>
+                    <hr className="border-aing-border"/>
+                    {exLinkedMember.bio && <p className="text-sm text-aing-muted">{exLinkedMember.bio}</p>}
+                    {exLinkedMember.interests && exLinkedMember.interests.length > 0 && (
+                      <div className="flex flex-wrap gap-1">{exLinkedMember.interests.map(i=><span key={i} className="tag">#{i}</span>)}</div>
+                    )}
+                    <div className="pt-2">
+                      <Link to={`/members/${exLinkedMember.id}`} className="btn-primary text-xs">프로필 전체 보기</Link>
+                    </div>
+                  </>
+                ) : (
+                  <p className="text-xs text-aing-muted">현재 활동 멤버가 아닙니다.</p>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+
       {/* Modal */}
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">

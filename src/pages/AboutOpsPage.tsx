@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Users, Crown, ChevronRight, PlusCircle, Pencil, Trash2, X, Check } from 'lucide-react';
 import AnimatedSection from '../components/AnimatedSection';
-import { supabase, OpsTeamMember } from '../lib/supabase';
+import { supabase, OpsTeamMember, Member } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
 
 const demoData: OpsTeamMember[] = [
@@ -31,6 +31,24 @@ const AboutOpsPage: React.FC = () => {
   const [editId, setEditId] = useState<string | null>(null);
   const [form, setForm] = useState(EMPTY_FORM);
   const [saving, setSaving] = useState(false);
+  const [selectedOps, setSelectedOps] = useState<OpsTeamMember | null>(null);
+  const [opsLinkedMember, setOpsLinkedMember] = useState<Member | null>(null);
+  const [loadingMember, setLoadingMember] = useState(false);
+
+  const handleCardClick = async (m: OpsTeamMember) => {
+    setSelectedOps(m);
+    setOpsLinkedMember(null);
+    setLoadingMember(true);
+    try {
+      const { data } = await supabase
+        .from('members')
+        .select('*')
+        .ilike('name', m.name.trim())
+        .single();
+      if (data) setOpsLinkedMember(data as Member);
+    } catch {}
+    setLoadingMember(false);
+  };
 
   useEffect(() => {
     const load = async () => {
@@ -117,6 +135,46 @@ const AboutOpsPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-aing-bg pt-20">
+      {/* Member Detail Modal */}
+      {selectedOps && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50" onClick={() => setSelectedOps(null)}>
+          <div className="bg-white rounded-2xl border border-aing-border shadow-xl w-full max-w-md p-6" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-base font-semibold text-aing-text">{selectedOps.name}</h3>
+              <button onClick={() => setSelectedOps(null)} className="text-aing-muted hover:text-aing-text"><X size={18}/></button>
+            </div>
+            {loadingMember ? (
+              <div className="space-y-2">{[...Array(3)].map((_,i)=><div key={i} className="animate-pulse h-6 bg-aing-border rounded"/>)}</div>
+            ) : opsLinkedMember ? (
+              <div className="space-y-3">
+                <p className="text-sm text-aing-muted">{selectedOps.role} · {selectedOps.level}</p>
+                {selectedOps.responsibilities && <p className="text-sm text-aing-text border-l-2 border-aing-blue pl-3">{selectedOps.responsibilities}</p>}
+                <hr className="border-aing-border"/>
+                {opsLinkedMember.bio && <p className="text-sm text-aing-muted">{opsLinkedMember.bio}</p>}
+                {opsLinkedMember.interests && opsLinkedMember.interests.length > 0 && (
+                  <div className="flex flex-wrap gap-1">{opsLinkedMember.interests.map(i=><span key={i} className="tag">#{i}</span>)}</div>
+                )}
+                {opsLinkedMember.github && (
+                  <a href={opsLinkedMember.github} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 text-xs text-aing-muted hover:text-aing-text">
+                    GitHub →
+                  </a>
+                )}
+                <div className="pt-2">
+                  <Link to={`/members/${opsLinkedMember.id}`} className="btn-primary text-xs">프로필 전체 보기</Link>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                <p className="text-sm text-aing-muted">{selectedOps.role}</p>
+                {selectedOps.responsibilities && <p className="text-sm text-aing-text border-l-2 border-aing-blue pl-3">{selectedOps.responsibilities}</p>}
+                <p className="text-xs text-aing-muted mt-3">멤버 프로필이 연결되지 않았습니다.</p>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+
       {/* Modal */}
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">

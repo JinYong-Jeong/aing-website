@@ -135,8 +135,21 @@ export type Activity = {
   start_date?: string;
   end_date?: string;
   participants?: number;
+  participants_type?: 'single' | 'min' | 'max' | 'range';
+  participants_min?: number;
+  participants_max?: number;
   result?: string;
   image_url?: string;
+};
+
+export type ActivityAward = {
+  id: string;
+  activity_id: string;
+  member_id: string;
+  rank: '1st' | '2nd' | '3rd' | 'special' | 'participation';
+  note?: string;
+  created_at?: string;
+  member?: Member;
 };
 
 export type OpsTeamMember = {
