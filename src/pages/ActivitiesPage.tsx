@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { Calendar, BookOpen, Code2, Users, Trophy, ArrowRight, Github, Pencil, PlusCircle, Trash2, X, Check, ExternalLink, Search } from 'lucide-react';
 import AnimatedSection from '../components/AnimatedSection';
 import { supabase, Activity } from '../lib/supabase';

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Calendar, BookOpen, Code2, Users, Trophy, Github, ExternalLink, Search } from 'lucide-react';
+import { Calendar, BookOpen, Code2, Users, Trophy, Search } from 'lucide-react';
 import AnimatedSection from '../components/AnimatedSection';
 import { supabase, Activity } from '../lib/supabase';
 

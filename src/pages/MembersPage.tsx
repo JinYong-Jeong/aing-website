@@ -176,6 +176,10 @@ const MembersPage: React.FC = () => {
 
           {filtersOpen && (
             <div className="space-y-3">
+              <div className="relative mb-3">
+                <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-aing-muted" />
+                <input type="text" value={search} onChange={e => setSearch(e.target.value)} placeholder="이름, 역할, 관심사 검색..." className="input-field pl-9 text-sm w-full" />
+              </div>
               {/* Track filter */}
               <div className="flex items-center gap-2 flex-wrap">
                 <span className="text-xs text-aing-muted w-14 shrink-0">트랙</span>

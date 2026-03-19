@@ -268,6 +268,10 @@ const TeamPage: React.FC = () => {
             </button>
           ))}
           <button
+          <div className="relative">
+            <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-aing-muted" />
+            <input type="text" value={search} onChange={e => setSearch(e.target.value)} placeholder="검색..." className="input-field pl-8 py-1.5 text-xs w-40" />
+          </div>
             onClick={() => setShowForm(true)}
             className="ml-auto flex items-center gap-1.5 bg-aing-blue text-white px-4 py-2 rounded-full text-sm font-medium hover:opacity-90 transition-opacity"
           >
