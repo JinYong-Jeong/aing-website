@@ -36,7 +36,7 @@ const EMPTY_FORM = {
   start_date: '', end_date: '', participants: '',
   participants_type: 'single' as 'single'|'min'|'max'|'range',
   participants_min: '', participants_max: '',
-  result: '', detail_url: '', image_url: '',
+  result: '', detail_url: '', image_url: '', detail_content: '',
 };
 
 const ActivityDetailPage: React.FC = () => {
