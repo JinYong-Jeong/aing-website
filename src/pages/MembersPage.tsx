@@ -31,14 +31,7 @@ const STATUS_LABELS: Record<string, string> = {
   free: '프로젝트 희망',
 };
 
-const demoMembers: Member[] = [
-  { id: '1', name: '송이두', role: 'President', track: 'admin', semester: '2026 Spring', github: 'https://github.com', is_active: true, created_at: '', interests: ['CV', 'NLP'], workload: 3, status: 'mid' },
-  { id: '2', name: '정진용', role: 'Researcher', track: 'senior', semester: '2026 Spring', github: 'https://github.com/JinYong-Jeong', bio: 'On-Device AI Agent, Federated Learning', is_active: true, created_at: '', interests: ['RL', 'CV'], workload: 2, status: 'free', looking_for_team: true },
-  { id: '3', name: 'Member 3', role: 'Junior', track: 'junior', semester: '2026 Spring', is_active: true, created_at: '', interests: ['NLP'], workload: 1, status: 'mid' },
-  { id: '4', name: 'Member 4', role: 'Senior', track: 'senior', semester: '2026 Spring', is_active: true, created_at: '', interests: ['CV', 'RL'], workload: 4, status: 'busy' },
-  { id: '5', name: 'Member 5', role: 'Junior', track: 'junior', semester: '2026 Spring', is_active: true, created_at: '', interests: ['NLP', 'CV'], workload: 0, status: 'free', looking_for_team: true },
-  { id: '6', name: 'Member 6', role: 'Junior', track: 'junior', semester: '2026 Spring', is_active: true, created_at: '', interests: ['CV'], workload: 5, status: 'busy' },
-];
+const demoMembers: Member[] = [];
 
 const WorkloadDots: React.FC<{ value: number }> = ({ value }) => {
   const filled = value ?? 0;
