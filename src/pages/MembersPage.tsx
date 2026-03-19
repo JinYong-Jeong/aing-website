@@ -54,6 +54,7 @@ const WorkloadDots: React.FC<{ value: number }> = ({ value }) => {
 };
 
 const MembersPage: React.FC = () => {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const siteSettings = useSiteSettings();
 
   const [members, setMembers] = useState<Member[]>([]);

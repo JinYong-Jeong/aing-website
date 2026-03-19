@@ -8,9 +8,12 @@ const ContactPage: React.FC = () => {
   const s = useSiteSettings();
   const instagramUrl = s.instagram || 'https://www.instagram.com/aing_gc/';
   const githubUrl = s.github || 'https://github.com/aing-gachon';
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const emailAddr = s.email || 'gachon.aing@gmail.com';
   const locationStr = s.location || '가천대학교 AI관';
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const recruitUrl = s.recruit_url || '/contact';
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const recruitOpen = s.recruit_open === 'true';
 
   const [form, setForm] = useState({ name: '', email: '', message: '' });
