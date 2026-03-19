@@ -35,7 +35,7 @@ const SECTIONS = [
     label: '관심분야 목록',
     icon: Database,
     fields: [
-      { key: 'interests_list', label: '관심분야 (쉼표로 구분)', type: 'text', placeholder: 'CV,NLP,RL,Agent,Transformer,On-Device' },
+      { key: 'interests_list', label: '관심분야', type: 'tags', placeholder: 'CV,NLP,RL,Agent,Transformer,On-Device' },
     ],
   },
   {
@@ -145,7 +145,39 @@ const AdminSettings: React.FC = () => {
                             <label className="block text-xs text-aing-muted mb-1.5 font-mono">
                               {field.label} <span className="text-aing-border">({field.key})</span>
                             </label>
-                            {field.type === 'toggle' ? (
+                            {field.type === 'tags' ? (
+                              <div>
+                                <div className="flex flex-wrap gap-2 mb-2">
+                                  {(settings[field.key] || '').split(',').filter(Boolean).map((tag, idx) => (
+                                    <span key={idx} className="inline-flex items-center gap-1 tag text-xs">
+                                      {tag.trim()}
+                                      <button type="button" onClick={() => {
+                                        const tags = (settings[field.key] || '').split(',').map(t=>t.trim()).filter(Boolean);
+                                        tags.splice(idx, 1);
+                                        setSettings(prev => ({ ...prev, [field.key]: tags.join(',') }));
+                                      }} className="ml-1 text-red-400 hover:text-red-600 font-bold leading-none">×</button>
+                                    </span>
+                                  ))}
+                                </div>
+                                <input
+                                  type="text"
+                                  placeholder="추가할 관심분야 입력 후 Enter"
+                                  className="input-field w-full text-sm"
+                                  onKeyDown={(e) => {
+                                    if (e.key === 'Enter') {
+                                      e.preventDefault();
+                                      const val = (e.target as HTMLInputElement).value.trim();
+                                      if (val) {
+                                        const tags = (settings[field.key] || '').split(',').map(t=>t.trim()).filter(Boolean);
+                                        if (!tags.includes(val)) tags.push(val);
+                                        setSettings(prev => ({ ...prev, [field.key]: tags.join(',') }));
+                                        (e.target as HTMLInputElement).value = '';
+                                      }
+                                    }
+                                  }}
+                                />
+                              </div>
+                            ) : field.type === 'toggle' ? (
                               <div className="flex items-center gap-3">
                                 <button
                                   type="button"

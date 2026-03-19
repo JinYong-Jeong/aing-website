@@ -258,17 +258,7 @@ const BoardPage: React.FC = () => {
               새 글 작성
             </Link>
           </div>
-
-          {totalPages > 1 && (
-            <div className="flex items-center justify-center gap-2 mt-12 pb-24">
-              <button onClick={()=>setPage(p=>Math.max(1,p-1))} disabled={page===1} className="btn-ghost text-xs px-3 py-1.5 disabled:opacity-40">← 이전</button>
-              {Array.from({length:totalPages},(_,i)=>i+1).map(p=>(
-                <button key={p} onClick={()=>setPage(p)} className={`text-xs px-3 py-1.5 rounded-lg border transition-all ${page===p?'bg-aing-dark text-white':'border-aing-border text-aing-muted hover:border-aing-blue'}`}>{p}</button>
-              ))}
-              <button onClick={()=>setPage(p=>Math.min(totalPages,p+1))} disabled={page===totalPages} className="btn-ghost text-xs px-3 py-1.5 disabled:opacity-40">다음 →</button>
-            </div>
-          )}
-        </div>
+</div>
       </section>
 
       {/* Controls */}
@@ -386,7 +376,17 @@ const BoardPage: React.FC = () => {
               })}
             </div>
           )}
+
+      {totalPages > 1 && (
+        <div className="flex items-center justify-center gap-2 py-8">
+          <button onClick={()=>setPage(p=>Math.max(1,p-1))} disabled={page===1} className="btn-ghost text-xs px-3 py-1.5 disabled:opacity-40">← 이전</button>
+          {Array.from({length:totalPages},(_,i)=>i+1).map(p=>(
+            <button key={p} onClick={()=>setPage(p)} className={`text-xs px-3 py-1.5 rounded-lg border transition-all ${page===p?'bg-aing-dark text-white':'border-aing-border text-aing-muted hover:border-aing-blue'}`}>{p}</button>
+          ))}
+          <button onClick={()=>setPage(p=>Math.min(totalPages,p+1))} disabled={page===totalPages} className="btn-ghost text-xs px-3 py-1.5 disabled:opacity-40">다음 →</button>
         </div>
+      )}
+    </div>
       </section>
     </div>
   );
