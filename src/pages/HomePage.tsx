@@ -41,6 +41,7 @@ const HomePage: React.FC = () => {
   const heroTitle = s.home_hero_title || 'Theory to Code.';
   const heroSubtitle = s.home_hero_subtitle || '';
   const tagline = s.tagline || 'Theory to Code. Code to Insight.';
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const recruitOpen = s.recruit_open === 'true';
   const recruitUrl = s.recruit_url || '/contact';
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
