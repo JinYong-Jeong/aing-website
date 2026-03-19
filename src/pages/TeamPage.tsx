@@ -407,6 +407,22 @@ const TeamPage: React.FC = () => {
               );
             })
           )}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-center gap-2 mt-6">
+              <button onClick={()=>setPage(p=>Math.max(1,p-1))} disabled={page===1} className="btn-ghost text-xs px-3 py-1.5 disabled:opacity-40">← 이전</button>
+              {Array.from({length:totalPages},(_,i)=>i+1).map(n=>(
+                <button key={n} onClick={()=>setPage(n)} className={"text-xs px-3 py-1.5 rounded-lg border transition-all " + (page===n?'bg-aing-dark text-white':'border-aing-border text-aing-muted hover:border-aing-blue')}>{n}</button>
+              ))}
+              <button onClick={()=>setPage(p=>Math.min(totalPages,p+1))} disabled={page===totalPages} className="btn-ghost text-xs px-3 py-1.5 disabled:opacity-40">다음 →</button>
+            </div>
+          )}
+          <div className="flex justify-end mt-2">
+            <select value={pageSize} onChange={e=>{setPageSize(Number(e.target.value));setPage(1);}} className="input-field py-1 text-xs w-20">
+              <option value={5}>5개</option>
+              <option value={10}>10개</option>
+              <option value={20}>20개</option>
+            </select>
+          </div>
         </div>
       </section>
 

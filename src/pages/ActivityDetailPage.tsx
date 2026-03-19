@@ -95,6 +95,7 @@ const ActivityDetailPage: React.FC = () => {
       result: activity.result || '',
       detail_url: activity.detail_url || '',
       image_url: activity.image_url || '',
+      detail_content: activity.detail_content || '',
     });
     setShowEditModal(true);
   };
@@ -118,6 +119,7 @@ const ActivityDetailPage: React.FC = () => {
       result: form.result || null as any,
       detail_url: form.detail_url || null as any,
       image_url: form.image_url || null as any,
+      detail_content: form.detail_content || null as any,
     };
     await supabase.from('activities').update(payload).eq('id', activity.id);
     setActivity(prev => prev ? { ...prev, ...payload } : prev);
@@ -218,6 +220,10 @@ const ActivityDetailPage: React.FC = () => {
                 <input value={form.result} onChange={e => setForm(p=>({...p,result:e.target.value}))} className="input-field" placeholder="결과 (예: 대상, 1st place)" />
                 <input value={form.detail_url} onChange={e => setForm(p=>({...p,detail_url:e.target.value}))} className="input-field" placeholder="상세 URL" />
                 <input value={form.image_url} onChange={e => setForm(p=>({...p,image_url:e.target.value}))} className="input-field sm:col-span-2" placeholder="이미지 URL" />
+                <div className="sm:col-span-2">
+                  <label className="text-xs text-aing-muted block mb-1">상세 내용 (Markdown 지원)</label>
+                  <textarea value={form.detail_content} onChange={e=>setForm(p=>({...p,detail_content:e.target.value}))} className="input-field w-full resize-none font-mono text-xs" rows={8} placeholder="## 활동 소개&#10;&#10;자세한 내용을 마크다운으로 작성하세요.&#10;&#10;- 항목 1&#10;- 항목 2&#10;&#10;**강조** *기울임*" />
+                </div>
               </div>
               <div className="flex gap-3 pt-2">
                 <button type="submit" disabled={saving} className="btn-primary text-sm flex items-center gap-2"><Check size={14}/>{saving?'저장 중...':'저장'}</button>
@@ -369,6 +375,30 @@ const ActivityDetailPage: React.FC = () => {
                     ))}
                   </div>
                 )}
+              </div>
+            </AnimatedSection>
+          )}
+
+          {/* Detail Content (Markdown) */}
+          {activity.detail_content && (
+            <AnimatedSection>
+              <div className="card prose prose-sm max-w-none">
+                <div
+                  className="text-aing-text text-sm leading-relaxed whitespace-pre-wrap"
+                  style={{fontFamily:'inherit'}}
+                  dangerouslySetInnerHTML={{
+                    __html: activity.detail_content
+                      .replace(/^### (.+)$/gm, '<h3 class="font-semibold text-base mt-4 mb-2">$1</h3>')
+                      .replace(/^## (.+)$/gm, '<h2 class="font-bold text-lg mt-6 mb-3">$1</h2>')
+                      .replace(/^# (.+)$/gm, '<h1 class="font-bold text-xl mt-6 mb-3">$1</h1>')
+                      .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+                      .replace(/\*(.+?)\*/g, '<em>$1</em>')
+                      .replace(/^- (.+)$/gm, '<li class="ml-4 list-disc">$1</li>')
+                      .replace(/
+
+/g, '<br/><br/>')
+                  }}
+                />
               </div>
             </AnimatedSection>
           )}

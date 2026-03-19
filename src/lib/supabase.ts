@@ -140,6 +140,7 @@ export type Activity = {
   participants_max?: number;
   result?: string;
   image_url?: string;
+  detail_content?: string;
 };
 
 export type ActivityAward = {
