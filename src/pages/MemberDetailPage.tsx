@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { Github, Trophy, Mail, MessageCircle, Users, ChevronLeft, Pencil, Code2, ExternalLink } from 'lucide-react';
-import { supabase, Member, ActivityAward, Activity, Project, TeamPost } from '../lib/supabase';
+import { Github, Mail, MessageCircle, Users, ChevronLeft, Pencil, Code2, ExternalLink, Trophy } from 'lucide-react';
+import { supabase, ActivityAward, Activity, Project, TeamPost } from '../lib/supabase';
 
 const TRACK_LABELS: Record<string, string> = {
   junior: 'Junior',
@@ -304,6 +304,30 @@ const MemberDetailPage: React.FC = () => {
             )}
           </div>
         </div>
+
+        {/* Participated Projects */}
+        {awards.length > 0 && (
+          <div className="mt-6 bg-aing-card border border-aing-border rounded-2xl p-6">
+            <h2 className="text-sm font-semibold text-aing-text mb-4 flex items-center gap-2">
+              <Trophy size={14} className="text-amber-500" />수상 내역
+            </h2>
+            <div className="space-y-2">
+              {awards.map(aw => (
+                <div key={aw.id} className="flex items-center gap-3 p-3 rounded-xl border border-aing-border bg-white">
+                  <span className="text-lg">{aw.rank==='1st'?'🥇':aw.rank==='2nd'?'🥈':aw.rank==='3rd'?'🥉':aw.rank==='special'?'🏅':'🎖️'}</span>
+                  <div>
+                    <p className="text-sm font-medium text-aing-text">{(aw as any).activity?.title || '활동'}</p>
+                    <p className="text-xs text-aing-muted">
+                      {aw.rank==='1st'?'1st Place':aw.rank==='2nd'?'2nd Place':aw.rank==='3rd'?'3rd Place':aw.rank==='special'?'특별상':'참가상'}
+                      {aw.note && ` · ${aw.note}`}
+                      {(aw as any).activity?.semester && ` · ${(aw as any).activity.semester}`}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Participated Projects */}
         {projects.length > 0 && (

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { Users, Crown, ChevronRight, PlusCircle, Pencil, Trash2, X, Check } from 'lucide-react';
 import AnimatedSection from '../components/AnimatedSection';
 import { supabase, OpsTeamMember, Member } from '../lib/supabase';
@@ -107,10 +107,10 @@ const AboutOpsPage: React.FC = () => {
   const leads = members.filter(m => m.level === 'lead').sort((a,b) => a.order - b.order);
   const regularMembers = members.filter(m => m.level === 'member').sort((a,b) => a.order - b.order);
 
-  const MemberCard: React.FC<{ m: OpsTeamMember; size?: 'lg' | 'md' | 'sm' }> = ({ m, size = 'md' }) => {
+  const MemberCard: React.FC<{ m: OpsTeamMember; size?: 'lg' | 'md' | 'sm'; onClick?: () => void }> = ({ m, size = 'md', onClick }) => {
     const cfg = LEVEL_CONFIG[m.level] || LEVEL_CONFIG.member;
     return (
-      <div className={`card group relative text-center ${size === 'lg' ? 'py-8' : size === 'sm' ? 'py-4' : 'py-6'}`}>
+      <div onClick={onClick} className={`card group relative text-center cursor-pointer hover:border-aing-blue transition-colors ${size === 'lg' ? 'py-8' : size === 'sm' ? 'py-4' : 'py-6'}`}>
         {isAdmin && (
           <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
             <button onClick={() => openEdit(m)} className="p-1 rounded border border-aing-border bg-white text-aing-muted hover:text-aing-blue transition-colors"><Pencil size={11} /></button>
@@ -248,7 +248,7 @@ const AboutOpsPage: React.FC = () => {
               </div>
               <div className="flex justify-center">
                 <div className="w-full max-w-xs">
-                  {presidents.map(m => <MemberCard key={m.id} m={m} size="lg" />)}
+                  {presidents.map(m => <MemberCard key={m.id} m={m} size="lg" onClick={() => handleCardClick(m)} />)}
                 </div>
               </div>
               {/* Connector line */}
@@ -267,7 +267,7 @@ const AboutOpsPage: React.FC = () => {
                 <span className="text-xs font-mono text-aing-muted uppercase tracking-widest">Vice President</span>
               </div>
               <div className={`grid gap-4 ${vps.length === 1 ? 'max-w-xs mx-auto' : `grid-cols-${Math.min(vps.length, 3)} max-w-2xl mx-auto`}`}>
-                {vps.map(m => <MemberCard key={m.id} m={m} size="md" />)}
+                {vps.map(m => <MemberCard key={m.id} m={m} size="md" onClick={() => handleCardClick(m)} />)}
               </div>
               {leads.length > 0 && (
                 <div className="flex justify-center mt-4">
@@ -284,7 +284,7 @@ const AboutOpsPage: React.FC = () => {
                 <span className="text-xs font-mono text-aing-muted uppercase tracking-widest">Team Leads</span>
               </div>
               <div className={`grid gap-4 ${leads.length <= 4 ? `grid-cols-${leads.length}` : 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4'} max-w-3xl mx-auto`}>
-                {leads.map(m => <MemberCard key={m.id} m={m} size="sm" />)}
+                {leads.map(m => <MemberCard key={m.id} m={m} size="sm" onClick={() => handleCardClick(m)} />)}
               </div>
               {regularMembers.length > 0 && (
                 <div className="flex justify-center mt-4">
@@ -301,7 +301,7 @@ const AboutOpsPage: React.FC = () => {
                 <span className="text-xs font-mono text-aing-muted uppercase tracking-widest">Members</span>
               </div>
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-                {regularMembers.map(m => <MemberCard key={m.id} m={m} size="sm" />)}
+                {regularMembers.map(m => <MemberCard key={m.id} m={m} size="sm" onClick={() => handleCardClick(m)} />)}
               </div>
             </AnimatedSection>
           )}

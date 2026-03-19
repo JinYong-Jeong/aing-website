@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { Users, ChevronRight, PlusCircle, Pencil, Trash2, X, Check } from 'lucide-react';
 import AnimatedSection from '../components/AnimatedSection';
 import { supabase, ExOpsMember, Member } from '../lib/supabase';
@@ -194,7 +194,7 @@ const ExOpsPage: React.FC = () => {
           ) : (
             members.map((m, i) => (
               <AnimatedSection key={m.id} delay={i * 60}>
-                <div className="card group flex items-center gap-4 hover:border-blue-200 transition-colors relative">
+                <div onClick={() => handleCardClick(m)} className="card group flex items-center gap-4 hover:border-aing-blue transition-colors relative cursor-pointer">
                   {/* Avatar circle */}
                   <div className="w-10 h-10 rounded-full bg-gradient-to-br from-aing-blue/20 to-purple-400/20 border border-aing-border flex items-center justify-center shrink-0">
                     <span className="text-sm font-bold text-aing-text">{m.name[0] || '?'}</span>

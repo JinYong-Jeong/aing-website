@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import {
-  ArrowLeft, Save, RefreshCw, Globe, Users, Megaphone, Palette,
-  Bell, Database, ShieldCheck, ChevronDown, ChevronUp, Check
+  ArrowLeft, Save, RefreshCw, Globe, Users, Megaphone, Database, ShieldCheck, ChevronDown, ChevronUp, Check
 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../context/AuthContext';
