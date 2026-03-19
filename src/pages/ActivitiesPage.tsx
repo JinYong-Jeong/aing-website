@@ -238,7 +238,7 @@ const ActivityModal: React.FC<{
               {(['single','min','max','range'] as const).map(t => (
                 <button key={t} type="button"
                   onClick={() => setForm(p=>({...p, participants_type: t as any}))}
-                  className={\`px-3 py-1 rounded-full text-xs border transition-all \${(form as any).participants_type===t?'bg-aing-dark text-white':'border-aing-border text-aing-muted'}\`}>
+                  className={(form as any).participants_type===t ? "px-3 py-1 rounded-full text-xs border transition-all bg-aing-dark text-white" : "px-3 py-1 rounded-full text-xs border transition-all border-aing-border text-aing-muted"}>
                   {t==='single'?'단일':t==='min'?'이상':t==='max'?'이하':'범위'}
                 </button>
               ))}
