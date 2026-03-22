@@ -66,15 +66,28 @@ const MembersPage: React.FC = () => {
   useEffect(() => {
     const fetchMembers = async () => {
       try {
-        const { data, error } = await supabase
-          .from('members')
-          .select('*')
-          .eq('is_active', true)
-          .order('created_at', { ascending: true });
+        const [{ data, error }, { data: orderSetting }] = await Promise.all([
+          supabase.from('members').select('*').eq('is_active', true),
+          supabase.from('site_settings').select('value').eq('key', 'member_order').single(),
+        ]);
+
         if (error || !data || data.length === 0) {
           setMembers(demoMembers);
         } else {
-          setMembers(data);
+          // 저장된 순서가 있으면 그 순서대로 정렬
+          if (orderSetting?.value) {
+            try {
+              const savedOrder: string[] = JSON.parse(orderSetting.value);
+              const idToMember = Object.fromEntries(data.map(m => [m.id, m]));
+              const ordered = savedOrder.filter(id => idToMember[id]).map(id => idToMember[id]);
+              const remaining = data.filter(m => !savedOrder.includes(m.id));
+              setMembers([...ordered, ...remaining]);
+            } catch {
+              setMembers(data);
+            }
+          } else {
+            setMembers(data);
+          }
         }
       } catch {
         setMembers(demoMembers);
