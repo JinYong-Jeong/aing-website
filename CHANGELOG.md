@@ -1,5 +1,31 @@
 # A.ing Website - Changelog
 
+## 2026-03-22
+
+### OB 트랙 오류 수정 + 부원 순서 드래그앤드롭 편집
+
+#### 버그 수정
+- **OB 트랙 DB 제약 오류**: `members_track_check` 제약 조건에 `'ob'` 값이 누락되어 OB 트랙 멤버 추가 시 `check constraint violation` 오류 발생 → 제약 조건 재생성으로 수정
+  - DROP CONSTRAINT → ADD CONSTRAINT (junior/senior/admin/ob 모두 허용)
+
+#### 신규 기능
+- **부원 순서 드래그앤드롭 편집** (Admin → 부원 관리)
+  - '순서 편집' 버튼으로 드래그 모드 토글
+  - 각 행 왼쪽 핸들(⠿) 드래그로 순서 변경
+  - '순서 저장' 버튼 클릭 시 `site_settings.member_order`에 JSON 배열로 저장
+  - 드래그 모드에서는 검색/필터 숨김, 전체 순서 일괄 편집
+  - 새 부원 추가 시 순서 목록 끝에 자동 추가
+- **Members 페이지 저장 순서 반영**: 어드민에서 저장한 순서대로 `/members` 페이지 표시
+  - `site_settings.member_order` 읽어서 정렬, 새 멤버는 끝에 추가
+
+#### 기술
+- `@dnd-kit/core`, `@dnd-kit/sortable`, `@dnd-kit/utilities` 패키지 추가
+- DDL 없이 `site_settings` 테이블 활용 (Supabase anon key로 upsert 가능)
+
+**Commit**: e8dce17
+
+---
+
 ## 2026-03-19
 
 ### 최종 완료 기능
