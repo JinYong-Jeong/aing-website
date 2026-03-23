@@ -248,9 +248,15 @@ const AdminMembers: React.FC = () => {
       github: form.github, bio: form.bio, avatar_url: form.avatar_url,
       status: form.status, is_active: form.is_active,
     };
-    if (form.password_hash.trim()) payload.password_hash = form.password_hash.trim();
     if (editingId) {
       await supabase.from('members').update(payload).eq('id', editingId);
+      // 비밀번호 입력 시 bcrypt RPC로 별도 처리
+      if (form.password_hash.trim()) {
+        await supabase.rpc('set_member_password', {
+          p_id: editingId,
+          p_new_password: form.password_hash.trim(),
+        });
+      }
     } else {
       const { data: inserted } = await supabase
         .from('members')
@@ -259,6 +265,13 @@ const AdminMembers: React.FC = () => {
         .single();
       if (inserted) {
         setOrderedIds(prev => [...prev, inserted.id]);
+        // 신규 멤버 비밀번호도 bcrypt RPC로 처리
+        if (form.password_hash.trim()) {
+          await supabase.rpc('set_member_password', {
+            p_id: inserted.id,
+            p_new_password: form.password_hash.trim(),
+          });
+        }
       }
     }
     cancelForm(); fetchMembers(); setSaving(false);
