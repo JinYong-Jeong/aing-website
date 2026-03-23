@@ -1,6 +1,6 @@
 -- ============================================================
--- A.ing Website - Schema Final (통합본)
--- 모든 버전(v1~v11)을 하나로 통합한 최종 스키마
+-- A.ing Website - Schema Final (v1.0.0)
+-- 2026-03-23 기준 최종 통합본
 -- Supabase SQL Editor에서 전체 복붙 후 실행
 -- ============================================================
 
@@ -25,9 +25,12 @@ create table if not exists public.members (
   bio text,
   project_idea text,
   interests text[] default '{}',
+  skills text[] default '{}',
   workload int default 0 check (workload between 0 and 5),
   status text default 'mid' check (status in ('busy', 'mid', 'free')),
   looking_for_team boolean default false,
+  contact_info text,
+  contact_email text,
   password_hash text,
   is_active boolean default true,
   generation int,
@@ -42,6 +45,7 @@ create table if not exists public.posts (
   content text not null,
   author_id uuid references public.members(id) on delete set null,
   author_name text,
+  author_password text,
   category text not null check (category in ('notice', 'activity', 'study', 'project')),
   tags text[] default '{}',
   is_pinned boolean default false,
@@ -55,8 +59,10 @@ create table if not exists public.comments (
   id uuid default gen_random_uuid() primary key,
   post_id uuid references public.posts(id) on delete cascade,
   author_name text not null,
+  author_email text,
   content text not null,
-  is_admin boolean default false,
+  is_approved boolean default true,
+  parent_id uuid references public.comments(id) on delete cascade,
   created_at timestamptz default now()
 );
 
@@ -85,21 +91,44 @@ create table if not exists public.activities (
   created_at timestamptz default now()
 );
 
+-- activity_awards (수상 및 수료)
+-- rank: '1st'|'2nd'|'3rd'|'special'|'participation' = 수상
+--       'honor_completion'|'completion'              = 수료 (study/project)
+create table if not exists public.activity_awards (
+  id uuid default gen_random_uuid() primary key,
+  activity_id uuid references public.activities(id) on delete cascade,
+  member_id uuid references public.members(id) on delete cascade,
+  rank text not null check (rank in ('1st','2nd','3rd','special','participation','honor_completion','completion')),
+  note text,
+  created_at timestamptz default now()
+);
+
 -- projects
 create table if not exists public.projects (
   id uuid default gen_random_uuid() primary key,
   title text not null,
   description text,
-  type text default 'project' check (type in ('study', 'project', 'competition', 'seminar')),
+  type text default 'project' check (type in ('study', 'project', 'research', 'competition')),
+  status text default 'ongoing' check (status in ('planned', 'ongoing', 'completed', 'archived')),
   semester text,
   tags text[] default '{}',
   github text,
-  status text default 'ongoing' check (status in ('ongoing', 'completed', 'upcoming')),
-  members text[] default '{}',
+  demo_url text,
+  thumbnail_url text,
+  outcome text,
   start_date date,
   end_date date,
-  image_url text,
-  created_at timestamptz default now()
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
+);
+
+-- project_members
+create table if not exists public.project_members (
+  id uuid default gen_random_uuid() primary key,
+  project_id uuid references public.projects(id) on delete cascade,
+  member_id uuid references public.members(id) on delete cascade,
+  role text,
+  joined_at timestamptz default now()
 );
 
 -- team_posts (팀원 모집)
@@ -109,9 +138,11 @@ create table if not exists public.team_posts (
   description text,
   author_id uuid references public.members(id) on delete set null,
   author_name text,
+  required_skills text[] default '{}',
   max_members int default 4,
+  current_members int default 1,
   status text default 'open' check (status in ('open', 'closed')),
-  tags text[] default '{}',
+  contact text,
   created_at timestamptz default now(),
   updated_at timestamptz default now()
 );
@@ -133,13 +164,12 @@ create table if not exists public.messages (
   id uuid default gen_random_uuid() primary key,
   name text not null,
   email text not null,
-  subject text,
   message text not null,
   is_read boolean default false,
   created_at timestamptz default now()
 );
 
--- users (admin/ops 로그인)
+-- users (admin/ops 로그인 — bcrypt 해싱 필수)
 create table if not exists public.users (
   id uuid default gen_random_uuid() primary key,
   name text not null unique,
@@ -159,6 +189,7 @@ create table if not exists public.ops_team (
   "order" int default 99,
   generation int default 1,
   member_id uuid references public.members(id) on delete set null,
+  avatar_url text,
   created_at timestamptz default now()
 );
 
@@ -174,17 +205,7 @@ create table if not exists public.ex_ops (
   created_at timestamptz default now()
 );
 
--- activity_awards
-create table if not exists public.activity_awards (
-  id uuid default gen_random_uuid() primary key,
-  member_id uuid references public.members(id) on delete cascade,
-  title text not null,
-  issuer text,
-  date date,
-  created_at timestamptz default now()
-);
-
--- site_settings
+-- site_settings (전역 설정 key-value)
 create table if not exists public.site_settings (
   id uuid default gen_random_uuid() primary key,
   key text not null unique,
@@ -199,52 +220,57 @@ alter table public.members enable row level security;
 alter table public.posts enable row level security;
 alter table public.comments enable row level security;
 alter table public.activities enable row level security;
+alter table public.activity_awards enable row level security;
 alter table public.projects enable row level security;
+alter table public.project_members enable row level security;
 alter table public.team_posts enable row level security;
 alter table public.team_applications enable row level security;
 alter table public.messages enable row level security;
 alter table public.users enable row level security;
 alter table public.ops_team enable row level security;
 alter table public.ex_ops enable row level security;
-alter table public.activity_awards enable row level security;
 alter table public.site_settings enable row level security;
 
 -- Public read policies
-create policy if not exists "public read members" on public.members for select using (true);
-create policy if not exists "public read posts" on public.posts for select using (true);
-create policy if not exists "public read comments" on public.comments for select using (true);
-create policy if not exists "public read activities" on public.activities for select using (true);
-create policy if not exists "public read projects" on public.projects for select using (true);
-create policy if not exists "public read team_posts" on public.team_posts for select using (true);
+create policy if not exists "public read members"          on public.members          for select using (true);
+create policy if not exists "public read posts"            on public.posts            for select using (true);
+create policy if not exists "public read comments"         on public.comments         for select using (true);
+create policy if not exists "public read activities"       on public.activities       for select using (true);
+create policy if not exists "public read activity_awards"  on public.activity_awards  for select using (true);
+create policy if not exists "public read projects"         on public.projects         for select using (true);
+create policy if not exists "public read project_members"  on public.project_members  for select using (true);
+create policy if not exists "public read team_posts"       on public.team_posts       for select using (true);
 create policy if not exists "public read team_applications" on public.team_applications for select using (true);
-create policy if not exists "public read ops_team" on public.ops_team for select using (true);
-create policy if not exists "public read ex_ops" on public.ex_ops for select using (true);
-create policy if not exists "public read activity_awards" on public.activity_awards for select using (true);
-create policy if not exists "public read site_settings" on public.site_settings for select using (true);
+create policy if not exists "public read ops_team"         on public.ops_team         for select using (true);
+create policy if not exists "public read ex_ops"           on public.ex_ops           for select using (true);
+create policy if not exists "public read site_settings"    on public.site_settings    for select using (true);
 
--- Public insert policies (forms)
-create policy if not exists "public insert messages" on public.messages for insert with check (true);
-create policy if not exists "public insert comments" on public.comments for insert with check (true);
+-- Public insert policies (폼 제출)
+create policy if not exists "public insert messages"          on public.messages          for insert with check (true);
+create policy if not exists "public insert comments"          on public.comments          for insert with check (true);
 create policy if not exists "public insert team_applications" on public.team_applications for insert with check (true);
 
--- Anon full access for admin operations (service_role bypasses RLS)
-create policy if not exists "anon all members" on public.members for all using (true) with check (true);
-create policy if not exists "anon all posts" on public.posts for all using (true) with check (true);
-create policy if not exists "anon all activities" on public.activities for all using (true) with check (true);
-create policy if not exists "anon all projects" on public.projects for all using (true) with check (true);
-create policy if not exists "anon all team_posts" on public.team_posts for all using (true) with check (true);
-create policy if not exists "anon all ops_team" on public.ops_team for all using (true) with check (true);
-create policy if not exists "anon all ex_ops" on public.ex_ops for all using (true) with check (true);
-create policy if not exists "anon all activity_awards" on public.activity_awards for all using (true) with check (true);
-create policy if not exists "anon all site_settings" on public.site_settings for all using (true) with check (true);
-create policy if not exists "anon all users" on public.users for all using (true) with check (true);
-create policy if not exists "anon all messages" on public.messages for all using (true) with check (true);
-create policy if not exists "anon all comments" on public.comments for all using (true) with check (true);
+-- Anon full access (Admin 운영용 — service_role은 RLS 우회)
+create policy if not exists "anon all members"           on public.members           for all using (true) with check (true);
+create policy if not exists "anon all posts"             on public.posts             for all using (true) with check (true);
+create policy if not exists "anon all comments"          on public.comments          for all using (true) with check (true);
+create policy if not exists "anon all activities"        on public.activities        for all using (true) with check (true);
+create policy if not exists "anon all activity_awards"   on public.activity_awards   for all using (true) with check (true);
+create policy if not exists "anon all projects"          on public.projects          for all using (true) with check (true);
+create policy if not exists "anon all project_members"   on public.project_members   for all using (true) with check (true);
+create policy if not exists "anon all team_posts"        on public.team_posts        for all using (true) with check (true);
 create policy if not exists "anon all team_applications" on public.team_applications for all using (true) with check (true);
+create policy if not exists "anon all ops_team"          on public.ops_team          for all using (true) with check (true);
+create policy if not exists "anon all ex_ops"            on public.ex_ops            for all using (true) with check (true);
+create policy if not exists "anon all site_settings"     on public.site_settings     for all using (true) with check (true);
+create policy if not exists "anon all users"             on public.users             for all using (true) with check (true);
+create policy if not exists "anon all messages"          on public.messages          for all using (true) with check (true);
 
 -- ============================================================
--- FUNCTIONS (bcrypt auth)
+-- FUNCTIONS (bcrypt 인증)
 -- ============================================================
+
+-- users 테이블 bcrypt 검증 (admin/ops 로그인)
 create or replace function check_user_password(p_name text, p_password text)
 returns table (id uuid, name text, role text, member_id uuid)
 language plpgsql security definer as $$
@@ -257,6 +283,7 @@ begin
 end;
 $$;
 
+-- users 테이블 비밀번호 bcrypt 저장
 create or replace function set_user_password(p_id uuid, p_new_password text)
 returns void language plpgsql security definer as $$
 begin
@@ -266,5 +293,31 @@ begin
 end;
 $$;
 
-grant execute on function check_user_password(text, text) to anon, authenticated;
-grant execute on function set_user_password(uuid, text) to authenticated;
+-- members 테이블 bcrypt 검증 (일반 부원 로그인)
+create or replace function check_member_password(p_name text, p_password text)
+returns table (id uuid, name text, track text)
+language plpgsql security definer as $$
+begin
+  return query
+    select m.id, m.name, m.track::text
+    from public.members m
+    where m.name ilike p_name
+      and m.password_hash is not null
+      and crypt(p_password, m.password_hash) = m.password_hash;
+end;
+$$;
+
+-- members 테이블 비밀번호 bcrypt 저장
+create or replace function set_member_password(p_id uuid, p_new_password text)
+returns void language plpgsql security definer as $$
+begin
+  update public.members
+  set password_hash = crypt(p_new_password, gen_salt('bf', 10))
+  where id = p_id;
+end;
+$$;
+
+grant execute on function check_user_password(text, text)   to anon, authenticated;
+grant execute on function set_user_password(uuid, text)     to authenticated;
+grant execute on function check_member_password(text, text) to anon, authenticated;
+grant execute on function set_member_password(uuid, text)   to authenticated;
