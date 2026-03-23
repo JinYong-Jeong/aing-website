@@ -301,6 +301,7 @@ const ActivitiesPage: React.FC = () => {
   }, []);
 
   const filtered = (filter === 'all' ? allActivities : allActivities.filter(a => a.type === filter))
+    .filter(a => isAdmin || a.status !== 'completed')
     .filter(a => {
       if (!search.trim()) return true;
       const q = search.toLowerCase();
