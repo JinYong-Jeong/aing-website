@@ -13,7 +13,7 @@ const TYPE_CONFIG: Record<string, { icon: React.ElementType; color: string; bg: 
 };
 const STATUS_COLORS: Record<string, string> = { ongoing: 'text-green-500', completed: 'text-aing-muted', upcoming: 'text-yellow-500' };
 const STATUS_LABELS: Record<string, string> = { ongoing: '진행 중', completed: '완료', upcoming: '예정' };
-const RANK_LABELS: Record<string, string> = { '1st': '🥇 1st Place', '2nd': '🥈 2nd Place', '3rd': '🥉 3rd Place', 'special': '🏅 특별상', 'participation': '🎖️ 참가상' };
+const RANK_LABELS: Record<string, string> = { '1st': '🥇 1st Place', '2nd': '🥈 2nd Place', '3rd': '🥉 3rd Place', 'special': '🏅 특별상', 'participation': '🎖️ 참가상', 'honor_completion': '🌟 우수 수료', 'completion': '✅ 수료' };
 
 function formatDate(d?: string) {
   if (!d) return '';
@@ -247,20 +247,29 @@ const ActivityDetailPage: React.FC = () => {
           <div className="bg-white rounded-2xl border border-aing-border shadow-xl w-full max-w-md p-6">
             <form onSubmit={handleAddAward} className="space-y-4">
               <div className="flex items-center justify-between">
-                <h3 className="text-base font-semibold text-aing-text">수상 멤버 태그</h3>
+                <h3 className="text-base font-semibold text-aing-text">
+                {activity.type === 'competition' ? '수상 멤버 태그' : '수료 멤버 태그'}
+              </h3>
                 <button type="button" onClick={() => setShowAwardModal(false)}><X size={18}/></button>
               </div>
               <select value={awardForm.member_id} onChange={e=>setAwardForm(p=>({...p,member_id:e.target.value}))} className="input-field w-full" required>
                 <option value="">멤버 선택</option>
                 {allMembers.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
               </select>
+              <div>
               <select value={awardForm.rank} onChange={e=>setAwardForm(p=>({...p,rank:e.target.value as any}))} className="input-field w-full">
-                <option value="1st">🥇 1st Place</option>
-                <option value="2nd">🥈 2nd Place</option>
-                <option value="3rd">🥉 3rd Place</option>
-                <option value="special">🏅 특별상</option>
-                <option value="participation">🎖️ 참가상</option>
+                {(activity.type === 'competition') ? (<>
+                  <option value="1st">🥇 1st Place</option>
+                  <option value="2nd">🥈 2nd Place</option>
+                  <option value="3rd">🥉 3rd Place</option>
+                  <option value="special">🏅 특별상</option>
+                  <option value="participation">🎖️ 참가상</option>
+                </>) : (<>
+                  <option value="honor_completion">🌟 우수 수료</option>
+                  <option value="completion">✅ 수료</option>
+                </>)}
               </select>
+              </div>
               <input value={awardForm.note} onChange={e=>setAwardForm(p=>({...p,note:e.target.value}))} className="input-field w-full" placeholder="비고 (선택)" />
               <div className="flex gap-3">
                 <button type="submit" disabled={saving} className="btn-primary text-sm flex items-center gap-2"><Check size={14}/>태그 추가</button>
@@ -351,11 +360,16 @@ const ActivityDetailPage: React.FC = () => {
           </AnimatedSection>
 
           {/* Awards */}
-          {(awards.length > 0 || isAdmin) && activity.type === 'competition' && (
+          {(awards.length > 0 || isAdmin) && (
             <AnimatedSection>
               <div className="card">
                 <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-sm font-semibold text-aing-text flex items-center gap-2"><Trophy size={14} className="text-amber-500"/>수상 멤버</h2>
+                  <h2 className="text-sm font-semibold text-aing-text flex items-center gap-2">
+                    {activity.type === 'competition'
+                      ? <><Trophy size={14} className="text-amber-500"/>수상 멤버</>
+                      : <><span>✅</span>수료 멤버</>
+                    }
+                  </h2>
                   {isAdmin && (
                     <button onClick={() => setShowAwardModal(true)} className="btn-ghost text-xs flex items-center gap-1.5"><Plus size={12}/>태그 추가</button>
                   )}

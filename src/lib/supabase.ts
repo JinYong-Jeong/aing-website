@@ -149,7 +149,7 @@ export type ActivityAward = {
   id: string;
   activity_id: string;
   member_id: string;
-  rank: '1st' | '2nd' | '3rd' | 'special' | 'participation';
+  rank: '1st' | '2nd' | '3rd' | 'special' | 'participation' | 'honor_completion' | 'completion';
   note?: string;
   created_at?: string;
   member?: Member;
