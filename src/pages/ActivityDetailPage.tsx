@@ -52,7 +52,8 @@ const ActivityDetailPage: React.FC = () => {
   const [showAwardModal, setShowAwardModal] = useState(false);
   const [form, setForm] = useState(EMPTY_FORM);
   const [saving, setSaving] = useState(false);
-  const [awardForm, setAwardForm] = useState({ member_id: '', rank: '1st' as ActivityAward['rank'], note: '' });
+  const [awardForm, setAwardForm] = useState<{ member_id: string; rank: ActivityAward['rank']; note: string }>({ member_id: '', rank: '1st', note: '' });
+  const [bulkAwardForm, setBulkAwardForm] = useState<{ member_ids: string[]; rank: ActivityAward['rank']; note: string }>({ member_ids: [], rank: 'completion', note: '' });
 
   useEffect(() => {
     const load = async () => {
@@ -134,15 +135,36 @@ const ActivityDetailPage: React.FC = () => {
 
   const handleAddAward = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!activity || !awardForm.member_id) return;
+    if (!activity) return;
     setSaving(true);
-    const { data } = await supabase
-      .from('activity_awards')
-      .insert({ activity_id: activity.id, member_id: awardForm.member_id, rank: awardForm.rank, note: awardForm.note || null })
-      .select('*, member:members(*)')
-      .single();
-    if (data) setAwards(prev => [...prev, data as any]);
-    setAwardForm({ member_id: '', rank: '1st', note: '' });
+
+    if (activity.type !== 'competition') {
+      // bulk insert
+      if (bulkAwardForm.member_ids.length === 0) { setSaving(false); return; }
+      const rows = bulkAwardForm.member_ids.map(mid => ({
+        activity_id: activity.id,
+        member_id: mid,
+        rank: bulkAwardForm.rank,
+        note: bulkAwardForm.note || null,
+      }));
+      const { data } = await supabase
+        .from('activity_awards')
+        .insert(rows)
+        .select('*, member:members(*)');
+      if (data) setAwards(prev => [...prev, ...(data as any[])]);
+      setBulkAwardForm({ member_ids: [], rank: 'completion', note: '' });
+    } else {
+      // single insert for competition
+      if (!awardForm.member_id) { setSaving(false); return; }
+      const { data } = await supabase
+        .from('activity_awards')
+        .insert({ activity_id: activity.id, member_id: awardForm.member_id, rank: awardForm.rank, note: awardForm.note || null })
+        .select('*, member:members(*)')
+        .single();
+      if (data) setAwards(prev => [...prev, data as any]);
+      setAwardForm({ member_id: '', rank: '1st', note: '' });
+    }
+
     setShowAwardModal(false);
     setSaving(false);
   };
@@ -248,29 +270,66 @@ const ActivityDetailPage: React.FC = () => {
             <form onSubmit={handleAddAward} className="space-y-4">
               <div className="flex items-center justify-between">
                 <h3 className="text-base font-semibold text-aing-text">
-                {activity.type === 'competition' ? '수상 멤버 태그' : '수료 멤버 태그'}
-              </h3>
+                  {activity.type === 'competition' ? '수상 멤버 태그' : '수료 멤버 태그'}
+                </h3>
                 <button type="button" onClick={() => setShowAwardModal(false)}><X size={18}/></button>
               </div>
-              <select value={awardForm.member_id} onChange={e=>setAwardForm(p=>({...p,member_id:e.target.value}))} className="input-field w-full" required>
-                <option value="">멤버 선택</option>
-                {allMembers.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
-              </select>
-              <div>
-              <select value={awardForm.rank} onChange={e=>setAwardForm(p=>({...p,rank:e.target.value as any}))} className="input-field w-full">
-                {(activity.type === 'competition') ? (<>
-                  <option value="1st">🥇 1st Place</option>
-                  <option value="2nd">🥈 2nd Place</option>
-                  <option value="3rd">🥉 3rd Place</option>
-                  <option value="special">🏅 특별상</option>
-                  <option value="participation">🎖️ 참가상</option>
-                </>) : (<>
-                  <option value="honor_completion">🌟 우수 수료</option>
-                  <option value="completion">✅ 수료</option>
-                </>)}
-              </select>
-              </div>
-              <input value={awardForm.note} onChange={e=>setAwardForm(p=>({...p,note:e.target.value}))} className="input-field w-full" placeholder="비고 (선택)" />
+
+              {activity.type === 'competition' ? (
+                /* ── Competition: 단일 멤버 + 수상 rank ── */
+                <>
+                  <select value={awardForm.member_id} onChange={e=>setAwardForm(p=>({...p,member_id:e.target.value}))} className="input-field w-full" required>
+                    <option value="">멤버 선택</option>
+                    {allMembers.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
+                  </select>
+                  <select value={awardForm.rank} onChange={e=>setAwardForm(p=>({...p,rank:e.target.value as any}))} className="input-field w-full">
+                    <option value="1st">🥇 1st Place</option>
+                    <option value="2nd">🥈 2nd Place</option>
+                    <option value="3rd">🥉 3rd Place</option>
+                    <option value="special">🏅 특별상</option>
+                    <option value="participation">🎖️ 참가상</option>
+                  </select>
+                  <input value={awardForm.note} onChange={e=>setAwardForm(p=>({...p,note:e.target.value}))} className="input-field w-full" placeholder="비고 (선택)" />
+                </>
+              ) : (
+                /* ── Study/Project: 멀티셀렉트 + 수료 rank ── */
+                <>
+                  <div>
+                    <p className="text-xs text-aing-muted mb-1.5">멤버 선택 (복수 선택 가능)</p>
+                    <div className="border border-aing-border rounded-xl overflow-hidden max-h-48 overflow-y-auto divide-y divide-aing-border">
+                      {allMembers.map(m => {
+                        const checked = bulkAwardForm.member_ids.includes(m.id);
+                        return (
+                          <label key={m.id} className={`flex items-center gap-3 px-4 py-2.5 cursor-pointer transition-colors ${checked ? 'bg-blue-50' : 'hover:bg-gray-50'}`}>
+                            <input
+                              type="checkbox"
+                              checked={checked}
+                              onChange={e => setBulkAwardForm(p => ({
+                                ...p,
+                                member_ids: e.target.checked
+                                  ? [...p.member_ids, m.id]
+                                  : p.member_ids.filter(id => id !== m.id),
+                              }))}
+                              className="accent-aing-blue"
+                            />
+                            <span className="text-sm text-aing-text">{m.name}</span>
+                            <span className="text-xs text-aing-muted ml-auto">{m.track}</span>
+                          </label>
+                        );
+                      })}
+                    </div>
+                    {bulkAwardForm.member_ids.length > 0 && (
+                      <p className="text-xs text-aing-blue mt-1">{bulkAwardForm.member_ids.length}명 선택됨</p>
+                    )}
+                  </div>
+                  <select value={bulkAwardForm.rank} onChange={e=>setBulkAwardForm(p=>({...p,rank:e.target.value as any}))} className="input-field w-full">
+                    <option value="honor_completion">🌟 우수 수료</option>
+                    <option value="completion">✅ 수료</option>
+                  </select>
+                  <input value={bulkAwardForm.note} onChange={e=>setBulkAwardForm(p=>({...p,note:e.target.value}))} className="input-field w-full" placeholder="비고 (선택, 전체 적용)" />
+                </>
+              )}
+
               <div className="flex gap-3">
                 <button type="submit" disabled={saving} className="btn-primary text-sm flex items-center gap-2"><Check size={14}/>태그 추가</button>
                 <button type="button" onClick={() => setShowAwardModal(false)} className="btn-ghost text-sm">취소</button>
@@ -371,7 +430,14 @@ const ActivityDetailPage: React.FC = () => {
                     }
                   </h2>
                   {isAdmin && (
-                    <button onClick={() => setShowAwardModal(true)} className="btn-ghost text-xs flex items-center gap-1.5"><Plus size={12}/>태그 추가</button>
+                    <button onClick={() => {
+                      if (activity.type === 'competition') {
+                        setAwardForm({ member_id: '', rank: '1st', note: '' });
+                      } else {
+                        setBulkAwardForm({ member_ids: [], rank: 'completion', note: '' });
+                      }
+                      setShowAwardModal(true);
+                    }} className="btn-ghost text-xs flex items-center gap-1.5"><Plus size={12}/>태그 추가</button>
                   )}
                 </div>
                 {awards.length === 0 ? (
