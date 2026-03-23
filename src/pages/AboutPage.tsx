@@ -3,11 +3,27 @@ import { Brain, Code, Target, Layers, ArrowRight, ChevronRight } from 'lucide-re
 import { Link } from 'react-router-dom';
 import AnimatedSection from '../components/AnimatedSection';
 
-const juniorWeeks = [
-  { week: '1주', title: '스터디', desc: '논문-코드 매핑 구조 파악 + 개념 퀴즈 풀기' },
-  { week: '2주', title: '구현', desc: '쿡북 가이드를 따라 빈칸 코드 직접 구현' },
-  { week: '3주', title: '실험', desc: '하이퍼파라미터 튜닝 및 팀 간 리그전' },
-  { week: '4주', title: '정리', desc: '1등 팀 전략 발표 및 실험 로그 분석' },
+const juniorSessions = [
+  {
+    id: 'resnet',
+    name: 'ResNet',
+    weeks: [
+      { week: '1주', title: '스터디', desc: '논문-코드 매핑 구조 파악 + 개념 퀴즈 풀기' },
+      { week: '2주', title: '구현', desc: '쿡북 가이드를 따라 빈칸 코드 직접 구현' },
+      { week: '3주', title: '실험', desc: '하이퍼파라미터 튜닝 및 팀 간 리그전' },
+      { week: '4주', title: '정리', desc: '1등 팀 전략 발표 및 실험 로그 분석' },
+    ],
+  },
+  {
+    id: 'transformer',
+    name: 'Transformer',
+    weeks: [
+      { week: '1주', title: '스터디', desc: '논문-코드 매핑 구조 파악 + 개념 퀴즈 풀기' },
+      { week: '2주', title: '구현', desc: '쿡북 가이드를 따라 빈칸 코드 직접 구현' },
+      { week: '3주', title: '실험', desc: '하이퍼파라미터 튜닝 및 팀 간 리그전' },
+      { week: '4주', title: '정리', desc: '1등 팀 전략 발표 및 실험 로그 분석' },
+    ],
+  },
 ];
 
 const seniorWeeks = [
@@ -19,13 +35,6 @@ const seniorWeeks = [
   { week: '6주', title: '최적화 / 확장', desc: '성능 비교 실험, 어블레이션, 웹 데모 제작 등' },
   { week: '7주', title: '정리', desc: '결과 정리, 그래프/표 작성, 블로그/로그 기록' },
   { week: '8주', title: '발표', desc: '최종 결과물 발표, 피드백 및 개선점 논의' },
-];
-
-const domains = [
-  { name: 'Computer Vision', tag: 'CV', desc: '이미지 인식, 객체 탐지, 생성 모델 등', color: 'text-blue-500 border-blue-200 bg-blue-50' },
-  { name: 'Natural Language Processing', tag: 'NLP', desc: '언어 모델, 텍스트 분류, 번역 등', color: 'text-purple-500 border-purple-200 bg-purple-50' },
-  { name: 'Reinforcement Learning', tag: 'RL', desc: '에이전트 학습, 보상 설계, 환경 구축', color: 'text-green-500 border-green-200 bg-green-50' },
-  { name: 'HCI & Multi-Agent', tag: 'HCI', desc: '사람-AI 상호작용, 멀티에이전트 시스템', color: 'text-orange-500 border-orange-200 bg-orange-50' },
 ];
 
 const AboutPage: React.FC = () => {
@@ -122,13 +131,22 @@ const AboutPage: React.FC = () => {
                   기초 논문을 단순히 가져다 쓰는 것이 아니라, 내부 구조와 작동 원리를 이해하고
                   수식을 직접 코드로 구현합니다. 자신의 데이터에 맞게 수정·개선하는 능력을 기릅니다.
                 </p>
-                <div className="space-y-3">
-                  {juniorWeeks.map((w) => (
-                    <div key={w.week} className="flex gap-4 text-sm">
-                      <span className="text-aing-blue font-mono text-xs w-14 shrink-0 pt-0.5">{w.week}</span>
-                      <div>
-                        <span className="text-aing-text font-medium">{w.title}</span>
-                        <span className="text-aing-muted ml-2">{w.desc}</span>
+                <div className="space-y-6">
+                  {juniorSessions.map((session) => (
+                    <div key={session.id}>
+                      <p className="text-xs font-mono font-semibold text-aing-blue mb-2 uppercase tracking-wider">
+                        {session.name}
+                      </p>
+                      <div className="space-y-2">
+                        {session.weeks.map((w) => (
+                          <div key={w.week} className="flex gap-4 text-sm">
+                            <span className="text-aing-blue font-mono text-xs w-14 shrink-0 pt-0.5">{w.week}</span>
+                            <div>
+                              <span className="text-aing-text font-medium">{w.title}</span>
+                              <span className="text-aing-muted ml-2">{w.desc}</span>
+                            </div>
+                          </div>
+                        ))}
                       </div>
                     </div>
                   ))}
@@ -165,34 +183,6 @@ const AboutPage: React.FC = () => {
                 </div>
               </div>
             </AnimatedSection>
-          </div>
-        </div>
-      </section>
-
-      {/* Research Domains */}
-      <section className="py-24 px-6 border-t border-aing-border">
-        <div className="max-w-6xl mx-auto">
-          <AnimatedSection>
-            <div className="mb-16">
-              <h2 className="section-title mb-4">Research Interests</h2>
-              <p className="section-subtitle">우리가 탐구하는 AI 분야들</p>
-            </div>
-          </AnimatedSection>
-
-          <div className="grid md:grid-cols-2 gap-4">
-            {domains.map((d, i) => (
-              <AnimatedSection key={d.tag} delay={i * 100}>
-                <div className={`card border rounded-2xl flex items-start gap-4 ${d.color}`}>
-                  <div className={`px-2 py-1 rounded-lg border text-xs font-mono font-bold shrink-0 ${d.color}`}>
-                    {d.tag}
-                  </div>
-                  <div>
-                    <h3 className="text-aing-text font-medium mb-1">{d.name}</h3>
-                    <p className="text-aing-muted text-sm">{d.desc}</p>
-                  </div>
-                </div>
-              </AnimatedSection>
-            ))}
           </div>
         </div>
       </section>
