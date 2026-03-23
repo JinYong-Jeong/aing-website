@@ -4,6 +4,7 @@ import { ArrowLeft, Send, Eye, Code } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
 import AnimatedSection from '../components/AnimatedSection';
+import MarkdownRenderer from '../components/MarkdownRenderer';
 
 type Category = 'activity' | 'study' | 'project' | 'notice';
 
@@ -41,18 +42,7 @@ const NewPostPage: React.FC = () => {
     }
   }, [user]);
 
-  const escapeHtml = (s: string) =>
-    s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');
-  const renderPreview = (content: string) => {
-    return escapeHtml(content)
-      .replace(/\*\*(.*?)\*\*/g, '<strong class="text-aing-text">$1</strong>')
-      .replace(/## (.*)/g, '<h2 class="text-lg font-semibold text-aing-text mt-6 mb-3">$1</h2>')
-      .replace(/# (.*)/g, '<h1 class="text-xl font-semibold text-aing-text mt-6 mb-3">$1</h1>')
-      .replace(/- (.*)/g, '<li class="ml-4 list-disc text-aing-muted">$1</li>')
-      .replace(/\n/g, '<br/>');
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.title || !form.content) return;
     setSubmitting(true);
@@ -199,10 +189,12 @@ const NewPostPage: React.FC = () => {
                   </button>
                 </div>
                 {showPreview ? (
-                  <div
-                    className="min-h-[240px] p-3 rounded-xl border border-aing-border bg-aing-bg text-sm text-aing-muted leading-relaxed"
-                    dangerouslySetInnerHTML={{ __html: form.content ? renderPreview(form.content) : '<span class="opacity-40">미리보기...</span>' }}
-                  />
+                  <div className="min-h-[240px] p-4 rounded-xl border border-aing-border bg-aing-bg">
+                    {form.content
+                      ? <MarkdownRenderer content={form.content} />
+                      : <span className="opacity-40 text-sm">미리보기...</span>
+                    }
+                  </div>
                 ) : (
                   <textarea
                     value={form.content}

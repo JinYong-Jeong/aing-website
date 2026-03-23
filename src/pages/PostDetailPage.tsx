@@ -3,6 +3,7 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Eye, MessageSquare, Trash2, Pin, User, Heart, Download } from 'lucide-react';
 import { supabase, Post, Comment } from '../lib/supabase';
 import AnimatedSection from '../components/AnimatedSection';
+import MarkdownRenderer from '../components/MarkdownRenderer';
 import { useAuth } from '../context/AuthContext';
 
 const CATEGORY_LABELS: Record<string, string> = {
@@ -172,17 +173,6 @@ const PostDetailPage: React.FC = () => {
     } catch {}
   };
 
-  const escapeHtml = (s: string) =>
-    s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');
-  const renderContent = (content: string) => {
-    return escapeHtml(content)
-      .replace(/\*\*(.*?)\*\*/g, '<strong class="text-aing-text">$1</strong>')
-      .replace(/## (.*)/g, '<h2 class="text-lg font-semibold text-aing-text mt-6 mb-3">$1</h2>')
-      .replace(/# (.*)/g, '<h1 class="text-xl font-semibold text-aing-text mt-6 mb-3">$1</h1>')
-      .replace(/- (.*)/g, '<li class="ml-4 list-disc">$1</li>')
-      .replace(/\n/g, '<br/>');
-  };
-
   if (loading) return (
     <div className="min-h-screen bg-aing-bg pt-32 flex items-center justify-center">
       <div className="text-aing-muted">Loading...</div>
@@ -241,8 +231,7 @@ const PostDetailPage: React.FC = () => {
 
             <div className="gradient-line mb-6" />
 
-            <div className="text-aing-muted text-sm leading-relaxed"
-              dangerouslySetInnerHTML={{ __html: renderContent(post.content) }} />
+            <MarkdownRenderer content={post.content} />
 
             <div className="flex items-center justify-between mt-8 pt-6 border-t border-aing-border flex-wrap gap-3">
               <div className="flex items-center gap-4 text-xs text-aing-muted">
