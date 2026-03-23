@@ -98,7 +98,7 @@ const MemberProfilePage: React.FC = () => {
     fetchMember();
   }, [id]);
 
-  const handlePasswordSubmit = () => {
+  const handlePasswordSubmit = async () => {
     if (!member) return;
     if (!password.trim()) {
       setPasswordError('비밀번호를 입력해주세요.');
@@ -108,7 +108,12 @@ const MemberProfilePage: React.FC = () => {
       setAuthenticated(true);
       setPasswordError('');
     } else {
-      if (password === member.password_hash) {
+      // bcrypt RPC로 검증
+      const { data: rpcData } = await supabase.rpc('check_member_password', {
+        p_name: member.name,
+        p_password: password,
+      });
+      if (rpcData && rpcData.length > 0) {
         setAuthenticated(true);
         setPasswordError('');
       } else {
@@ -139,18 +144,22 @@ const MemberProfilePage: React.FC = () => {
         contact_info: form.contact_info,
       };
 
-      if (isSettingPassword && password.trim()) {
-        payload.password_hash = password.trim();
-      } else if (form.new_password && form.new_password.trim()) {
-        payload.password_hash = form.new_password.trim();
-      }
-
       const { error } = await supabase
         .from('members')
         .update(payload)
         .eq('id', id);
 
       if (error) throw error;
+
+      // 비밀번호 변경 시 bcrypt RPC로 처리
+      const newPw = isSettingPassword ? password.trim() : form.new_password?.trim();
+      if (newPw) {
+        await supabase.rpc('set_member_password', {
+          p_id: id,
+          p_new_password: newPw,
+        });
+      }
+
       navigate(`/members/${id}`);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
