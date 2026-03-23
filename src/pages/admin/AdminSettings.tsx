@@ -245,14 +245,13 @@ const AdminSettings: React.FC = () => {
             </div>
 
             {/* 보안 */}
-            <div className="card border-yellow-200 bg-yellow-50">
+            <div className="card border-green-200 bg-green-50">
               <div className="flex items-center gap-2 mb-2">
-                <ShieldCheck size={15} className="text-yellow-600" />
-                <h3 className="text-sm font-semibold text-yellow-700">보안 안내</h3>
+                <ShieldCheck size={15} className="text-green-600" />
+                <h3 className="text-sm font-semibold text-green-700">보안 상태</h3>
               </div>
-              <p className="text-xs text-yellow-700 leading-relaxed">
-                현재 비밀번호는 평문 저장입니다. 프로덕션 전 Supabase Auth 또는 bcrypt 해싱으로 전환을 권장합니다.
-                admin 계정은 Supabase users 테이블에서 직접 관리하세요.
+              <p className="text-xs text-green-700 leading-relaxed">
+                모든 비밀번호는 bcrypt로 해싱되어 저장됩니다. admin 계정은 Supabase users 테이블에서 직접 관리하세요.
               </p>
             </div>
           </div>

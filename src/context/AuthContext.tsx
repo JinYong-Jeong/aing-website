@@ -61,15 +61,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // users table may not exist yet, fall through
     }
 
-    // 2. members 테이블에서 확인 (password_hash + track 기반 role)
+    // 2. members 테이블에서 확인 (bcrypt RPC)
     try {
-      const { data: memberData } = await supabase
-        .from('members')
-        .select('id, name, password_hash, track')
-        .ilike('name', name.trim())
-        .single();
+      const { data: rpcMember } = await supabase.rpc('check_member_password', {
+        p_name: name.trim(),
+        p_password: password,
+      });
+      const memberData = rpcMember && rpcMember.length > 0 ? rpcMember[0] : null;
 
-      if (memberData && memberData.password_hash === password) {
+      if (memberData) {
         const role: 'admin' | 'ops' | 'member' | 'ob' =
           memberData.track === 'admin' ? 'admin' :
           memberData.track === 'ob' ? 'ob' : 'member';
