@@ -204,7 +204,6 @@ const AboutPage: React.FC = () => {
                       'Python 코드를 읽고 수정할 수 있는 능력',
                       '로컬 Jupyter/Python 환경 설정 가능',
                       '팀 프로젝트에 적극적으로 참여할 의지',
-                      '기본적인 딥러닝 지식 (모델, 손실함수 등)',
                     ].map(item => (
                       <li key={item} className="flex items-start gap-2">
                         <span className="text-aing-blue mt-0.5">✓</span>
@@ -220,7 +219,7 @@ const AboutPage: React.FC = () => {
                       '선택 도메인(CV/NLP/RL)에 대한 기본 이해',
                       '논문 읽기 가능 여부',
                       '기본적인 Git/GitHub 사용 경험',
-                      '주니어 트랙 수료 또는 유사 프로젝트 경험',
+                      '기본적인 딥러닝 지식 (모델, 손실함수 등)',
                     ].map(item => (
                       <li key={item} className="flex items-start gap-2">
                         <span className="text-purple-500 mt-0.5">→</span>
