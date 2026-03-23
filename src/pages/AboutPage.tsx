@@ -4,18 +4,21 @@ import { Link } from 'react-router-dom';
 import AnimatedSection from '../components/AnimatedSection';
 
 const juniorWeeks = [
-  { week: '1-2주', title: '논문 선정', desc: '기초 딥러닝 논문 선정 및 수식 분석' },
-  { week: '3-4주', title: '코드 매핑', desc: '수식을 코드로 직접 구현하며 파이프라인 체화' },
-  { week: '5-6주', title: '실험', desc: '다양한 데이터셋으로 실험 및 결과 분석' },
-  { week: '7-8주', title: '발표', desc: '구현 결과 발표 및 팀 피드백' },
+  { week: '1주', title: '스터디', desc: '논문-코드 매핑 구조 파악 + 개념 퀴즈 풀기' },
+  { week: '2주', title: '구현', desc: '쿡북 가이드를 따라 빈칸 코드 직접 구현' },
+  { week: '3주', title: '실험', desc: '하이퍼파라미터 튜닝 및 팀 간 리그전' },
+  { week: '4주', title: '정리', desc: '1등 팀 전략 발표 및 실험 로그 분석' },
 ];
 
 const seniorWeeks = [
-  { week: '1주', title: '주제 선정', desc: 'SOTA 모델 기반 주제 선정 및 코드 파악' },
-  { week: '2-3주', title: '커스터마이징', desc: '내 데이터/환경에 맞게 코드 수정' },
-  { week: '4-5주', title: '최적화', desc: '모델 구조 개선 및 하이퍼파라미터 튜닝' },
-  { week: '6-7주', title: '정리', desc: '결과 정리, 로그 작성, 웹 데모 제작' },
-  { week: '8주', title: '발표', desc: '최종 결과물 발표 및 피드백' },
+  { week: '1주', title: '기획 및 탐색', desc: '주제 선정, 깃허브 레포 탐색, 코드 실행 및 구조 파악' },
+  { week: '2주', title: '탐색 심화', desc: '데이터 확인, 베이스라인 재현, 이슈 리스트업' },
+  { week: '3주', title: '튜닝', desc: '내 데이터 적용, 데이터 로더 수정 및 전처리' },
+  { week: '4주', title: '튜닝 / 에러 해결', desc: '학습 파이프라인 안정화, 에러 해결 및 재현성 확보' },
+  { week: '5주', title: '최적화', desc: '모델 구조 개선, 하이퍼파라미터 튜닝' },
+  { week: '6주', title: '최적화 / 확장', desc: '성능 비교 실험, 어블레이션, 웹 데모 제작 등' },
+  { week: '7주', title: '정리', desc: '결과 정리, 그래프/표 작성, 블로그/로그 기록' },
+  { week: '8주', title: '발표', desc: '최종 결과물 발표, 피드백 및 개선점 논의' },
 ];
 
 const domains = [
@@ -116,8 +119,8 @@ const AboutPage: React.FC = () => {
                   </div>
                 </div>
                 <p className="text-aing-muted text-sm mb-6 leading-relaxed">
-                  기초 논문의 수식을 코드로 매핑하며 딥러닝 파이프라인을 체화합니다.
-                  이론과 구현 사이의 간극을 좁히는 것이 핵심입니다.
+                  기초 논문을 단순히 가져다 쓰는 것이 아니라, 내부 구조와 작동 원리를 이해하고
+                  수식을 직접 코드로 구현합니다. 자신의 데이터에 맞게 수정·개선하는 능력을 기릅니다.
                 </p>
                 <div className="space-y-3">
                   {juniorWeeks.map((w) => (
@@ -146,8 +149,8 @@ const AboutPage: React.FC = () => {
                   </div>
                 </div>
                 <p className="text-aing-muted text-sm mb-6 leading-relaxed">
-                  특정 도메인의 SOTA 모델을 기반으로 커스텀 모델을 설계합니다.
-                  실전 역량 강화와 포트폴리오 구축을 목표로 합니다.
+                  SOTA 모델의 코드를 직접 실행하고 파악하는 것에서 시작합니다.
+                  내 데이터에 맞게 수정하고, 구조를 개선하며 실전 역량을 쌓습니다. 포트폴리오 구축 중심.
                 </p>
                 <div className="space-y-3">
                   {seniorWeeks.map((w) => (
