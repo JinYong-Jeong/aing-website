@@ -60,9 +60,11 @@ const AboutPage: React.FC = () => {
               <span className="text-gradient">교차점</span>
             </h1>
             <p className="section-subtitle max-w-2xl leading-relaxed text-lg">
-              A.ing은 가천대학교 학부생들이 주도하는 인공지능 학술 동아리입니다.</br>
-              단순히 코드를 실행하는 것을 넘어, 수식을 이해하고 직접 구현하는 과정을 통해</br>
-              진짜 실력을 쌓는 것을 목표로 합니다.
+              A.ing은 가천대학교 학부생들이 주도하는 인공지능 학술 동아리입니다.</p>
+             <p className="section-subtitle max-w-2xl leading-relaxed text-lg">
+              단순히 코드를 실행하는 것을 넘어, 수식을 이해하고 직접 구현하는 과정을 통해</p>
+            <p className="section-subtitle max-w-2xl leading-relaxed text-lg">  
+            진짜 실력을 쌓는 것을 목표로 합니다.
             </p>
           </AnimatedSection>
         </div>
