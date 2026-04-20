@@ -56,7 +56,7 @@ const AboutPage: React.FC = () => {
               <span>About</span>
             </div>
             <h1 className="section-title text-5xl md:text-6xl mb-6">
-              이론과 구현의<br />
+              이론과 구현의
               <span className="text-gradient">교차점</span>
             </h1>
             <p className="section-subtitle max-w-2xl leading-relaxed text-lg">
