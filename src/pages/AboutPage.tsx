@@ -78,19 +78,19 @@ const AboutPage: React.FC = () => {
               {
                 icon: Brain,
                 title: 'Theory First',
-                desc: '논문의 수식과 개념을 먼저 이해합니다. 블랙박스 없이, 원리부터.',
+                desc: '논문의 수식과 개념을 먼저 이해합니다. \n블랙박스 없이, 원리부터.',
                 color: 'text-aing-blue',
               },
               {
                 icon: Code,
                 title: 'Build It',
-                desc: '이해한 것을 직접 코드로 구현합니다. 구현이 곧 진짜 이해의 증명.',
+                desc: '이해한 것을 직접 코드로 구현합니다. \n구현이 곧 진짜 이해의 증명.',
                 color: 'text-purple-500',
               },
               {
                 icon: Target,
                 title: 'Level Up',
-                desc: '기초부터 SOTA까지. 각자의 속도로, 함께 성장합니다.',
+                desc: '기초부터 SOTA까지. \n각자의 속도로, 함께 성장합니다.',
                 color: 'text-green-500',
               },
             ].map((item, i) => (
