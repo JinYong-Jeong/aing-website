@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { supabase } from '../lib/supabase';
+import { isSupabaseConfigured, supabase } from '../lib/supabase';
 
 type Settings = Record<string, string>;
 
@@ -11,6 +11,8 @@ export const SiteSettingsProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const [settings, setSettings] = useState<Settings>({});
 
   useEffect(() => {
+    if (!isSupabaseConfigured) return;
+
     supabase.from('site_settings').select('key,value').then(({ data }) => {
       if (data) {
         const map: Settings = {};

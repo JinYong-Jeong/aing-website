@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Users, Crown, ChevronRight, PlusCircle, Pencil, Trash2, X, Check } from 'lucide-react';
 import AnimatedSection from '../components/AnimatedSection';
-import { supabase, OpsTeamMember, Member } from '../lib/supabase';
+import { MEMBER_PUBLIC_SELECT, supabase, OpsTeamMember, Member } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
 
 const demoData: OpsTeamMember[] = [
@@ -24,6 +24,8 @@ const EMPTY_FORM = {
   order: 0, generation: 1,
 };
 
+const OPS_MEMBER_SELECT = 'id,name,role,responsibilities,level,order,generation,avatar_url,created_at';
+
 const AboutOpsPage: React.FC = () => {
   const { isAdmin } = useAuth();
   const [members, setMembers] = useState<OpsTeamMember[]>(demoData);
@@ -42,10 +44,11 @@ const AboutOpsPage: React.FC = () => {
     try {
       const { data } = await supabase
         .from('members')
-        .select('*')
+        .select(MEMBER_PUBLIC_SELECT)
         .ilike('name', m.name.trim())
+        .eq('is_active', true)
         .single();
-      if (data) setOpsLinkedMember(data as Member);
+      if (data) setOpsLinkedMember(data as unknown as Member);
     } catch {}
     setLoadingMember(false);
   };
@@ -55,7 +58,7 @@ const AboutOpsPage: React.FC = () => {
       try {
         const { data } = await supabase
           .from('ops_members')
-          .select('*')
+          .select(OPS_MEMBER_SELECT)
           .order('order', { ascending: true });
         if (data && data.length > 0) setMembers(data as OpsTeamMember[]);
       } catch { /* use demo */ }

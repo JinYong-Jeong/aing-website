@@ -1,57 +1,64 @@
 # A.ing Website
 
-가천대학교 AI 학술동아리 A.ing 공식 웹사이트
+Gachon University AI Academic Club A.ing official website.
 
-## 🚀 Tech Stack
+## Tech Stack
 
-- **Frontend**: React 18 + TypeScript + Vite
-- **Styling**: Tailwind CSS
-- **Backend**: Supabase (PostgreSQL + RLS)
-- **Deploy**: Vercel
+- Frontend: React 18, TypeScript, Tailwind CSS
+- Backend: Supabase Auth, PostgreSQL, Row Level Security
+- Deploy: Vercel
 
-## 📁 Project Structure
+## Project Structure
 
-```
+```text
 src/
-├── components/      # 공통 컴포넌트 (Navbar, Footer, AnimatedSection)
-├── context/         # Context (Auth, SiteSettings)
-├── lib/             # Supabase 클라이언트 & 타입
-├── pages/
-│   ├── admin/       # 관리자 페이지
-│   └── ...          # 일반 페이지
-└── App.tsx
+  components/      Shared UI components
+  context/         Auth and site setting contexts
+  lib/             Supabase client and shared types
+  pages/
+    admin/         Admin pages
+    ...            Public and member pages
 ```
 
-## 🗄️ Database Setup
-
-`schema_final.sql` 파일을 Supabase SQL Editor에서 실행합니다.
-
-## 🔑 Admin Setup
-
-1. `schema_final.sql` 실행
-2. Supabase에서 `users` 테이블에 admin 계정 추가:
-```sql
-insert into public.users (name, password_hash, role)
-values ('admin이름', crypt('비밀번호', gen_salt('bf', 10)), 'admin');
-```
-
-## ⚙️ Environment Variables
+## Environment Variables
 
 ```env
 VITE_SUPABASE_URL=your_supabase_url
 VITE_SUPABASE_ANON_KEY=your_anon_key
 ```
 
-## 📋 Admin Features
+Existing `REACT_APP_SUPABASE_URL` and `REACT_APP_SUPABASE_ANON_KEY` values are also accepted during migration.
 
-| 메뉴 | 기능 |
-|------|------|
-| Settings | 사이트 정보, SNS, 관심분야, 모집 설정 |
-| Members | 멤버 추가/수정/삭제 |
-| Activities | 활동 추가/수정/삭제 |
-| Projects | 프로젝트 관리 |
-| Posts | 게시글 관리 |
-| Team Posts | 팀원 모집글 관리 |
-| Messages | 문의 메시지 확인 |
-| About Ops | 운영진 관리 |
-| Ex-Ops | 전 운영진 관리 |
+## Database Setup
+
+Run `schema_final.sql` in the Supabase SQL Editor.
+
+The app uses Supabase email OTP or magic-link authentication. A user is accepted only when the authenticated email belongs to an active registered member in `members.email` or `members.contact_email`.
+
+## Initial Admin Setup
+
+1. Run `schema_final.sql`.
+2. Insert or update an active member row with the admin's school email.
+3. Set that member's `role` to `admin`.
+4. Log in through the site with the registered school email and complete the email verification flow.
+
+No application password or password hash is required.
+
+## Main Features
+
+| Area | Features |
+| --- | --- |
+| Members | Member directory, profile editing, LinkedIn/GitHub-centered public profile |
+| Activities | Simplified activity cards managed separately from history |
+| History | Featured achievements and milestones in a timeline |
+| Team | Member-only team recruiting with ownership checks, limits, and rate controls |
+| Contact | Official email-first contact flow |
+| Admin | Site settings, members, activities, projects, team posts, messages, ops content |
+
+## Security Notes
+
+- Members and Team pages require a verified registered member session.
+- Team posts are limited to three open posts per account.
+- Team writes and applications include length checks, duplicate/self-apply blocks, and rate-limit policies.
+- Community/Board routes and admin management pages were removed.
+- Public API selections avoid password hashes and private contact fields.

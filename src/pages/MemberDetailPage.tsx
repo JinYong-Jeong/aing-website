@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Github, Mail, MessageCircle, Users, ChevronLeft, Pencil, Code2, ExternalLink, Trophy } from 'lucide-react';
-import { supabase, Member, ActivityAward, Activity, Project, TeamPost } from '../lib/supabase';
+import { MEMBER_PUBLIC_SELECT, supabase, Member, ActivityAward, Activity, Project, TeamPost } from '../lib/supabase';
+import { useAuth } from '../context/AuthContext';
 
 const TRACK_LABELS: Record<string, string> = {
   junior: 'Junior',
@@ -42,6 +43,7 @@ const WORKLOAD_LABELS = ['여유', '여유', '보통', '보통', '바쁨', '매�
 
 const MemberDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
+  const { user, isAdmin } = useAuth();
   const [member, setMember] = useState<Member | null>(null);
   const [projects, setProjects] = useState<Project[]>([]);
   const [teamPosts, setTeamPosts] = useState<Pick<TeamPost, 'id' | 'title' | 'status' | 'created_at'>[]>([]);
@@ -55,13 +57,25 @@ const MemberDetailPage: React.FC = () => {
       try {
         const { data, error } = await supabase
           .from('members')
-          .select('*')
+          .select(MEMBER_PUBLIC_SELECT)
           .eq('id', id)
           .single();
         if (error || !data) {
           setNotFound(true);
         } else {
-          setMember(data);
+          let nextMember = data as unknown as Member;
+          const canReadPrivate = Boolean(isAdmin || user?.member_id === id);
+          if (canReadPrivate) {
+            try {
+              const { data: privateData } = await supabase
+                .from('members')
+                .select('contact_info,contact_email,email')
+                .eq('id', id)
+                .single();
+              if (privateData) nextMember = { ...nextMember, ...privateData };
+            } catch {}
+          }
+          setMember(nextMember);
           // Fetch participated projects
           try {
             const { data: pmData } = await supabase
@@ -87,15 +101,15 @@ const MemberDetailPage: React.FC = () => {
               .eq('author_id', id)
               .order('created_at', { ascending: false });
             if (tpById && tpById.length > 0) {
-              teamPostsData = tpById;
+              teamPostsData = tpById as unknown as Pick<TeamPost, 'id' | 'title' | 'status' | 'created_at'>[];
             } else {
               // fallback: author_name match
               const { data: tpByName } = await supabase
                 .from('team_posts')
                 .select('id, title, status, created_at')
-                .ilike('author_name', data.name)
+                .ilike('author_name', nextMember.name)
                 .order('created_at', { ascending: false });
-              if (tpByName) teamPostsData = tpByName;
+              if (tpByName) teamPostsData = tpByName as unknown as Pick<TeamPost, 'id' | 'title' | 'status' | 'created_at'>[];
             }
             setTeamPosts(teamPostsData);
           } catch {
@@ -104,7 +118,7 @@ const MemberDetailPage: React.FC = () => {
           try {
             const { data: awardsData } = await supabase
               .from('activity_awards')
-              .select('*, activity:activities(*)')
+              .select('id,activity_id,member_id,rank,note,created_at,activity:activities(id,title,semester,type)')
               .eq('member_id', id);
             if (awardsData) setAwards(awardsData as any);
           } catch {}
@@ -116,7 +130,7 @@ const MemberDetailPage: React.FC = () => {
       }
     };
     fetchMember();
-  }, [id]);
+  }, [id, isAdmin, user?.member_id]);
 
   const getInitials = (name: string) =>
     name.split(' ').map((n) => n[0]).join('').toUpperCase().slice(0, 2);
@@ -143,6 +157,7 @@ const MemberDetailPage: React.FC = () => {
 
   const workload = member.workload ?? 0;
   const status = member.status ?? 'free';
+  const canSeePrivateContact = Boolean(isAdmin || user?.member_id === member.id);
 
   return (
     <div className="min-h-screen bg-aing-bg pt-20">
@@ -196,13 +211,15 @@ const MemberDetailPage: React.FC = () => {
                 </span>
               </div>
             </div>
-            <Link
-              to={`/members/${member.id}/edit`}
-              className="text-aing-muted hover:text-aing-text transition-colors p-1"
-              title="프로필 수정"
-            >
-              <Pencil size={14} />
-            </Link>
+            {canSeePrivateContact && (
+              <Link
+                to={`/members/${member.id}/edit`}
+                className="text-aing-muted hover:text-aing-text transition-colors p-1"
+                title="프로필 수정"
+              >
+                <Pencil size={14} />
+              </Link>
+            )}
           </div>
 
           {/* Bio */}
@@ -290,7 +307,7 @@ const MemberDetailPage: React.FC = () => {
                 LinkedIn
               </a>
             )}
-            {member.contact_info && (
+            {canSeePrivateContact && member.contact_info && (
               <a
                 href={member.contact_info.startsWith('http') ? member.contact_info : `#`}
                 target="_blank"
@@ -301,7 +318,7 @@ const MemberDetailPage: React.FC = () => {
                 연락수단
               </a>
             )}
-            {member.contact_email && (
+            {canSeePrivateContact && member.contact_email && (
               <a
                 href={`mailto:${member.contact_email}`}
                 className="flex items-center gap-1.5 text-sm text-aing-muted hover:text-aing-text transition-colors"

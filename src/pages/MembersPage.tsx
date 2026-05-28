@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Github, Users, Pencil, ChevronDown, ChevronUp, X, Search } from 'lucide-react';
-import { supabase, Member } from '../lib/supabase';
+import { Github, Users, Pencil, ChevronDown, ChevronUp, X, Search, Linkedin } from 'lucide-react';
+import { MEMBER_PUBLIC_SELECT, supabase, Member } from '../lib/supabase';
 import AnimatedSection from '../components/AnimatedSection';
 import { useSiteSettings } from '../context/SiteSettingsContext';
+import { useAuth } from '../context/AuthContext';
 
 const TRACK_LABELS: Record<string, string> = {
   junior: 'Junior',
@@ -49,6 +50,7 @@ const WorkloadDots: React.FC<{ value: number }> = ({ value }) => {
 const MembersPage: React.FC = () => {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const siteSettings = useSiteSettings();
+  const { user, isAdmin } = useAuth();
 
   const [members, setMembers] = useState<Member[]>([]);
   const [loading, setLoading] = useState(true);
@@ -67,26 +69,30 @@ const MembersPage: React.FC = () => {
     const fetchMembers = async () => {
       try {
         const [{ data, error }, { data: orderSetting }] = await Promise.all([
-          supabase.from('members').select('*').eq('is_active', true),
+          supabase
+            .from('members')
+            .select(MEMBER_PUBLIC_SELECT)
+            .eq('is_active', true),
           supabase.from('site_settings').select('value').eq('key', 'member_order').single(),
         ]);
 
         if (error || !data || data.length === 0) {
           setMembers(demoMembers);
         } else {
+          const fetchedMembers = data as unknown as Member[];
           // 저장된 순서가 있으면 그 순서대로 정렬
           if (orderSetting?.value) {
             try {
               const savedOrder: string[] = JSON.parse(orderSetting.value);
-              const idToMember = Object.fromEntries(data.map(m => [m.id, m]));
+              const idToMember = Object.fromEntries(fetchedMembers.map(m => [m.id, m]));
               const ordered = savedOrder.filter(id => idToMember[id]).map(id => idToMember[id]);
-              const remaining = data.filter(m => !savedOrder.includes(m.id));
+              const remaining = fetchedMembers.filter(m => !savedOrder.includes(m.id));
               setMembers([...ordered, ...remaining]);
             } catch {
-              setMembers(data);
+              setMembers(fetchedMembers);
             }
           } else {
-            setMembers(data);
+            setMembers(fetchedMembers);
           }
         }
       } catch {
@@ -399,26 +405,35 @@ const MembersPage: React.FC = () => {
                           <WorkloadDots value={workload} />
                         </div>
 
-                        {/* GitHub link */}
-                        {member.github && (
-                          <span className="flex items-center gap-1 text-xs text-aing-muted">
-                            <Github size={12} />
-                            GitHub
-                          </span>
-                        )}
+                        <div className="flex flex-wrap gap-3">
+                          {member.github && (
+                            <span className="flex items-center gap-1 text-xs text-aing-muted">
+                              <Github size={12} />
+                              GitHub
+                            </span>
+                          )}
+                          {member.linkedin && (
+                            <span className="flex items-center gap-1 text-xs text-aing-muted">
+                              <Linkedin size={12} />
+                              LinkedIn
+                            </span>
+                          )}
+                        </div>
                       </Link>
 
                       {/* Profile Edit Link */}
-                      <div className="mt-3 pt-3 border-t border-aing-border flex justify-end">
-                        <Link
-                          to={`/members/${member.id}/edit`}
-                          className="flex items-center gap-1 text-xs text-aing-muted hover:text-aing-blue transition-colors"
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          <Pencil size={10} />
-                          프로필 수정
-                        </Link>
-                      </div>
+                      {(isAdmin || user?.member_id === member.id) && (
+                        <div className="mt-3 pt-3 border-t border-aing-border flex justify-end">
+                          <Link
+                            to={`/members/${member.id}/edit`}
+                            className="flex items-center gap-1 text-xs text-aing-muted hover:text-aing-blue transition-colors"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <Pencil size={10} />
+                            프로필 수정
+                          </Link>
+                        </div>
+                      )}
                     </div>
                   </AnimatedSection>
                 );

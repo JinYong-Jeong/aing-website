@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { ChevronLeft, Save, Eye, EyeOff } from 'lucide-react';
-import { supabase, Member } from '../lib/supabase';
+import { ChevronLeft, Save } from 'lucide-react';
+import { MEMBER_PRIVATE_SELECT, supabase, Member } from '../lib/supabase';
+import { useAuth } from '../context/AuthContext';
 
 const WORKLOAD_LABELS = ['여유', '여유', '보통', '바쁨', '바쁨', '매우 바쁨'];
 const WORKLOAD_COLORS = ['text-green-600', 'text-green-600', 'text-yellow-600', 'text-orange-500', 'text-orange-600', 'text-red-600'];
@@ -25,21 +26,16 @@ type FormData = {
   contact_email: string;
   github: string;
   linkedin: string;
-  new_password: string;
 };
 
 const MemberProfilePage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { user, isAdmin } = useAuth();
   const [member, setMember] = useState<Member | null>(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
-
-  const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
-  const [passwordError, setPasswordError] = useState('');
-  const [authenticated, setAuthenticated] = useState(false);
-  const [isSettingPassword, setIsSettingPassword] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   const [form, setForm] = useState<FormData>({
     bio: '',
@@ -54,39 +50,41 @@ const MemberProfilePage: React.FC = () => {
     contact_email: '',
     github: '',
     linkedin: '',
-    new_password: '',
   });
 
-  const [saving, setSaving] = useState(false);
+  const canEdit = Boolean(user && id && (isAdmin || user.member_id === id));
 
   useEffect(() => {
     const fetchMember = async () => {
       if (!id) return;
+      if (!canEdit) {
+        setLoading(false);
+        return;
+      }
       try {
         const { data, error } = await supabase
           .from('members')
-          .select('*')
+          .select(MEMBER_PRIVATE_SELECT)
           .eq('id', id)
           .single();
         if (error || !data) {
           setNotFound(true);
         } else {
-          setMember(data);
-          setIsSettingPassword(!data.password_hash);
+          const fetchedMember = data as unknown as Member;
+          setMember(fetchedMember);
           setForm({
-            bio: data.bio ?? '',
-            avatar_url: data.avatar_url ?? '',
-            interests: (data.interests ?? []).join(', '),
-            skills: (data.skills ?? []).join(', '),
-            workload: data.workload ?? 0,
-            status: (data.status as 'busy' | 'mid' | 'free') ?? 'free',
-            looking_for_team: data.looking_for_team ?? false,
-            project_idea: data.project_idea ?? '',
-            contact_info: data.contact_info ?? '',
-            contact_email: data.contact_email ?? '',
-            github: data.github ?? '',
-            linkedin: data.linkedin ?? '',
-            new_password: '',
+            bio: fetchedMember.bio ?? '',
+            avatar_url: fetchedMember.avatar_url ?? '',
+            interests: (fetchedMember.interests ?? []).join(', '),
+            skills: (fetchedMember.skills ?? []).join(', '),
+            workload: fetchedMember.workload ?? 0,
+            status: (fetchedMember.status as 'busy' | 'mid' | 'free') ?? 'free',
+            looking_for_team: fetchedMember.looking_for_team ?? false,
+            project_idea: fetchedMember.project_idea ?? '',
+            contact_info: fetchedMember.contact_info ?? '',
+            contact_email: fetchedMember.contact_email ?? '',
+            github: fetchedMember.github ?? '',
+            linkedin: fetchedMember.linkedin ?? '',
           });
         }
       } catch {
@@ -96,52 +94,25 @@ const MemberProfilePage: React.FC = () => {
       }
     };
     fetchMember();
-  }, [id]);
-
-  const handlePasswordSubmit = async () => {
-    if (!member) return;
-    if (!password.trim()) {
-      setPasswordError('비밀번호를 입력해주세요.');
-      return;
-    }
-    if (isSettingPassword) {
-      setAuthenticated(true);
-      setPasswordError('');
-    } else {
-      // bcrypt RPC로 검증
-      const { data: rpcData } = await supabase.rpc('check_member_password', {
-        p_name: member.name,
-        p_password: password,
-      });
-      if (rpcData && rpcData.length > 0) {
-        setAuthenticated(true);
-        setPasswordError('');
-      } else {
-        setPasswordError('비밀번호가 일치하지 않습니다.');
-      }
-    }
-  };
+  }, [canEdit, id]);
 
   const handleSave = async () => {
-    if (!member || !id) return;
+    if (!member || !id || !canEdit) return;
     setSaving(true);
     try {
       const payload: Record<string, unknown> = {
-        bio: form.bio,
+        bio: form.bio.slice(0, 300),
         avatar_url: form.avatar_url,
         github: form.github,
         linkedin: form.linkedin,
-        interests: typeof form.interests === 'string'
-          ? form.interests.split(',').map((s: string) => s.trim()).filter(Boolean)
-          : form.interests,
-        skills: typeof form.skills === 'string'
-          ? form.skills.split(',').map((s: string) => s.trim()).filter(Boolean)
-          : form.skills,
+        interests: form.interests.split(',').map((s) => s.trim()).filter(Boolean).slice(0, 8),
+        skills: form.skills.split(',').map((s) => s.trim()).filter(Boolean).slice(0, 12),
         workload: Number(form.workload),
         status: form.status,
         looking_for_team: form.looking_for_team,
-        project_idea: form.project_idea,
-        contact_info: form.contact_info,
+        project_idea: form.project_idea.slice(0, 500),
+        contact_info: form.contact_info.slice(0, 160),
+        contact_email: form.contact_email.trim().toLowerCase(),
       };
 
       const { error } = await supabase
@@ -150,20 +121,9 @@ const MemberProfilePage: React.FC = () => {
         .eq('id', id);
 
       if (error) throw error;
-
-      // 비밀번호 변경 시 bcrypt RPC로 처리
-      const newPw = isSettingPassword ? password.trim() : form.new_password?.trim();
-      if (newPw) {
-        await supabase.rpc('set_member_password', {
-          p_id: id,
-          p_new_password: newPw,
-        });
-      }
-
       navigate(`/members/${id}`);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
-      console.error('Profile save error:', msg);
       alert('저장 실패: ' + msg);
     }
     setSaving(false);
@@ -176,6 +136,18 @@ const MemberProfilePage: React.FC = () => {
     return (
       <div className="min-h-screen bg-aing-bg pt-20 flex items-center justify-center">
         <div className="text-aing-muted text-sm">불러오는 중...</div>
+      </div>
+    );
+  }
+
+  if (!canEdit) {
+    return (
+      <div className="min-h-screen bg-aing-bg pt-20 flex items-center justify-center px-6">
+        <div className="card text-center max-w-sm">
+          <h1 className="text-lg font-semibold text-aing-text mb-2">수정 권한이 없습니다.</h1>
+          <p className="text-sm text-aing-muted mb-5">프로필은 본인 또는 관리자만 수정할 수 있습니다.</p>
+          <Link to={id ? `/members/${id}` : '/members'} className="btn-primary text-sm">프로필로 돌아가기</Link>
+        </div>
       </div>
     );
   }
@@ -203,7 +175,6 @@ const MemberProfilePage: React.FC = () => {
           프로필 보기
         </Link>
 
-        {/* Member Header */}
         <div className="flex items-center gap-4 mb-8">
           {member.avatar_url ? (
             <img
@@ -213,9 +184,7 @@ const MemberProfilePage: React.FC = () => {
             />
           ) : (
             <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-100 to-purple-100 border border-aing-border flex items-center justify-center shrink-0">
-              <span className="text-aing-text font-semibold text-xl">
-                {getInitials(member.name)}
-              </span>
+              <span className="text-aing-text font-semibold text-xl">{getInitials(member.name)}</span>
             </div>
           )}
           <div>
@@ -224,246 +193,94 @@ const MemberProfilePage: React.FC = () => {
           </div>
         </div>
 
-        {/* Password Section */}
-        {!authenticated ? (
-          <div className="bg-aing-card border border-aing-border rounded-2xl p-6">
-            <h2 className="font-semibold text-aing-text mb-1">
-              {isSettingPassword ? '초기 비밀번호 설정' : '본인 확인'}
-            </h2>
-            <p className="text-aing-muted text-xs mb-4">
-              {isSettingPassword
-                ? '처음 접속입니다. 사용할 비밀번호를 설정해주세요.'
-                : '프로필을 수정하려면 비밀번호를 입력해주세요.'}
-            </p>
-            <div className="relative mb-3">
-              <input
-                type={showPassword ? 'text' : 'password'}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handlePasswordSubmit()}
-                placeholder="비밀번호"
-                autoComplete="current-password"
-                className="w-full border border-aing-border rounded-xl px-4 py-2.5 text-sm text-aing-text bg-aing-bg outline-none focus:border-aing-blue pr-10"
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-aing-muted hover:text-aing-text"
-              >
-                {showPassword ? <EyeOff size={14} /> : <Eye size={14} />}
-              </button>
+        <div className="space-y-5">
+          <div className="bg-aing-card border border-aing-border rounded-2xl p-5">
+            <h3 className="text-xs font-semibold text-aing-muted uppercase tracking-wider mb-3">기본 정보</h3>
+            <div className="space-y-3">
+              <input value={form.avatar_url} onChange={(e) => setForm({ ...form, avatar_url: e.target.value })} placeholder="프로필 이미지 URL" className="input-field" />
+              <input value={form.bio} onChange={(e) => setForm({ ...form, bio: e.target.value })} maxLength={300} placeholder="한 줄 소개" className="input-field" />
+              <input value={form.github} onChange={(e) => setForm({ ...form, github: e.target.value })} placeholder="GitHub URL" className="input-field" />
+              <input value={form.linkedin} onChange={(e) => setForm({ ...form, linkedin: e.target.value })} placeholder="LinkedIn URL" className="input-field" />
             </div>
-            {passwordError && (
-              <p className="text-red-500 text-xs mb-3">{passwordError}</p>
-            )}
-            <button
-              onClick={handlePasswordSubmit}
-              className="w-full bg-aing-blue text-white rounded-xl py-2.5 text-sm font-medium hover:opacity-90 transition-opacity"
-            >
-              {isSettingPassword ? '비밀번호 설정 후 수정하기' : '확인'}
-            </button>
           </div>
-        ) : (
-          <div className="space-y-5 animate-[fadeIn_0.3s_ease]">
-            {/* Avatar URL */}
-            <div className="bg-aing-card border border-aing-border rounded-2xl p-5">
-              <h3 className="text-xs font-semibold text-aing-muted uppercase tracking-wider mb-3">기본 정보</h3>
-              <div className="space-y-3">
-                <div>
-                  <label className="text-xs text-aing-muted mb-1 block">프로필 이미지 URL</label>
-                  <input
-                    type="text"
-                    value={form.avatar_url}
-                    onChange={(e) => setForm({ ...form, avatar_url: e.target.value })}
-                    placeholder="https://..."
-                    className="w-full border border-aing-border rounded-xl px-3 py-2 text-sm text-aing-text bg-aing-bg outline-none focus:border-aing-blue"
-                  />
-                </div>
-                <div>
-                  <label className="text-xs text-aing-muted mb-1 block">한 줄 소개 (bio)</label>
-                  <input
-                    type="text"
-                    value={form.bio}
-                    onChange={(e) => setForm({ ...form, bio: e.target.value })}
-                    placeholder="자신을 소개해 주세요"
-                    className="w-full border border-aing-border rounded-xl px-3 py-2 text-sm text-aing-text bg-aing-bg outline-none focus:border-aing-blue"
-                  />
-                </div>
-                <div>
-                  <label className="text-xs text-aing-muted mb-1 block">GitHub URL</label>
-                  <input
-                    type="text"
-                    value={form.github}
-                    onChange={(e) => setForm({ ...form, github: e.target.value })}
-                    placeholder="https://github.com/username"
-                    className="w-full border border-aing-border rounded-xl px-3 py-2 text-sm text-aing-text bg-aing-bg outline-none focus:border-aing-blue"
-                  />
-                </div>
-                <div>
-                  <label className="text-xs text-aing-muted mb-1 block">LinkedIn URL</label>
-                  <input
-                    type="text"
-                    value={form.linkedin}
-                    onChange={(e) => setForm({ ...form, linkedin: e.target.value })}
-                    placeholder="https://linkedin.com/in/username"
-                    className="w-full border border-aing-border rounded-xl px-3 py-2 text-sm text-aing-text bg-aing-bg outline-none focus:border-aing-blue"
-                  />
-                </div>
-              </div>
-            </div>
 
-            {/* Interests & Skills */}
-            <div className="bg-aing-card border border-aing-border rounded-2xl p-5">
-              <h3 className="text-xs font-semibold text-aing-muted uppercase tracking-wider mb-3">관심사 & 기술</h3>
-              <div className="space-y-3">
-                <div>
-                  <label className="text-xs text-aing-muted mb-1 block">관심 분야 (쉼표로 구분)</label>
-                  <input
-                    type="text"
-                    value={form.interests}
-                    onChange={(e) => setForm({ ...form, interests: e.target.value })}
-                    placeholder="CV, NLP, RL"
-                    className="w-full border border-aing-border rounded-xl px-3 py-2 text-sm text-aing-text bg-aing-bg outline-none focus:border-aing-blue"
-                  />
-                </div>
-                <div>
-                  <label className="text-xs text-aing-muted mb-1 block">보유 기술 (쉼표로 구분)</label>
-                  <input
-                    type="text"
-                    value={form.skills}
-                    onChange={(e) => setForm({ ...form, skills: e.target.value })}
-                    placeholder="Python, PyTorch, React"
-                    className="w-full border border-aing-border rounded-xl px-3 py-2 text-sm text-aing-text bg-aing-bg outline-none focus:border-aing-blue"
-                  />
-                </div>
-              </div>
+          <div className="bg-aing-card border border-aing-border rounded-2xl p-5">
+            <h3 className="text-xs font-semibold text-aing-muted uppercase tracking-wider mb-3">관심사 & 기술</h3>
+            <div className="space-y-3">
+              <input value={form.interests} onChange={(e) => setForm({ ...form, interests: e.target.value })} placeholder="관심 분야 (쉼표로 구분, 최대 8개)" className="input-field" />
+              <input value={form.skills} onChange={(e) => setForm({ ...form, skills: e.target.value })} placeholder="보유 기술 (쉼표로 구분, 최대 12개)" className="input-field" />
             </div>
+          </div>
 
-            {/* Workload */}
-            <div className="bg-aing-card border border-aing-border rounded-2xl p-5">
-              <h3 className="text-xs font-semibold text-aing-muted uppercase tracking-wider mb-3">업무 포화도</h3>
-              <div className="flex items-center gap-3 mb-2">
-                <input
-                  type="range"
-                  min={0}
-                  max={5}
-                  value={form.workload}
-                  onChange={(e) => setForm({ ...form, workload: Number(e.target.value) })}
-                  className="flex-1 accent-aing-blue"
-                />
-                <span className={`text-sm font-semibold w-20 text-right ${WORKLOAD_COLORS[form.workload]}`}>
-                  {form.workload} — {WORKLOAD_LABELS[form.workload]}
-                </span>
-              </div>
-              <div className="flex justify-between text-xs text-aing-muted">
-                <span>0 여유</span>
-                <span>5 매우 바쁨</span>
-              </div>
+          <div className="bg-aing-card border border-aing-border rounded-2xl p-5">
+            <h3 className="text-xs font-semibold text-aing-muted uppercase tracking-wider mb-3">업무 포화도</h3>
+            <div className="flex items-center gap-3 mb-2">
+              <input type="range" min={0} max={5} value={form.workload} onChange={(e) => setForm({ ...form, workload: Number(e.target.value) })} className="flex-1 accent-aing-blue" />
+              <span className={`text-sm font-semibold w-20 text-right ${WORKLOAD_COLORS[form.workload]}`}>
+                {form.workload} - {WORKLOAD_LABELS[form.workload]}
+              </span>
             </div>
+          </div>
 
-            {/* Status */}
-            <div className="bg-aing-card border border-aing-border rounded-2xl p-5">
-              <h3 className="text-xs font-semibold text-aing-muted uppercase tracking-wider mb-3">상태</h3>
-              <div className="flex gap-2">
-                {STATUS_OPTIONS.map((opt) => (
-                  <button
-                    key={opt.value}
-                    onClick={() => setForm({ ...form, status: opt.value as 'busy' | 'mid' | 'free' })}
-                    className={`flex-1 py-2 rounded-xl text-xs font-medium border transition-all ${
-                      form.status === opt.value
-                        ? opt.color + ' border-opacity-100'
-                        : 'border-aing-border text-aing-muted hover:border-aing-blue hover:text-aing-blue'
-                    }`}
-                  >
-                    {opt.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Team */}
-            <div className="bg-aing-card border border-aing-border rounded-2xl p-5">
-              <h3 className="text-xs font-semibold text-aing-muted uppercase tracking-wider mb-3">팀원 모집</h3>
-              <label className="flex items-center gap-3 cursor-pointer mb-3">
-                <div
-                  onClick={() => setForm({ ...form, looking_for_team: !form.looking_for_team })}
-                  className={`w-10 h-5 rounded-full transition-all relative ${
-                    form.looking_for_team ? 'bg-aing-blue' : 'bg-aing-border'
+          <div className="bg-aing-card border border-aing-border rounded-2xl p-5">
+            <h3 className="text-xs font-semibold text-aing-muted uppercase tracking-wider mb-3">상태</h3>
+            <div className="flex gap-2">
+              {STATUS_OPTIONS.map((opt) => (
+                <button
+                  key={opt.value}
+                  onClick={() => setForm({ ...form, status: opt.value as 'busy' | 'mid' | 'free' })}
+                  className={`flex-1 py-2 rounded-xl text-xs font-medium border transition-all ${
+                    form.status === opt.value
+                      ? opt.color + ' border-opacity-100'
+                      : 'border-aing-border text-aing-muted hover:border-aing-blue hover:text-aing-blue'
                   }`}
                 >
-                  <div
-                    className={`w-4 h-4 bg-white rounded-full absolute top-0.5 transition-all ${
-                      form.looking_for_team ? 'left-5' : 'left-0.5'
-                    }`}
-                  />
-                </div>
-                <span className="text-sm text-aing-text">팀원 구하는 중</span>
-              </label>
-              {form.looking_for_team && (
-                <div>
-                  <label className="text-xs text-aing-muted mb-1 block">프로젝트 아이디어</label>
-                  <textarea
-                    value={form.project_idea}
-                    onChange={(e) => setForm({ ...form, project_idea: e.target.value })}
-                    placeholder="어떤 프로젝트를 하고 싶으신가요?"
-                    rows={3}
-                    className="w-full border border-aing-border rounded-xl px-3 py-2 text-sm text-aing-text bg-aing-bg outline-none focus:border-aing-blue resize-none"
-                  />
-                </div>
-              )}
+                  {opt.label}
+                </button>
+              ))}
             </div>
-
-            {/* Contact */}
-            <div className="bg-aing-card border border-aing-border rounded-2xl p-5">
-              <h3 className="text-xs font-semibold text-aing-muted uppercase tracking-wider mb-3">연락처</h3>
-              <div className="space-y-3">
-                <div>
-                  <label className="text-xs text-aing-muted mb-1 block">연락수단</label>
-                  <input
-                    type="text"
-                    value={form.contact_info}
-                    onChange={(e) => setForm({ ...form, contact_info: e.target.value })}
-                    placeholder="연락수단 링크 또는 ID"
-                    className="w-full border border-aing-border rounded-xl px-3 py-2 text-sm text-aing-text bg-aing-bg outline-none focus:border-aing-blue"
-                  />
-                </div>
-                <div>
-                  <label className="text-xs text-aing-muted mb-1 block">연락용 이메일</label>
-                  <input
-                    type="email"
-                    value={form.contact_email}
-                    onChange={(e) => setForm({ ...form, contact_email: e.target.value })}
-                    placeholder="example@email.com"
-                    className="w-full border border-aing-border rounded-xl px-3 py-2 text-sm text-aing-text bg-aing-bg outline-none focus:border-aing-blue"
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Password Change */}
-            <div className="bg-aing-card border border-aing-border rounded-2xl p-5">
-              <h3 className="text-xs font-semibold text-aing-muted uppercase tracking-wider mb-3">비밀번호 변경 (선택)</h3>
-              <input
-                type="password"
-                value={form.new_password}
-                onChange={(e) => setForm({ ...form, new_password: e.target.value })}
-                placeholder="새 비밀번호 (비우면 변경 안 함)"
-                autoComplete="new-password"
-                className="w-full border border-aing-border rounded-xl px-3 py-2 text-sm text-aing-text bg-aing-bg outline-none focus:border-aing-blue"
-              />
-            </div>
-
-            {/* Save */}
-            <button
-              onClick={handleSave}
-              disabled={saving}
-              className="w-full bg-aing-blue text-white rounded-xl py-3 text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center justify-center gap-2"
-            >
-              <Save size={14} />
-              {saving ? '저장 중...' : '저장하기'}
-            </button>
           </div>
-        )}
+
+          <div className="bg-aing-card border border-aing-border rounded-2xl p-5">
+            <h3 className="text-xs font-semibold text-aing-muted uppercase tracking-wider mb-3">팀원 모집</h3>
+            <label className="flex items-center gap-3 cursor-pointer mb-3">
+              <input
+                type="checkbox"
+                checked={form.looking_for_team}
+                onChange={(e) => setForm({ ...form, looking_for_team: e.target.checked })}
+                className="accent-aing-blue"
+              />
+              <span className="text-sm text-aing-text">팀원 구하는 중</span>
+            </label>
+            {form.looking_for_team && (
+              <textarea
+                value={form.project_idea}
+                onChange={(e) => setForm({ ...form, project_idea: e.target.value })}
+                maxLength={500}
+                placeholder="프로젝트 아이디어 (최대 500자)"
+                rows={3}
+                className="input-field resize-none"
+              />
+            )}
+          </div>
+
+          <div className="bg-aing-card border border-aing-border rounded-2xl p-5">
+            <h3 className="text-xs font-semibold text-aing-muted uppercase tracking-wider mb-3">비공개 연락처</h3>
+            <div className="space-y-3">
+              <input value={form.contact_info} onChange={(e) => setForm({ ...form, contact_info: e.target.value })} maxLength={160} placeholder="연락수단 링크 또는 ID" className="input-field" />
+              <input type="email" value={form.contact_email} onChange={(e) => setForm({ ...form, contact_email: e.target.value })} placeholder="연락용 이메일" className="input-field" />
+            </div>
+          </div>
+
+          <button
+            onClick={handleSave}
+            disabled={saving}
+            className="w-full bg-aing-blue text-white rounded-xl py-3 text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center justify-center gap-2"
+          >
+            <Save size={14} />
+            {saving ? '저장 중...' : '저장하기'}
+          </button>
+        </div>
       </div>
     </div>
   );

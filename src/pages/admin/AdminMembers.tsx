@@ -18,7 +18,7 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { supabase, Member } from '../../lib/supabase';
+import { MEMBER_PRIVATE_SELECT, supabase, Member } from '../../lib/supabase';
 import { useAuth } from '../../context/AuthContext';
 
 const TRACK_COLORS: Record<string, string> = {
@@ -37,12 +37,12 @@ const TRACK_LABELS: Record<string, string> = {
 
 type FormState = {
   name: string; role: string; track: Member['track']; semester: string;
-  github: string; bio: string; avatar_url: string; password_hash: string;
+  email: string; github: string; linkedin: string; bio: string; avatar_url: string;
   status: 'busy'|'mid'|'free'; is_active: boolean;
 };
 const defaultForm: FormState = {
   name:'', role:'', track:'junior', semester:'2026 Spring',
-  github:'', bio:'', avatar_url:'', password_hash:'', status:'free', is_active:true,
+  email:'', github:'', linkedin:'', bio:'', avatar_url:'', status:'free', is_active:true,
 };
 
 // ─── Sortable Row ────────────────────────────────────────────────────────────
@@ -148,8 +148,8 @@ const AdminMembers: React.FC = () => {
 
   const fetchMembers = async () => {
     setLoading(true);
-    const { data } = await supabase.from('members').select('*').order('created_at', { ascending: true });
-    const allMembers = data || [];
+    const { data } = await supabase.from('members').select(MEMBER_PRIVATE_SELECT).order('created_at', { ascending: true });
+    const allMembers = (data as unknown as Member[]) || [];
     setMembers(allMembers);
 
     // 저장된 순서 불러오기
@@ -233,8 +233,9 @@ const AdminMembers: React.FC = () => {
     setEditingId(member.id);
     setForm({
       name: member.name||'', role: member.role||'', track: member.track||'junior',
-      semester: member.semester||'2026 Spring', github: member.github||'',
-      bio: member.bio||'', avatar_url: member.avatar_url||'', password_hash: '',
+      semester: member.semester||'2026 Spring', email: member.email || '',
+      github: member.github||'', linkedin: member.linkedin || '',
+      bio: member.bio||'', avatar_url: member.avatar_url||'',
       status: (member.status as 'busy'|'mid'|'free')||'free', is_active: member.is_active??true,
     });
     setShowAdd(true);
@@ -245,18 +246,12 @@ const AdminMembers: React.FC = () => {
     e.preventDefault(); setSaving(true);
     const payload: Record<string,unknown> = {
       name: form.name, role: form.role, track: form.track, semester: form.semester,
-      github: form.github, bio: form.bio, avatar_url: form.avatar_url,
+      email: form.email.trim().toLowerCase(), github: form.github, linkedin: form.linkedin,
+      bio: form.bio, avatar_url: form.avatar_url,
       status: form.status, is_active: form.is_active,
     };
     if (editingId) {
       await supabase.from('members').update(payload).eq('id', editingId);
-      // 비밀번호 입력 시 bcrypt RPC로 별도 처리
-      if (form.password_hash.trim()) {
-        await supabase.rpc('set_member_password', {
-          p_id: editingId,
-          p_new_password: form.password_hash.trim(),
-        });
-      }
     } else {
       const { data: inserted } = await supabase
         .from('members')
@@ -265,13 +260,6 @@ const AdminMembers: React.FC = () => {
         .single();
       if (inserted) {
         setOrderedIds(prev => [...prev, inserted.id]);
-        // 신규 멤버 비밀번호도 bcrypt RPC로 처리
-        if (form.password_hash.trim()) {
-          await supabase.rpc('set_member_password', {
-            p_id: inserted.id,
-            p_new_password: form.password_hash.trim(),
-          });
-        }
       }
     }
     cancelForm(); fetchMembers(); setSaving(false);
@@ -372,8 +360,16 @@ const AdminMembers: React.FC = () => {
                     <input value={form.semester} onChange={e=>setForm(p=>({...p,semester:e.target.value}))} className="input-field" placeholder="2026 Spring" />
                   </div>
                   <div>
+                    <label className="text-xs text-aing-muted mb-1 block">학교 이메일 *</label>
+                    <input type="email" value={form.email} onChange={e=>setForm(p=>({...p,email:e.target.value}))} className="input-field" placeholder="name@gachon.ac.kr" required />
+                  </div>
+                  <div>
                     <label className="text-xs text-aing-muted mb-1 block">GitHub URL</label>
                     <input value={form.github} onChange={e=>setForm(p=>({...p,github:e.target.value}))} className="input-field" placeholder="https://github.com/..." />
+                  </div>
+                  <div>
+                    <label className="text-xs text-aing-muted mb-1 block">LinkedIn URL</label>
+                    <input value={form.linkedin} onChange={e=>setForm(p=>({...p,linkedin:e.target.value}))} className="input-field" placeholder="https://linkedin.com/in/..." />
                   </div>
                   <div>
                     <label className="text-xs text-aing-muted mb-1 block">한 줄 소개</label>
@@ -382,10 +378,6 @@ const AdminMembers: React.FC = () => {
                   <div className="sm:col-span-2">
                     <label className="text-xs text-aing-muted mb-1 block">아바타 URL</label>
                     <input value={form.avatar_url} onChange={e=>setForm(p=>({...p,avatar_url:e.target.value}))} className="input-field" placeholder="https://..." />
-                  </div>
-                  <div>
-                    <label className="text-xs text-aing-muted mb-1 block">비밀번호{editingId ? ' (변경시만)' : ''}</label>
-                    <input type="password" value={form.password_hash} onChange={e=>setForm(p=>({...p,password_hash:e.target.value}))} className="input-field" placeholder="비밀번호" />
                   </div>
                   <div>
                     <label className="text-xs text-aing-muted mb-1 block">상태</label>

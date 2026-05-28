@@ -15,7 +15,7 @@ const SECTIONS = [
     icon: Globe,
     fields: [
       { key: 'description',         label: '동아리 소개 문구',       type: 'textarea', placeholder: '동아리를 소개하는 한 단락' },
-      { key: 'footer_text',         label: '푸터 텍스트',             type: 'text',     placeholder: 'A.ing © 2026.' },
+      { key: 'footer_text',         label: '푸터 텍스트',             type: 'text',     placeholder: '© 2026 A.ing. All rights reserved.' },
     ],
   },
   {
@@ -67,7 +67,7 @@ const AdminSettings: React.FC = () => {
 
   const fetchSettings = async () => {
     setLoading(true);
-    const { data } = await supabase.from('site_settings').select('*');
+    const { data } = await supabase.from('site_settings').select('id,key,value,updated_at');
     const map: Record<string, string> = {};
     (data as Setting[] || []).forEach(s => { map[s.key] = s.value || ''; });
     setSettings(map);
@@ -233,10 +233,9 @@ const AdminSettings: React.FC = () => {
                 {[
                   { to: '/admin/members', label: '멤버 관리' },
                   { to: '/admin/activities', label: '활동 관리' },
-                  { to: '/admin/posts', label: '게시글 관리' },
+                  { to: '/admin/history', label: '히스토리 관리' },
                   { to: '/admin/projects', label: '프로젝트 관리' },
                   { to: '/admin/team', label: '팀 모집 관리' },
-                  { to: '/admin/comments', label: '댓글 관리' },
                   { to: '/admin/messages', label: '문의 메시지' },
                 ].map(item => (
                   <Link key={item.to} to={item.to} className="btn-ghost text-xs text-center py-2">{item.label}</Link>
@@ -251,7 +250,7 @@ const AdminSettings: React.FC = () => {
                 <h3 className="text-sm font-semibold text-green-700">보안 상태</h3>
               </div>
               <p className="text-xs text-green-700 leading-relaxed">
-                모든 비밀번호는 bcrypt로 해싱되어 저장됩니다. admin 계정은 Supabase users 테이블에서 직접 관리하세요.
+                멤버 로그인은 Supabase 이메일 인증을 사용합니다. 등록된 학교 이메일과 매칭된 활성 부원만 Members/Team에 접근할 수 있습니다.
               </p>
             </div>
           </div>

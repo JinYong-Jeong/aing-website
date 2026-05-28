@@ -15,6 +15,13 @@ const STATUS_COLORS: Record<string, string> = { ongoing: 'text-green-500', compl
 const STATUS_LABELS: Record<string, string> = { ongoing: '진행 중', completed: '완료', upcoming: '예정' };
 const RANK_LABELS: Record<string, string> = { '1st': '🥇 1st Place', '2nd': '🥈 2nd Place', '3rd': '🥉 3rd Place', 'special': '🏅 특별상', 'participation': '🎖️ 참가상', 'honor_completion': '🌟 우수 수료', 'completion': '✅ 수료' };
 
+const ACTIVITY_SELECT = [
+  'id', 'semester', 'title', 'type', 'description', 'tags', 'github', 'status',
+  'detail_url', 'start_date', 'end_date', 'participants', 'participants_type',
+  'participants_min', 'participants_max', 'result', 'image_url', 'detail_content',
+  'slug', 'instagram_url', 'created_at',
+].join(',');
+
 function formatDate(d?: string) {
   if (!d) return '';
   return new Date(d).toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' });
@@ -59,19 +66,19 @@ const ActivityDetailPage: React.FC = () => {
     const load = async () => {
       if (!id) { setLoading(false); return; }
       try {
-        const { data } = await supabase.from('activities').select('*').eq('id', id).single();
-        if (data) setActivity(data as Activity);
+        const { data } = await supabase.from('activities').select(ACTIVITY_SELECT).eq('id', id).single();
+        if (data) setActivity(data as unknown as Activity);
       } catch {}
       try {
         const { data } = await supabase
           .from('activity_awards')
-          .select('*, member:members(*)')
+          .select('id,activity_id,member_id,rank,note,created_at, member:members(id,name,track,avatar_url)')
           .eq('activity_id', id);
         if (data) setAwards(data as any);
       } catch {}
       try {
         const { data } = await supabase.from('members').select('id,name').eq('is_active', true).order('name');
-        if (data) setAllMembers(data as Member[]);
+        if (data) setAllMembers(data as unknown as Member[]);
       } catch {}
       setLoading(false);
     };
@@ -150,7 +157,7 @@ const ActivityDetailPage: React.FC = () => {
       const { data } = await supabase
         .from('activity_awards')
         .insert(rows)
-        .select('*, member:members(*)');
+        .select('id,activity_id,member_id,rank,note,created_at, member:members(id,name,track,avatar_url)');
       if (data) setAwards(prev => [...prev, ...(data as any[])]);
       setBulkAwardForm({ member_ids: [], rank: 'completion', note: '' });
     } else {
@@ -159,7 +166,7 @@ const ActivityDetailPage: React.FC = () => {
       const { data } = await supabase
         .from('activity_awards')
         .insert({ activity_id: activity.id, member_id: awardForm.member_id, rank: awardForm.rank, note: awardForm.note || null })
-        .select('*, member:members(*)')
+        .select('id,activity_id,member_id,rank,note,created_at, member:members(id,name,track,avatar_url)')
         .single();
       if (data) setAwards(prev => [...prev, data as any]);
       setAwardForm({ member_id: '', rank: '1st', note: '' });

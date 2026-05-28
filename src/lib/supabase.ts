@@ -1,9 +1,52 @@
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = process.env.REACT_APP_SUPABASE_URL!;
-const supabaseAnonKey = process.env.REACT_APP_SUPABASE_ANON_KEY!;
+const env = import.meta.env;
+const supabaseUrl = env.REACT_APP_SUPABASE_URL || env.VITE_SUPABASE_URL || '';
+const supabaseAnonKey = env.REACT_APP_SUPABASE_ANON_KEY || env.VITE_SUPABASE_ANON_KEY || '';
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+export const isSupabaseConfigured = Boolean(supabaseUrl && supabaseAnonKey);
+
+if (!isSupabaseConfigured && !env.MODE?.includes('test')) {
+  console.warn('Supabase environment variables are missing. Auth and live data features are disabled.');
+}
+
+export const supabase = createClient(
+  isSupabaseConfigured ? supabaseUrl : 'https://placeholder.supabase.co',
+  isSupabaseConfigured ? supabaseAnonKey : 'placeholder-anon-key',
+  {
+    auth: {
+      autoRefreshToken: isSupabaseConfigured,
+      persistSession: isSupabaseConfigured,
+    },
+  }
+);
+
+export const MEMBER_PUBLIC_SELECT = [
+  'id',
+  'name',
+  'role',
+  'track',
+  'semester',
+  'github',
+  'linkedin',
+  'avatar_url',
+  'bio',
+  'is_active',
+  'created_at',
+  'interests',
+  'workload',
+  'status',
+  'skills',
+  'looking_for_team',
+  'project_idea',
+].join(',');
+
+export const MEMBER_PRIVATE_SELECT = [
+  MEMBER_PUBLIC_SELECT,
+  'email',
+  'contact_email',
+  'contact_info',
+].join(',');
 
 export type Member = {
   id: string;
@@ -11,13 +54,13 @@ export type Member = {
   role: string;
   track: 'junior' | 'senior' | 'admin' | 'ob';
   semester: string;
+  email?: string;
   github?: string;
   linkedin?: string;
   avatar_url?: string;
   bio?: string;
   is_active: boolean;
   created_at: string;
-  password_hash?: string;
   interests?: string[];
   workload?: number;
   status?: 'busy' | 'mid' | 'free';
@@ -51,45 +94,9 @@ export type TeamPost = {
   status: 'open' | 'closed';
   contact: string | null;
   created_at: string;
+  updated_at?: string;
   author?: Member;
   applications?: TeamApplication[];
-};
-
-export type Post = {
-  id: string;
-  title: string;
-  content: string;
-  author_id: string | null;
-  author_name?: string;
-  author_password?: string;
-  category: 'notice' | 'activity' | 'study' | 'project';
-  tags: string[];
-  is_pinned: boolean;
-  views: number;
-  created_at: string;
-  updated_at: string;
-  author?: Member;
-  comments?: Comment[];
-};
-
-export type Comment = {
-  id: string;
-  post_id: string;
-  author_name: string;
-  author_email?: string;
-  content: string;
-  is_approved: boolean;
-  parent_id?: string;
-  created_at: string;
-};
-
-export type ContactMessage = {
-  id: string;
-  name: string;
-  email: string;
-  message: string;
-  is_read: boolean;
-  created_at: string;
 };
 
 export type Project = {
@@ -153,6 +160,18 @@ export type ActivityAward = {
   note?: string;
   created_at?: string;
   member?: Member;
+};
+
+export type HistoryEvent = {
+  id: string;
+  title: string;
+  description?: string;
+  event_date: string;
+  category: 'award' | 'hackathon' | 'project' | 'event' | 'milestone';
+  link_url?: string;
+  image_url?: string;
+  display_order?: number;
+  created_at: string;
 };
 
 export type OpsTeamMember = {

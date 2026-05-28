@@ -1,23 +1,31 @@
 -- ============================================================
--- A.ing Website - Schema Final (v1.0.0)
--- 2026-03-23 기준 최종 통합본
--- Supabase SQL Editor에서 전체 복붙 후 실행
+-- A.ing Website - Schema Final
+-- 2026-05-28 security-focused version
+-- Run in Supabase SQL Editor for a fresh deployment.
 -- ============================================================
 
--- Extensions
 create extension if not exists pgcrypto;
+
+create or replace function public.text_array_items_max_length(values text[], max_len int)
+returns boolean
+language sql
+immutable
+as $$
+  select coalesce(bool_and(char_length(item) <= max_len), true)
+  from unnest(values) as item
+$$;
 
 -- ============================================================
 -- TABLES
 -- ============================================================
 
--- members
 create table if not exists public.members (
   id uuid default gen_random_uuid() primary key,
   name text not null,
   role text not null,
   track text not null check (track in ('junior', 'senior', 'admin', 'ob')),
   semester text not null,
+  email text unique,
   github text,
   linkedin text,
   instagram text,
@@ -31,42 +39,21 @@ create table if not exists public.members (
   looking_for_team boolean default false,
   contact_info text,
   contact_email text,
-  password_hash text,
   is_active boolean default true,
   generation int,
   "order" int default 99,
-  created_at timestamptz default now()
-);
-
--- posts
-create table if not exists public.posts (
-  id uuid default gen_random_uuid() primary key,
-  title text not null,
-  content text not null,
-  author_id uuid references public.members(id) on delete set null,
-  author_name text,
-  author_password text,
-  category text not null check (category in ('notice', 'activity', 'study', 'project')),
-  tags text[] default '{}',
-  is_pinned boolean default false,
-  views integer default 0,
   created_at timestamptz default now(),
-  updated_at timestamptz default now()
+  constraint members_email_school_check check (
+    email is null or lower(email) ~ '^[^@[:space:]]+@([a-z0-9-]+\.)*gachon\.ac\.kr$'
+  ),
+  constraint members_bio_length_check check (bio is null or char_length(bio) <= 300),
+  constraint members_project_idea_length_check check (project_idea is null or char_length(project_idea) <= 500),
+  constraint members_contact_length_check check (
+    (contact_info is null or char_length(contact_info) <= 160)
+    and (contact_email is null or char_length(contact_email) <= 160)
+  )
 );
 
--- comments
-create table if not exists public.comments (
-  id uuid default gen_random_uuid() primary key,
-  post_id uuid references public.posts(id) on delete cascade,
-  author_name text not null,
-  author_email text,
-  content text not null,
-  is_approved boolean default true,
-  parent_id uuid references public.comments(id) on delete cascade,
-  created_at timestamptz default now()
-);
-
--- activities
 create table if not exists public.activities (
   id uuid default gen_random_uuid() primary key,
   slug text unique,
@@ -91,9 +78,6 @@ create table if not exists public.activities (
   created_at timestamptz default now()
 );
 
--- activity_awards (수상 및 수료)
--- rank: '1st'|'2nd'|'3rd'|'special'|'participation' = 수상
---       'honor_completion'|'completion'              = 수료 (study/project)
 create table if not exists public.activity_awards (
   id uuid default gen_random_uuid() primary key,
   activity_id uuid references public.activities(id) on delete cascade,
@@ -103,7 +87,18 @@ create table if not exists public.activity_awards (
   created_at timestamptz default now()
 );
 
--- projects
+create table if not exists public.history_events (
+  id uuid default gen_random_uuid() primary key,
+  title text not null check (char_length(title) between 2 and 120),
+  description text check (description is null or char_length(description) <= 1000),
+  event_date date not null,
+  category text not null default 'milestone' check (category in ('award', 'hackathon', 'project', 'event', 'milestone')),
+  link_url text,
+  image_url text,
+  display_order int default 0,
+  created_at timestamptz default now()
+);
+
 create table if not exists public.projects (
   id uuid default gen_random_uuid() primary key,
   title text not null,
@@ -122,7 +117,6 @@ create table if not exists public.projects (
   updated_at timestamptz default now()
 );
 
--- project_members
 create table if not exists public.project_members (
   id uuid default gen_random_uuid() primary key,
   project_id uuid references public.projects(id) on delete cascade,
@@ -131,12 +125,11 @@ create table if not exists public.project_members (
   joined_at timestamptz default now()
 );
 
--- team_posts (팀원 모집)
 create table if not exists public.team_posts (
   id uuid default gen_random_uuid() primary key,
   title text not null,
-  description text,
-  author_id uuid references public.members(id) on delete set null,
+  description text not null,
+  author_id uuid not null references public.members(id) on delete cascade,
   author_name text,
   required_skills text[] default '{}',
   max_members int default 4,
@@ -144,22 +137,27 @@ create table if not exists public.team_posts (
   status text default 'open' check (status in ('open', 'closed')),
   contact text,
   created_at timestamptz default now(),
-  updated_at timestamptz default now()
+  updated_at timestamptz default now(),
+  constraint team_posts_title_length_check check (char_length(title) between 4 and 80),
+  constraint team_posts_description_length_check check (char_length(description) between 20 and 1000),
+  constraint team_posts_members_check check (max_members between 2 and 8 and current_members between 1 and max_members),
+  constraint team_posts_contact_length_check check (contact is null or char_length(contact) <= 120),
+  constraint team_posts_skills_count_check check (coalesce(array_length(required_skills, 1), 0) <= 8),
+  constraint team_posts_skills_length_check check (public.text_array_items_max_length(required_skills, 24))
 );
 
--- team_applications
 create table if not exists public.team_applications (
   id uuid default gen_random_uuid() primary key,
   team_post_id uuid references public.team_posts(id) on delete cascade,
-  applicant_id uuid references public.members(id) on delete cascade,
-  applicant_name text,
+  applicant_id uuid not null references public.members(id) on delete cascade,
+  applicant_name text not null,
   message text,
   status text default 'pending' check (status in ('pending', 'accepted', 'rejected')),
   created_at timestamptz default now(),
-  unique(team_post_id, applicant_id)
+  unique(team_post_id, applicant_id),
+  constraint team_applications_message_length_check check (message is null or char_length(message) <= 300)
 );
 
--- messages (contact form)
 create table if not exists public.messages (
   id uuid default gen_random_uuid() primary key,
   name text not null,
@@ -169,18 +167,7 @@ create table if not exists public.messages (
   created_at timestamptz default now()
 );
 
--- users (admin/ops 로그인 — bcrypt 해싱 필수)
-create table if not exists public.users (
-  id uuid default gen_random_uuid() primary key,
-  name text not null unique,
-  password_hash text not null,
-  role text not null check (role in ('admin', 'ops', 'member', 'ob')),
-  member_id uuid references public.members(id) on delete set null,
-  created_at timestamptz default now()
-);
-
--- ops_team (운영진)
-create table if not exists public.ops_team (
+create table if not exists public.ops_members (
   id uuid default gen_random_uuid() primary key,
   name text not null,
   role text not null,
@@ -193,8 +180,7 @@ create table if not exists public.ops_team (
   created_at timestamptz default now()
 );
 
--- ex_ops (전 운영진)
-create table if not exists public.ex_ops (
+create table if not exists public.ex_ops_members (
   id uuid default gen_random_uuid() primary key,
   name text not null,
   role text not null,
@@ -205,7 +191,6 @@ create table if not exists public.ex_ops (
   created_at timestamptz default now()
 );
 
--- site_settings (전역 설정 key-value)
 create table if not exists public.site_settings (
   id uuid default gen_random_uuid() primary key,
   key text not null unique,
@@ -213,111 +198,301 @@ create table if not exists public.site_settings (
   updated_at timestamptz default now()
 );
 
+-- Community board tables were removed on 2026-05-28.
+-- Do not expose legacy posts.author_password or members.password_hash columns if they exist in an older database.
+alter table if exists public.members drop column if exists password_hash;
+alter table if exists public.posts drop column if exists author_password;
+
+do $$
+declare
+  legacy_policy record;
+begin
+  for legacy_policy in
+    select schemaname, tablename, policyname
+    from pg_policies
+    where schemaname = 'public'
+      and tablename in ('posts', 'comments')
+  loop
+    execute format(
+      'drop policy if exists %I on %I.%I',
+      legacy_policy.policyname,
+      legacy_policy.schemaname,
+      legacy_policy.tablename
+    );
+  end loop;
+
+  if to_regclass('public.posts') is not null then
+    execute 'alter table public.posts enable row level security';
+    execute 'revoke all on public.posts from anon, authenticated';
+  end if;
+
+  if to_regclass('public.comments') is not null then
+    execute 'alter table public.comments enable row level security';
+    execute 'revoke all on public.comments from anon, authenticated';
+  end if;
+end $$;
+
 -- ============================================================
--- RLS (Row Level Security)
+-- HELPERS
 -- ============================================================
+
+create or replace function public.current_member_id()
+returns uuid
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select m.id
+  from public.members m
+  where m.is_active = true
+    and lower(coalesce(m.email, m.contact_email)) = lower(auth.jwt() ->> 'email')
+  limit 1
+$$;
+
+create or replace function public.is_admin_member()
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select exists (
+    select 1
+    from public.members m
+    where m.is_active = true
+      and lower(coalesce(m.email, m.contact_email)) = lower(auth.jwt() ->> 'email')
+      and (
+        m.track = 'admin'
+        or m.role ~* '(ops|운영|회장|부회장|lead)'
+      )
+  )
+$$;
+
+create or replace function public.get_current_member()
+returns table (
+  id uuid,
+  name text,
+  role text,
+  track text,
+  email text,
+  contact_email text,
+  is_active boolean
+)
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select m.id, m.name, m.role, m.track, m.email, m.contact_email, m.is_active
+  from public.members m
+  where m.is_active = true
+    and lower(coalesce(m.email, m.contact_email)) = lower(auth.jwt() ->> 'email')
+  limit 1
+$$;
+
+grant execute on function public.get_current_member() to authenticated;
+grant execute on function public.current_member_id() to authenticated;
+grant execute on function public.is_admin_member() to authenticated;
+
+-- ============================================================
+-- RLS
+-- ============================================================
+
 alter table public.members enable row level security;
-alter table public.posts enable row level security;
-alter table public.comments enable row level security;
 alter table public.activities enable row level security;
 alter table public.activity_awards enable row level security;
+alter table public.history_events enable row level security;
 alter table public.projects enable row level security;
 alter table public.project_members enable row level security;
 alter table public.team_posts enable row level security;
 alter table public.team_applications enable row level security;
 alter table public.messages enable row level security;
-alter table public.users enable row level security;
-alter table public.ops_team enable row level security;
-alter table public.ex_ops enable row level security;
+alter table public.ops_members enable row level security;
+alter table public.ex_ops_members enable row level security;
 alter table public.site_settings enable row level security;
 
--- Public read policies
-create policy if not exists "public read members"          on public.members          for select using (true);
-create policy if not exists "public read posts"            on public.posts            for select using (true);
-create policy if not exists "public read comments"         on public.comments         for select using (true);
-create policy if not exists "public read activities"       on public.activities       for select using (true);
-create policy if not exists "public read activity_awards"  on public.activity_awards  for select using (true);
-create policy if not exists "public read projects"         on public.projects         for select using (true);
-create policy if not exists "public read project_members"  on public.project_members  for select using (true);
-create policy if not exists "public read team_posts"       on public.team_posts       for select using (true);
-create policy if not exists "public read team_applications" on public.team_applications for select using (true);
-create policy if not exists "public read ops_team"         on public.ops_team         for select using (true);
-create policy if not exists "public read ex_ops"           on public.ex_ops           for select using (true);
-create policy if not exists "public read site_settings"    on public.site_settings    for select using (true);
+-- Drop legacy permissive policies.
+drop policy if exists "anon all members" on public.members;
+drop policy if exists "anon all activities" on public.activities;
+drop policy if exists "anon all activity_awards" on public.activity_awards;
+drop policy if exists "anon all projects" on public.projects;
+drop policy if exists "anon all project_members" on public.project_members;
+drop policy if exists "anon all team_posts" on public.team_posts;
+drop policy if exists "anon all team_applications" on public.team_applications;
+drop policy if exists "anon all messages" on public.messages;
+drop policy if exists "public insert team_applications" on public.team_applications;
+drop policy if exists "public insert messages" on public.messages;
 
--- Public insert policies (폼 제출)
-create policy if not exists "public insert messages"          on public.messages          for insert with check (true);
-create policy if not exists "public insert comments"          on public.comments          for insert with check (true);
-create policy if not exists "public insert team_applications" on public.team_applications for insert with check (true);
+-- Members: registered members can read active profile fields; users can update themselves; admins can manage all.
+drop policy if exists "authenticated read active members" on public.members;
+create policy "authenticated read active members"
+on public.members for select
+to authenticated
+using (is_active = true or public.is_admin_member());
 
--- Anon full access (Admin 운영용 — service_role은 RLS 우회)
-create policy if not exists "anon all members"           on public.members           for all using (true) with check (true);
-create policy if not exists "anon all posts"             on public.posts             for all using (true) with check (true);
-create policy if not exists "anon all comments"          on public.comments          for all using (true) with check (true);
-create policy if not exists "anon all activities"        on public.activities        for all using (true) with check (true);
-create policy if not exists "anon all activity_awards"   on public.activity_awards   for all using (true) with check (true);
-create policy if not exists "anon all projects"          on public.projects          for all using (true) with check (true);
-create policy if not exists "anon all project_members"   on public.project_members   for all using (true) with check (true);
-create policy if not exists "anon all team_posts"        on public.team_posts        for all using (true) with check (true);
-create policy if not exists "anon all team_applications" on public.team_applications for all using (true) with check (true);
-create policy if not exists "anon all ops_team"          on public.ops_team          for all using (true) with check (true);
-create policy if not exists "anon all ex_ops"            on public.ex_ops            for all using (true) with check (true);
-create policy if not exists "anon all site_settings"     on public.site_settings     for all using (true) with check (true);
-create policy if not exists "anon all users"             on public.users             for all using (true) with check (true);
-create policy if not exists "anon all messages"          on public.messages          for all using (true) with check (true);
+drop policy if exists "members update self" on public.members;
+create policy "members update self"
+on public.members for update
+to authenticated
+using (id = public.current_member_id() or public.is_admin_member())
+with check (id = public.current_member_id() or public.is_admin_member());
 
--- ============================================================
--- FUNCTIONS (bcrypt 인증)
--- ============================================================
+drop policy if exists "admins manage members" on public.members;
+create policy "admins manage members"
+on public.members for all
+to authenticated
+using (public.is_admin_member())
+with check (public.is_admin_member());
 
--- users 테이블 bcrypt 검증 (admin/ops 로그인)
-create or replace function check_user_password(p_name text, p_password text)
-returns table (id uuid, name text, role text, member_id uuid)
-language plpgsql security definer as $$
-begin
-  return query
-    select u.id, u.name, u.role::text, u.member_id
-    from public.users u
-    where u.name = p_name
-      and crypt(p_password, u.password_hash) = u.password_hash;
-end;
-$$;
+-- Public read-only content.
+drop policy if exists "public read activities" on public.activities;
+create policy "public read activities" on public.activities for select to anon, authenticated using (true);
+drop policy if exists "public read activity_awards" on public.activity_awards;
+create policy "public read activity_awards" on public.activity_awards for select to anon, authenticated using (true);
+drop policy if exists "public read history_events" on public.history_events;
+create policy "public read history_events" on public.history_events for select to anon, authenticated using (true);
+drop policy if exists "public read projects" on public.projects;
+create policy "public read projects" on public.projects for select to anon, authenticated using (true);
+drop policy if exists "public read project_members" on public.project_members;
+create policy "public read project_members" on public.project_members for select to anon, authenticated using (true);
+drop policy if exists "public read ops_members" on public.ops_members;
+create policy "public read ops_members" on public.ops_members for select to anon, authenticated using (true);
+drop policy if exists "public read ex_ops_members" on public.ex_ops_members;
+create policy "public read ex_ops_members" on public.ex_ops_members for select to anon, authenticated using (true);
+drop policy if exists "public read site_settings" on public.site_settings;
+create policy "public read site_settings" on public.site_settings for select to anon, authenticated using (true);
 
--- users 테이블 비밀번호 bcrypt 저장
-create or replace function set_user_password(p_id uuid, p_new_password text)
-returns void language plpgsql security definer as $$
-begin
-  update public.users
-  set password_hash = crypt(p_new_password, gen_salt('bf', 10))
-  where id = p_id;
-end;
-$$;
+-- Admin-managed public content.
+drop policy if exists "admins manage activities" on public.activities;
+create policy "admins manage activities" on public.activities for all to authenticated using (public.is_admin_member()) with check (public.is_admin_member());
+drop policy if exists "admins manage activity_awards" on public.activity_awards;
+create policy "admins manage activity_awards" on public.activity_awards for all to authenticated using (public.is_admin_member()) with check (public.is_admin_member());
+drop policy if exists "admins manage history_events" on public.history_events;
+create policy "admins manage history_events" on public.history_events for all to authenticated using (public.is_admin_member()) with check (public.is_admin_member());
+drop policy if exists "admins manage projects" on public.projects;
+create policy "admins manage projects" on public.projects for all to authenticated using (public.is_admin_member()) with check (public.is_admin_member());
+drop policy if exists "admins manage project_members" on public.project_members;
+create policy "admins manage project_members" on public.project_members for all to authenticated using (public.is_admin_member()) with check (public.is_admin_member());
+drop policy if exists "admins manage ops_members" on public.ops_members;
+create policy "admins manage ops_members" on public.ops_members for all to authenticated using (public.is_admin_member()) with check (public.is_admin_member());
+drop policy if exists "admins manage ex_ops_members" on public.ex_ops_members;
+create policy "admins manage ex_ops_members" on public.ex_ops_members for all to authenticated using (public.is_admin_member()) with check (public.is_admin_member());
+drop policy if exists "admins manage site_settings" on public.site_settings;
+create policy "admins manage site_settings" on public.site_settings for all to authenticated using (public.is_admin_member()) with check (public.is_admin_member());
 
--- members 테이블 bcrypt 검증 (일반 부원 로그인)
-create or replace function check_member_password(p_name text, p_password text)
-returns table (id uuid, name text, track text)
-language plpgsql security definer as $$
-begin
-  return query
-    select m.id, m.name, m.track::text
-    from public.members m
-    where m.name ilike p_name
-      and m.password_hash is not null
-      and crypt(p_password, m.password_hash) = m.password_hash;
-end;
-$$;
+-- Team posts: registered members only. Strong limits are enforced in checks and policies.
+drop policy if exists "members read team_posts" on public.team_posts;
+create policy "members read team_posts"
+on public.team_posts for select
+to authenticated
+using (public.current_member_id() is not null);
 
--- members 테이블 비밀번호 bcrypt 저장
-create or replace function set_member_password(p_id uuid, p_new_password text)
-returns void language plpgsql security definer as $$
-begin
-  update public.members
-  set password_hash = crypt(p_new_password, gen_salt('bf', 10))
-  where id = p_id;
-end;
-$$;
+drop policy if exists "members insert team_posts" on public.team_posts;
+create policy "members insert team_posts"
+on public.team_posts for insert
+to authenticated
+with check (
+  author_id = public.current_member_id()
+  and public.current_member_id() is not null
+  and (
+    select count(*)
+    from public.team_posts tp
+    where tp.author_id = public.current_member_id()
+      and tp.status = 'open'
+  ) < 3
+  and (
+    select count(*)
+    from public.team_posts tp
+    where tp.author_id = public.current_member_id()
+      and tp.created_at > now() - interval '10 minutes'
+  ) < 2
+);
 
-grant execute on function check_user_password(text, text)   to anon, authenticated;
-grant execute on function set_user_password(uuid, text)     to authenticated;
-grant execute on function check_member_password(text, text) to anon, authenticated;
-grant execute on function set_member_password(uuid, text)   to authenticated;
+drop policy if exists "authors update team_posts" on public.team_posts;
+create policy "authors update team_posts"
+on public.team_posts for update
+to authenticated
+using (author_id = public.current_member_id() or public.is_admin_member())
+with check (author_id = public.current_member_id() or public.is_admin_member());
+
+drop policy if exists "authors delete team_posts" on public.team_posts;
+create policy "authors delete team_posts"
+on public.team_posts for delete
+to authenticated
+using (author_id = public.current_member_id() or public.is_admin_member());
+
+-- Team applications: applicants see their own; authors/admins see applicants to their posts.
+drop policy if exists "members read relevant team_applications" on public.team_applications;
+create policy "members read relevant team_applications"
+on public.team_applications for select
+to authenticated
+using (
+  applicant_id = public.current_member_id()
+  or public.is_admin_member()
+  or exists (
+    select 1
+    from public.team_posts tp
+    where tp.id = team_applications.team_post_id
+      and tp.author_id = public.current_member_id()
+  )
+);
+
+drop policy if exists "members insert team_applications" on public.team_applications;
+create policy "members insert team_applications"
+on public.team_applications for insert
+to authenticated
+with check (
+  applicant_id = public.current_member_id()
+  and exists (
+    select 1
+    from public.team_posts tp
+    where tp.id = team_applications.team_post_id
+      and tp.status = 'open'
+      and tp.author_id <> public.current_member_id()
+  )
+  and not exists (
+    select 1
+    from public.team_applications ta
+    where ta.applicant_id = public.current_member_id()
+      and ta.created_at > now() - interval '1 minute'
+  )
+);
+
+drop policy if exists "authors update team_applications" on public.team_applications;
+create policy "authors update team_applications"
+on public.team_applications for update
+to authenticated
+using (
+  public.is_admin_member()
+  or exists (
+    select 1
+    from public.team_posts tp
+    where tp.id = team_applications.team_post_id
+      and tp.author_id = public.current_member_id()
+  )
+)
+with check (
+  public.is_admin_member()
+  or exists (
+    select 1
+    from public.team_posts tp
+    where tp.id = team_applications.team_post_id
+      and tp.author_id = public.current_member_id()
+  )
+);
+
+-- Legacy contact messages: no public insert; admins only.
+drop policy if exists "admins manage messages" on public.messages;
+create policy "admins manage messages"
+on public.messages for all
+to authenticated
+using (public.is_admin_member())
+with check (public.is_admin_member());
+
+-- Default settings.
+insert into public.site_settings (key, value)
+values
+  ('email', 'gachon.aing@gmail.com'),
+  ('footer_text', '© 2026 A.ing. All rights reserved.')
+on conflict (key) do nothing;

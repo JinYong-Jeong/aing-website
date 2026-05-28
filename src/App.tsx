@@ -4,6 +4,7 @@ import { AuthProvider } from './context/AuthContext';
 import { SiteSettingsProvider } from './context/SiteSettingsContext';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
+import ProtectedRoute from './components/ProtectedRoute';
 import HomePage from './pages/HomePage';
 import AboutPage from './pages/AboutPage';
 import AboutOpsPage from './pages/AboutOpsPage';
@@ -15,9 +16,6 @@ import MemberDetailPage from './pages/MemberDetailPage';
 import MemberProfilePage from './pages/MemberProfilePage';
 import TeamPage from './pages/TeamPage';
 import TeamPostDetailPage from './pages/TeamPostDetailPage';
-import BoardPage from './pages/BoardPage';
-import NewPostPage from './pages/NewPostPage';
-import PostDetailPage from './pages/PostDetailPage';
 import ContactPage from './pages/ContactPage';
 import ActivityDetailPage from './pages/ActivityDetailPage';
 import ProjectsPage from './pages/ProjectsPage';
@@ -25,12 +23,10 @@ import ProjectDetailPage from './pages/ProjectDetailPage';
 import LoginPage from './pages/LoginPage';
 import AdminLoginPage from './pages/admin/AdminLoginPage';
 import AdminDashboard from './pages/admin/AdminDashboard';
-import AdminPosts from './pages/admin/AdminPosts';
-import AdminPostEditor from './pages/admin/AdminPostEditor';
 import AdminMembers from './pages/admin/AdminMembers';
 import AdminMessages from './pages/admin/AdminMessages';
-import AdminComments from './pages/admin/AdminComments';
 import AdminActivities from './pages/admin/AdminActivities';
+import AdminHistory from './pages/admin/AdminHistory';
 import AdminSettings from './pages/admin/AdminSettings';
 import AdminProjects from './pages/admin/AdminProjects';
 import AdminTeamPosts from './pages/admin/AdminTeamPosts';
@@ -61,28 +57,22 @@ function App() {
               <Route path="/history" element={<HistoryPage />} />
               <Route path="/projects" element={<ProjectsPage />} />
               <Route path="/projects/:id" element={<ProjectDetailPage />} />
-              <Route path="/members" element={<MembersPage />} />
-              <Route path="/members/:id" element={<MemberDetailPage />} />
-              <Route path="/members/:id/edit" element={<MemberProfilePage />} />
-              <Route path="/team" element={<TeamPage />} />
-              <Route path="/team/:id" element={<TeamPostDetailPage />} />
-              <Route path="/board" element={<BoardPage />} />
-              <Route path="/board/new" element={<NewPostPage />} />
-              <Route path="/board/:id" element={<PostDetailPage />} />
+              <Route path="/members" element={<ProtectedRoute><MembersPage /></ProtectedRoute>} />
+              <Route path="/members/:id" element={<ProtectedRoute><MemberDetailPage /></ProtectedRoute>} />
+              <Route path="/members/:id/edit" element={<ProtectedRoute><MemberProfilePage /></ProtectedRoute>} />
+              <Route path="/team" element={<ProtectedRoute><TeamPage /></ProtectedRoute>} />
+              <Route path="/team/:id" element={<ProtectedRoute><TeamPostDetailPage /></ProtectedRoute>} />
               <Route path="/contact" element={<ContactPage />} />
               <Route path="/login" element={<LoginPage />} />
               <Route path="/admin/login" element={<AdminLoginPage />} />
-              <Route path="/admin" element={<AdminDashboard />} />
-              <Route path="/admin/posts" element={<AdminPosts />} />
-              <Route path="/admin/posts/new" element={<AdminPostEditor />} />
-              <Route path="/admin/posts/edit/:id" element={<AdminPostEditor />} />
-              <Route path="/admin/members" element={<AdminMembers />} />
-              <Route path="/admin/comments" element={<AdminComments />} />
-              <Route path="/admin/messages" element={<AdminMessages />} />
-              <Route path="/admin/activities" element={<AdminActivities />} />
-              <Route path="/admin/settings" element={<AdminSettings />} />
-              <Route path="/admin/projects" element={<AdminProjects />} />
-              <Route path="/admin/team" element={<AdminTeamPosts />} />
+              <Route path="/admin" element={<ProtectedRoute adminOnly><AdminDashboard /></ProtectedRoute>} />
+              <Route path="/admin/members" element={<ProtectedRoute adminOnly><AdminMembers /></ProtectedRoute>} />
+              <Route path="/admin/messages" element={<ProtectedRoute adminOnly><AdminMessages /></ProtectedRoute>} />
+              <Route path="/admin/activities" element={<ProtectedRoute adminOnly><AdminActivities /></ProtectedRoute>} />
+              <Route path="/admin/history" element={<ProtectedRoute adminOnly><AdminHistory /></ProtectedRoute>} />
+              <Route path="/admin/settings" element={<ProtectedRoute adminOnly><AdminSettings /></ProtectedRoute>} />
+              <Route path="/admin/projects" element={<ProtectedRoute adminOnly><AdminProjects /></ProtectedRoute>} />
+              <Route path="/admin/team" element={<ProtectedRoute adminOnly><AdminTeamPosts /></ProtectedRoute>} />
               <Route path="*" element={
                 <div className="min-h-screen flex items-center justify-center">
                   <div className="text-center">

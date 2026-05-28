@@ -34,6 +34,25 @@ const STATUS_COLORS: Record<string, string> = {
   upcoming: 'text-yellow-500',
 };
 
+const ACTIVITY_ADMIN_SELECT = [
+  'id',
+  'semester',
+  'title',
+  'type',
+  'description',
+  'tags',
+  'github',
+  'status',
+  'created_at',
+  'detail_url',
+  'start_date',
+  'end_date',
+  'participants',
+  'result',
+  'image_url',
+  'detail_content',
+].join(',');
+
 const AdminActivities: React.FC = () => {
   const { isAdmin } = useAuth();
   const navigate = useNavigate();
@@ -53,9 +72,9 @@ const AdminActivities: React.FC = () => {
     setLoading(true);
     const { data } = await supabase
       .from('activities')
-      .select('*')
+      .select(ACTIVITY_ADMIN_SELECT)
       .order('created_at', { ascending: false });
-    setActivities((data as Activity[]) || []);
+    setActivities((data as unknown as Activity[]) || []);
     setLoading(false);
   };
 

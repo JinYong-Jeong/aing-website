@@ -1,27 +1,35 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Lock, Eye, EyeOff } from 'lucide-react';
+import { Mail, Lock } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import AnimatedSection from '../../components/AnimatedSection';
 
 const AdminLoginPage: React.FC = () => {
-  const [id, setId] = useState('');
-  const [pw, setPw] = useState('');
-  const [showPw, setShowPw] = useState(false);
+  const [email, setEmail] = useState('');
+  const [sent, setSent] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const { login } = useAuth();
+  const { user, isAdmin, authError, sendLoginLink } = useAuth();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (user && isAdmin) navigate('/admin', { replace: true });
+  }, [isAdmin, navigate, user]);
+
+  useEffect(() => {
+    if (authError) setError(authError);
+  }, [authError]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError('');
-    const ok = await login(id, pw);
-    if (ok) {
-      navigate('/admin');
+    setSent(false);
+    const result = await sendLoginLink(email, `${window.location.origin}/admin`);
+    if (result.ok) {
+      setSent(true);
     } else {
-      setError('ID 또는 비밀번호가 잘못되었습니다.');
+      setError(result.error || '인증 링크를 보낼 수 없습니다.');
     }
     setLoading(false);
   };
@@ -35,46 +43,29 @@ const AdminLoginPage: React.FC = () => {
               <Lock size={20} className="text-aing-blue" />
             </div>
             <h1 className="text-xl font-semibold text-aing-text">Admin Login</h1>
-            <p className="text-aing-muted text-sm mt-1">A.ing 관리자 패널</p>
+            <p className="text-aing-muted text-sm mt-1">운영 권한이 있는 부원 이메일로 인증합니다.</p>
           </div>
 
           <form onSubmit={handleSubmit} className="card space-y-4">
             <div>
-              <label className="block text-xs text-aing-muted mb-2">Admin ID</label>
-              <input
-                type="text"
-                value={id}
-                onChange={e => setId(e.target.value)}
-                className="input-field"
-                placeholder="admin"
-                autoComplete="username"
-                required
-              />
-            </div>
-            <div>
-              <label className="block text-xs text-aing-muted mb-2">Password</label>
+              <label className="block text-xs text-aing-muted mb-2">학교 이메일</label>
               <div className="relative">
+                <Mail size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-aing-muted" />
                 <input
-                  type={showPw ? 'text' : 'password'}
-                  value={pw}
-                  onChange={e => setPw(e.target.value)}
-                  className="input-field pr-10"
-                  placeholder="••••••"
-                  autoComplete="current-password"
+                  type="email"
+                  value={email}
+                  onChange={e => setEmail(e.target.value)}
+                  className="input-field pl-9"
+                  placeholder="admin@gachon.ac.kr"
+                  autoComplete="email"
                   required
                 />
-                <button
-                  type="button"
-                  onClick={() => setShowPw(!showPw)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-aing-muted hover:text-aing-text transition-colors"
-                >
-                  {showPw ? <EyeOff size={14} /> : <Eye size={14} />}
-                </button>
               </div>
             </div>
-            {error && <p className="text-red-500 text-xs">{error}</p>}
+            {error && <p className="text-red-500 text-xs leading-relaxed">{error}</p>}
+            {sent && <p className="text-green-600 text-xs">인증 링크를 보냈습니다. 메일함을 확인해주세요.</p>}
             <button type="submit" className="btn-primary w-full" disabled={loading}>
-              {loading ? '로그인 중...' : '로그인'}
+              {loading ? '전송 중...' : '인증 링크 받기'}
             </button>
           </form>
         </div>

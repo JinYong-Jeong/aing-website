@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Plus, Pencil, Trash2, ChevronLeft, Github, ExternalLink, ChevronRight, X, Check } from 'lucide-react';
-import { supabase, Project, Member } from '../../lib/supabase';
+import { MEMBER_PUBLIC_SELECT, supabase, Project, Member } from '../../lib/supabase';
 import { useAuth } from '../../context/AuthContext';
 import AnimatedSection from '../../components/AnimatedSection';
 
@@ -72,10 +72,10 @@ const AdminProjects: React.FC = () => {
     setLoading(true);
     const [proj, mem] = await Promise.all([
       supabase.from('projects').select('*, project_members(*, member:members(id, name))').order('created_at', { ascending: false }),
-      supabase.from('members').select('*').eq('is_active', true).order('name'),
+      supabase.from('members').select(MEMBER_PUBLIC_SELECT).eq('is_active', true).order('name'),
     ]);
-    setProjects((proj.data as Project[]) ?? []);
-    setAllMembers(mem.data ?? []);
+    setProjects((proj.data as unknown as Project[]) ?? []);
+    setAllMembers((mem.data as unknown as Member[]) ?? []);
     setLoading(false);
   };
 

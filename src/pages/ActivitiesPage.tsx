@@ -57,6 +57,13 @@ const STATUS_LABELS: Record<string, string> = {
   ongoing: '진행 중', completed: '완료', upcoming: '예정',
 };
 
+const ACTIVITY_SELECT = [
+  'id', 'semester', 'title', 'type', 'description', 'tags', 'github', 'status',
+  'detail_url', 'start_date', 'end_date', 'participants', 'participants_type',
+  'participants_min', 'participants_max', 'result', 'image_url', 'detail_content',
+  'slug', 'instagram_url', 'created_at',
+].join(',');
+
 const EMPTY_FORM = {
   semester: '2026 Spring',
   title: '',
@@ -118,6 +125,12 @@ const ActivityCard: React.FC<{
         </div>
       )}
 
+      {item.image_url && (
+        <div className="mb-4 -mx-1 -mt-1 overflow-hidden rounded-xl border border-aing-border bg-aing-bg-alt">
+          <img src={item.image_url} alt={item.title} className="w-full aspect-[16/9] object-cover" />
+        </div>
+      )}
+
       {/* Header */}
       <div className="flex items-start justify-between mb-4">
         <div className="flex items-center gap-2">
@@ -133,21 +146,15 @@ const ActivityCard: React.FC<{
       </div>
 
       <h3 className="text-base font-semibold text-aing-text mb-2">{item.title}</h3>
-      <p className="text-aing-muted text-sm mb-3 leading-relaxed flex-1">{item.description}</p>
+      {item.description && (
+        <p className="text-aing-muted text-sm mb-3 leading-relaxed flex-1 line-clamp-2">{item.description}</p>
+      )}
 
       {/* Competition-specific: date range */}
       {dateRange && (
         <div className="flex items-center gap-1 text-xs text-aing-muted mb-2">
           <Calendar size={10} />
           <span className="font-mono">{dateRange}</span>
-        </div>
-      )}
-
-      {/* Competition-specific: participants (team size) */}
-      {item.participants && item.type === 'competition' && (
-        <div className="flex items-center gap-1 text-xs text-aing-muted mb-2">
-          <Users size={10} />
-          <span>팀 구성: {item.participants}인팀</span>
         </div>
       )}
 
@@ -161,7 +168,7 @@ const ActivityCard: React.FC<{
 
       {/* Tags */}
       <div className="flex flex-wrap gap-2 mb-4">
-        {(item.tags || []).map(tag => (
+        {(item.tags || []).slice(0, 3).map(tag => (
           <span key={tag} className="tag">{tag}</span>
         ))}
       </div>
@@ -290,10 +297,10 @@ const ActivitiesPage: React.FC = () => {
       try {
         const { data } = await supabase
           .from('activities')
-          .select('*')
+          .select(ACTIVITY_SELECT)
           .order('created_at', { ascending: false });
         if (data && data.length > 0) {
-          setAllActivities(data as Activity[]);
+          setAllActivities(data as unknown as Activity[]);
         }
       } catch { /* use fallback */ }
     };
@@ -452,28 +459,6 @@ const ActivitiesPage: React.FC = () => {
               활동 추가
             </button>
           )}
-        </div>
-      </section>
-
-      {/* Overview Cards */}
-      <section className="py-16 px-6 border-b border-aing-border">
-        <div className="max-w-6xl mx-auto">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {[
-              { icon: BookOpen, label: 'Weekly Study', desc: '논문 리딩 & 코드 구현', color: 'text-aing-blue' },
-              { icon: Code2,    label: 'Projects',     desc: 'SOTA 모델 커스터마이징', color: 'text-purple-500' },
-              { icon: Trophy,   label: 'Competition',  desc: '해커톤 & 경진대회 참가', color: 'text-amber-500' },
-              { icon: Users,    label: 'Seminars',     desc: '지식 공유 & 발표',       color: 'text-green-500' },
-            ].map((item, i) => (
-              <AnimatedSection key={item.label} delay={i * 100}>
-                <div className="card text-center group">
-                  <item.icon size={24} className={`${item.color} mx-auto mb-3`} />
-                  <h3 className="text-sm font-semibold text-aing-text mb-1">{item.label}</h3>
-                  <p className="text-xs text-aing-muted">{item.desc}</p>
-                </div>
-              </AnimatedSection>
-            ))}
-          </div>
         </div>
       </section>
 

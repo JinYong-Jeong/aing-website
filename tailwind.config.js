@@ -20,7 +20,7 @@ module.exports = {
       },
       fontFamily: {
         sans: ['Inter', 'Pretendard', '-apple-system', 'sans-serif'],
-        mono: ['JetBrains Mono', 'Fira Code', 'monospace'],
+        mono: ['Inter', 'Pretendard', 'ui-sans-serif', 'system-ui', 'sans-serif'],
       },
       animation: {
         'fade-up': 'fadeUp 0.6s ease-out forwards',

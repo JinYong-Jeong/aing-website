@@ -86,7 +86,6 @@ const Navbar: React.FC = () => {
     { label: 'History', to: '/history' },
     { label: 'Members', to: '/members' },
     { label: 'Team', to: '/team' },
-    { label: 'Community', to: '/board' },
     { label: 'Contact', to: '/contact' },
   ];
 
@@ -98,12 +97,11 @@ const Navbar: React.FC = () => {
 
   const adminMenuItems = [
     { label: 'Dashboard', to: '/admin' },
-    { label: 'Posts', to: '/admin/posts' },
     { label: 'Members', to: '/admin/members' },
     { label: 'Projects', to: '/admin/projects' },
     { label: 'Team', to: '/admin/team' },
     { label: 'Activities', to: '/admin/activities' },
-    { label: 'Comments', to: '/admin/comments' },
+    { label: 'History', to: '/admin/history' },
     { label: 'Messages', to: '/admin/messages' },
     { label: 'Settings', to: '/admin/settings' },
   ];

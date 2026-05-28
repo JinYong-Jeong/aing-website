@@ -1,5 +1,35 @@
 # A.ing Website - Changelog
 
+## 2026-05-28
+
+### 개발자 피드백 반영 및 보안 고도화
+- 로그인 방식을 이름/비밀번호 인증에서 Supabase 이메일 OTP/magic link 기반으로 전환했습니다.
+- 등록된 가천대학교 이메일과 활성 멤버 레코드가 매칭된 사용자만 Members/Team에 접근하도록 보호 라우트를 추가했습니다.
+- 클라이언트에서 `password_hash`, `author_password`를 조회하거나 비교하던 흐름을 제거했습니다.
+- 하드코딩 관리자 로그인 컨텍스트와 Community/Board 공개/관리자 기능을 제거했습니다.
+- Team 모집글은 로그인한 등록 부원만 작성/지원할 수 있도록 바꾸고, 계정당 열린 글 3개, 글자수, 스킬 개수, 모집 인원, 연락수단 형식, 작성/지원 쿨다운 제한을 추가했습니다.
+- Team 상세에서는 작성자/관리자만 수정, 삭제, 지원자 수락/거절을 할 수 있도록 정리했습니다.
+- `schema_final.sql`에서 익명 전체 권한 정책을 제거하고, 이메일 인증 기반 RLS, Team check constraint, DB rate limit 정책, `history_events` 테이블을 추가했습니다.
+- Members 페이지는 로그인 후 접근만 허용하고, 비공개 연락처는 본인 또는 관리자에게만 보이도록 수정했습니다.
+- Activities 상단 설명 카드 섹션을 제거하고 카드 정보량을 줄였으며, History는 별도 `history_events` 기반 타임라인으로 재구성했습니다.
+- 관리자 화면에 History 관리 페이지를 추가해 Activities와 History를 별도 콘텐츠로 등록/수정/삭제할 수 있게 했습니다.
+- Contact는 공식 이메일 `gachon.aing@gmail.com` 중심으로 바꾸고 메시지 저장 폼을 제거했습니다.
+- SEO 메타 태그, Open Graph/Twitter 카드, manifest, robots.txt를 A.ing 기준으로 정리했습니다.
+- 배포 URL `https://aing-website.vercel.app/` 기준 canonical과 sitemap을 추가했습니다.
+- favicon/PWA 아이콘을 `public/logo.png`에서 심볼 중심 정사각형 아이콘으로 재생성했습니다.
+- `font-mono` 기본 폰트를 JetBrains Mono 대신 Inter/Pretendard 계열로 완화했습니다.
+- 푸터 저작권 표기를 `© 2026 A.ing. All rights reserved.`로 변경했습니다.
+- 사용하지 않는 raw HTML 마크다운 렌더러와 관련 의존성을 제거해 불필요한 XSS 공격 표면을 줄였습니다.
+- `npm audit fix`, 불필요한 의존성 제거, Vite 전환으로 `npm audit` 기준 취약점 0건 상태로 정리했습니다.
+- README를 비밀번호 기반 관리자 생성 안내에서 이메일 인증 기반 운영 안내로 갱신했습니다.
+- Supabase 환경변수가 없는 로컬/검토 환경에서도 앱이 빈 화면으로 죽지 않도록 인증 및 설정 로딩 방어 처리를 추가했습니다.
+- 레거시 DB에 남아 있을 수 있는 `members.password_hash`, `posts.author_password` 컬럼 제거와 `posts/comments` 공개 권한 회수 SQL을 추가했습니다.
+- 운영진 테이블명을 앱 코드의 `ops_members`, `ex_ops_members`와 맞춰 새 DB 초기화 시 운영진 페이지가 바로 동작하도록 정리했습니다.
+- 공개/관리자 조회 전반의 `select('*')` 사용을 필요한 컬럼 목록으로 좁혀 응답 필터링을 강화했습니다.
+- CRA `react-scripts`에서 Vite로 빌드 도구를 전환해 오래된 개발 서버 전이 취약점까지 제거했습니다.
+
+---
+
 ## [1.0.0] - 2026-03-23
 
 ### 홈페이지 리디자인

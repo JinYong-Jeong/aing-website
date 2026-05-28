@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Users, ChevronRight, PlusCircle, Pencil, Trash2, X, Check } from 'lucide-react';
 import AnimatedSection from '../components/AnimatedSection';
-import { supabase, ExOpsMember, Member } from '../lib/supabase';
+import { MEMBER_PUBLIC_SELECT, supabase, ExOpsMember, Member } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
 
 const demoData: ExOpsMember[] = [
@@ -12,6 +12,8 @@ const demoData: ExOpsMember[] = [
 const EMPTY_FORM = {
   name: '', role: '', generation: '', term: '', description: '',
 };
+
+const EX_OPS_MEMBER_SELECT = 'id,name,role,generation,term,description,created_at';
 
 const ExOpsPage: React.FC = () => {
   const { isAdmin } = useAuth();
@@ -31,10 +33,11 @@ const ExOpsPage: React.FC = () => {
     try {
       const { data } = await supabase
         .from('members')
-        .select('*')
+        .select(MEMBER_PUBLIC_SELECT)
         .ilike('name', m.name.trim())
+        .eq('is_active', true)
         .single();
-      if (data) setExLinkedMember(data as Member);
+      if (data) setExLinkedMember(data as unknown as Member);
     } catch {}
     setLoadingMember(false);
   };
@@ -44,7 +47,7 @@ const ExOpsPage: React.FC = () => {
       try {
         const { data } = await supabase
           .from('ex_ops_members')
-          .select('*')
+          .select(EX_OPS_MEMBER_SELECT)
           .order('created_at', { ascending: false });
         if (data && data.length > 0) setMembers(data as ExOpsMember[]);
       } catch { /* use demo */ }

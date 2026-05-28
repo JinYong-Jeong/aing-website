@@ -205,7 +205,7 @@ const ProjectsPage: React.FC = () => {
         if (error || !data || data.length === 0) {
           setProjects(demoProjects);
         } else {
-          setProjects(data as Project[]);
+          setProjects(data as unknown as Project[]);
         }
       } catch {
         setProjects(demoProjects);

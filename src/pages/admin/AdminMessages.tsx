@@ -4,6 +4,8 @@ import { ArrowLeft, Search, CheckCircle, XCircle, Mail } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../context/AuthContext';
 
+const MESSAGE_SELECT = 'id,name,email,message,is_read,created_at';
+
 const AdminMessages: React.FC = () => {
   const { isAdmin } = useAuth();
   const navigate = useNavigate();
@@ -20,20 +22,20 @@ const AdminMessages: React.FC = () => {
   const fetchMessages = async () => {
     setLoading(true);
     const { data } = await supabase
-      .from('contact_messages')
-      .select('*')
+      .from('messages')
+      .select(MESSAGE_SELECT)
       .order('created_at', { ascending: false });
     setMessages(data || []);
     setLoading(false);
   };
 
   const markRead = async (id: string) => {
-    await supabase.from('contact_messages').update({ is_read: true }).eq('id', id);
+    await supabase.from('messages').update({ is_read: true }).eq('id', id);
     setMessages(prev => prev.map(m => m.id === id ? { ...m, is_read: true } : m));
   };
 
   const deleteMsg = async (id: string) => {
-    await supabase.from('contact_messages').delete().eq('id', id);
+    await supabase.from('messages').delete().eq('id', id);
     setMessages(prev => prev.filter(m => m.id !== id));
   };
 

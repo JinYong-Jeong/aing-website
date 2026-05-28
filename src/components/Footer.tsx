@@ -8,9 +8,9 @@ const Footer: React.FC = () => {
 
   const instagram = s.instagram || 'https://www.instagram.com/aing_gc/';
   const github = s.github || 'https://github.com/aing-gachon';
-  const email = s.email || '';
+  const email = s.email || 'gachon.aing@gmail.com';
   const location = s.location || '가천대학교 AI관';
-  const footerText = s.footer_text || '© 2026 A.ing. Licensed under CC BY-NC-SA 4.0.';
+  const footerText = s.footer_text || '© 2026 A.ing. All rights reserved.';
   const description = s.description || '학부생 주도 인공지능 학술 동아리.\n이론을 코드로, 코드를 통찰로.';
 
   return (
@@ -38,7 +38,7 @@ const Footer: React.FC = () => {
                 { label: 'About', to: '/about' },
                 { label: 'Activities', to: '/activities' },
                 { label: 'Members', to: '/members' },
-                { label: 'Board', to: '/board' },
+                { label: 'Team', to: '/team' },
                 { label: 'Contact', to: '/contact' },
                 { label: 'Join Us', to: '/contact' },
               ].map(item => (
