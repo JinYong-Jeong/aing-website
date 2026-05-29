@@ -16,6 +16,7 @@ export const supabase = createClient(
   {
     auth: {
       autoRefreshToken: isSupabaseConfigured,
+      detectSessionInUrl: isSupabaseConfigured,
       persistSession: isSupabaseConfigured,
     },
   }

@@ -28,6 +28,20 @@
     <link rel="apple-touch-icon" href="/logo192.png" />
     <link rel="manifest" href="/manifest.json" />
     <title>A.ing — Gachon AI Academic Club</title>
+    <script>
+      (function () {
+        var isLocal = /^(localhost|127\.0\.0\.1|0\.0\.0\.0)$/.test(window.location.hostname);
+        var hasAuthHash = /(?:^|[#&])(access_token|refresh_token|error|error_code)=/.test(window.location.hash);
+        if (isLocal && hasAuthHash) {
+          window.location.replace(
+            'https://aing-website.vercel.app' +
+              window.location.pathname +
+              window.location.search +
+              window.location.hash
+          );
+        }
+      })();
+    </script>
   </head>
   <body>
     <noscript>You need to enable JavaScript to run this app.</noscript>

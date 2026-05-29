@@ -28,6 +28,7 @@
 - 공개/관리자 조회 전반의 `select('*')` 사용을 필요한 컬럼 목록으로 좁혀 응답 필터링을 강화했습니다.
 - CRA `react-scripts`에서 Vite로 빌드 도구를 전환해 오래된 개발 서버 전이 취약점까지 제거했습니다.
 - 이메일 인증 링크가 로컬호스트로 돌아가지 않도록 기본 인증 redirect origin을 `https://aing-website.vercel.app`로 보정하고, 만료/무효 링크 오류 안내를 로그인 화면에 추가했습니다.
+- Supabase 설정이 아직 `localhost`를 반환하더라도 로컬 서버가 열린 상태라면 인증 fragment를 운영 도메인으로 즉시 옮기도록 HTML 초기 redirect 가드를 추가했습니다.
 
 ---
 

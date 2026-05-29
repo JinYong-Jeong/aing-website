@@ -40,6 +40,8 @@ In Supabase Dashboard, set Authentication > URL Configuration like this:
 
 For email templates, use Supabase's confirmation link variable, not the site URL variable. If an old email opens `localhost:3000` or shows `otp_expired`, request a new link after these settings are saved.
 
+If a magic-link URL with `access_token` or `refresh_token` has been shared, treat that link as compromised. Do not use it, revoke that user's active sessions in Supabase Auth if possible, and request a fresh link.
+
 ## Database Setup
 
 Run `schema_final.sql` in the Supabase SQL Editor.
