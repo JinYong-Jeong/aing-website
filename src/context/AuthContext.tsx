@@ -25,6 +25,8 @@ interface AuthContextType {
 const SCHOOL_DOMAIN = 'gachon.ac.kr';
 const DEFAULT_AUTH_REDIRECT_ORIGIN = 'https://aing-website.vercel.app';
 const LOCAL_HOSTS = new Set(['localhost', '127.0.0.1', '0.0.0.0']);
+const AUTH_REQUEST_TIMEOUT_MS = 15_000;
+const MEMBER_PREFLIGHT_TIMEOUT_MS = 5_000;
 
 const AuthContext = createContext<AuthContextType>({
   user: null,
@@ -119,6 +121,26 @@ const authFailureLoginUrl = (code: string, email?: string) => {
 const isRateLimitError = (message: string) =>
   /rate limit|rate_limit|too many|email rate/i.test(message);
 
+const getErrorMessage = (error: unknown) => {
+  if (error instanceof Error) return error.message;
+  if (typeof error === 'string') return error;
+  return '요청 처리 중 오류가 발생했습니다.';
+};
+
+const withTimeout = async <T,>(promise: PromiseLike<T>, timeoutMs: number, message: string): Promise<T> => {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  try {
+    return await Promise.race([
+      Promise.resolve(promise),
+      new Promise<T>((_, reject) => {
+        timer = setTimeout(() => reject(new Error(message)), timeoutMs);
+      }),
+    ]);
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
+};
+
 const validateLoginEmail = async (rawEmail: string) => {
   const email = normalizeEmail(rawEmail);
   if (!email) return { email, error: '이메일을 입력해주세요.' };
@@ -130,7 +152,11 @@ const validateLoginEmail = async (rawEmail: string) => {
   }
 
   try {
-    const { data, error } = await supabase.rpc('is_registered_member_email', { input_email: email });
+    const { data, error } = await withTimeout(
+      supabase.rpc('is_registered_member_email', { input_email: email }),
+      MEMBER_PREFLIGHT_TIMEOUT_MS,
+      '등록 이메일 확인이 지연되고 있습니다.'
+    );
     if (!error && data === false) {
       return { email, error: '등록된 A.ing 부원 이메일이 아닙니다. 운영진에게 먼저 등록을 요청해주세요.' };
     }
@@ -263,10 +289,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
 
     setLoading(true);
-    const { data } = await supabase.auth.getSession();
-    const nextUser = await loadMemberForSession(data.session);
-    setLoading(false);
-    return nextUser;
+    try {
+      const { data } = await withTimeout(
+        supabase.auth.getSession(),
+        AUTH_REQUEST_TIMEOUT_MS,
+        '로그인 세션 확인이 지연되고 있습니다. 잠시 후 다시 시도해주세요.'
+      );
+      return await loadMemberForSession(data.session);
+    } catch (error) {
+      setAuthError(getErrorMessage(error));
+      return null;
+    } finally {
+      setLoading(false);
+    }
   }, [loadMemberForSession]);
 
   useEffect(() => {
@@ -281,17 +316,30 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       };
     }
 
-    supabase.auth.getSession().then(async ({ data }) => {
+    withTimeout(
+      supabase.auth.getSession(),
+      AUTH_REQUEST_TIMEOUT_MS,
+      '로그인 세션 확인이 지연되고 있습니다.'
+    ).then(async ({ data }) => {
       if (!mounted) return;
       await loadMemberForSession(data.session);
+      setLoading(false);
+    }).catch(error => {
+      if (!mounted) return;
+      setAuthError(getErrorMessage(error));
       setLoading(false);
     });
 
     const { data: listener } = supabase.auth.onAuthStateChange(async (_event, session) => {
       if (!mounted) return;
       setLoading(true);
-      await loadMemberForSession(session);
-      setLoading(false);
+      try {
+        await loadMemberForSession(session);
+      } catch (error) {
+        setAuthError(getErrorMessage(error));
+      } finally {
+        setLoading(false);
+      }
     });
 
     return () => {
@@ -304,20 +352,33 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const { email, error: validationError } = await validateLoginEmail(rawEmail);
     if (validationError) return { ok: false, error: validationError };
 
-    const { error } = await supabase.auth.signInWithOtp({
-      email,
-      options: {
-        emailRedirectTo: resolveEmailRedirectTo(redirectTo),
-        shouldCreateUser: true,
-      },
-    });
+    try {
+      const { error } = await withTimeout(
+        supabase.auth.signInWithOtp({
+          email,
+          options: {
+            emailRedirectTo: resolveEmailRedirectTo(redirectTo),
+            shouldCreateUser: true,
+          },
+        }),
+        AUTH_REQUEST_TIMEOUT_MS,
+        '인증 메일 전송 응답이 지연되고 있습니다. 네트워크를 확인하고 다시 시도해주세요.'
+      );
 
-    if (error) {
-      if (isRateLimitError(error.message)) {
+      if (error) {
+        if (isRateLimitError(error.message)) {
+          return { ok: false, error: '메일 발송 제한에 걸렸습니다. 잠시 뒤 새 인증 링크를 다시 요청해주세요.' };
+        }
+        return { ok: false, error: error.message };
+      }
+    } catch (error) {
+      const message = getErrorMessage(error);
+      if (isRateLimitError(message)) {
         return { ok: false, error: '메일 발송 제한에 걸렸습니다. 잠시 뒤 새 인증 링크를 다시 요청해주세요.' };
       }
-      return { ok: false, error: error.message };
+      return { ok: false, error: message };
     }
+
     return { ok: true };
   };
 
@@ -331,26 +392,38 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
 
     setLoading(true);
-    const { data, error } = await supabase.auth.verifyOtp({
-      email,
-      token,
-      type: 'email',
-    });
+    try {
+      const { data, error } = await withTimeout(
+        supabase.auth.verifyOtp({
+          email,
+          token,
+          type: 'email',
+        }),
+        AUTH_REQUEST_TIMEOUT_MS,
+        '인증 코드 확인 응답이 지연되고 있습니다. 네트워크를 확인하고 다시 시도해주세요.'
+      );
 
-    if (error) {
-      setLoading(false);
-      if (isRateLimitError(error.message)) {
+      if (error) {
+        if (isRateLimitError(error.message)) {
+          return { ok: false, error: '인증 시도 제한에 걸렸습니다. 잠시 뒤 다시 시도해주세요.' };
+        }
+        return { ok: false, error: error.message };
+      }
+
+      const nextUser = await loadMemberForSession(data.session);
+      if (!nextUser) {
+        return { ok: false, error: '인증은 완료됐지만 등록된 부원 정보를 확인하지 못했습니다.' };
+      }
+      return { ok: true };
+    } catch (error) {
+      const message = getErrorMessage(error);
+      if (isRateLimitError(message)) {
         return { ok: false, error: '인증 시도 제한에 걸렸습니다. 잠시 뒤 다시 시도해주세요.' };
       }
-      return { ok: false, error: error.message };
+      return { ok: false, error: message };
+    } finally {
+      setLoading(false);
     }
-
-    const nextUser = await loadMemberForSession(data.session);
-    setLoading(false);
-    if (!nextUser) {
-      return { ok: false, error: '인증은 완료됐지만 등록된 부원 정보를 확인하지 못했습니다.' };
-    }
-    return { ok: true };
   };
 
   const signInWithGoogle = async (redirectTo?: string) => {
@@ -358,24 +431,40 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return { ok: false, error: 'Supabase 환경변수가 설정되지 않아 Google 로그인을 사용할 수 없습니다.' };
     }
 
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: resolveEmailRedirectTo(redirectTo),
-        queryParams: {
-          hd: SCHOOL_DOMAIN,
-          prompt: 'select_account',
-        },
-      },
-    });
+    try {
+      const { error } = await withTimeout(
+        supabase.auth.signInWithOAuth({
+          provider: 'google',
+          options: {
+            redirectTo: resolveEmailRedirectTo(redirectTo),
+            queryParams: {
+              hd: SCHOOL_DOMAIN,
+              prompt: 'select_account',
+            },
+          },
+        }),
+        AUTH_REQUEST_TIMEOUT_MS,
+        'Google 로그인 시작 응답이 지연되고 있습니다. 네트워크를 확인하고 다시 시도해주세요.'
+      );
 
-    if (error) return { ok: false, error: error.message };
-    return { ok: true };
+      if (error) return { ok: false, error: error.message };
+      return { ok: true };
+    } catch (error) {
+      return { ok: false, error: getErrorMessage(error) };
+    }
   };
 
   const logout = async () => {
     if (isSupabaseConfigured) {
-      await supabase.auth.signOut();
+      try {
+        await withTimeout(
+          supabase.auth.signOut(),
+          AUTH_REQUEST_TIMEOUT_MS,
+          '로그아웃 응답이 지연되고 있습니다.'
+        );
+      } catch {
+        // Clear local app state even when the remote sign-out call stalls.
+      }
     }
     setUser(null);
     setAuthError(null);

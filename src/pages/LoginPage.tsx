@@ -103,41 +103,56 @@ const LoginPage: React.FC = () => {
     setLoading(true);
     setError('');
     setSent(false);
-    const redirectTo = `/auth/callback?next=${encodeURIComponent(from)}`;
-    const result = await sendLoginLink(email, redirectTo);
-    if (result.ok) {
-      localStorage.setItem(LAST_LOGIN_LINK_SENT_AT, String(Date.now()));
-      setCooldownLeft(secondsUntilNextSend());
-      setSent(true);
-    } else {
-      if (/메일 발송 제한/.test(result.error || '')) {
+    try {
+      const redirectTo = `/auth/callback?next=${encodeURIComponent(from)}`;
+      const result = await sendLoginLink(email, redirectTo);
+      if (result.ok) {
         localStorage.setItem(LAST_LOGIN_LINK_SENT_AT, String(Date.now()));
         setCooldownLeft(secondsUntilNextSend());
+        setSent(true);
+      } else {
+        if (/메일 발송 제한/.test(result.error || '')) {
+          localStorage.setItem(LAST_LOGIN_LINK_SENT_AT, String(Date.now()));
+          setCooldownLeft(secondsUntilNextSend());
+        }
+        setError(result.error || '로그인 링크를 보낼 수 없습니다.');
       }
-      setError(result.error || '로그인 링크를 보낼 수 없습니다.');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : '인증 메일 전송 중 오류가 발생했습니다.');
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   const handleCodeVerify = async () => {
     setVerifying(true);
     setError('');
-    const result = await verifyLoginCode(email, authCode);
-    if (result.ok) {
-      navigate(from, { replace: true });
-    } else {
-      setError(result.error || '인증 코드를 확인할 수 없습니다.');
+    try {
+      const result = await verifyLoginCode(email, authCode);
+      if (result.ok) {
+        navigate(from, { replace: true });
+      } else {
+        setError(result.error || '인증 코드를 확인할 수 없습니다.');
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : '인증 코드 확인 중 오류가 발생했습니다.');
+    } finally {
+      setVerifying(false);
     }
-    setVerifying(false);
   };
 
   const handleGoogleLogin = async () => {
     setLoading(true);
     setError('');
-    const redirectTo = `/auth/callback?next=${encodeURIComponent(from)}`;
-    const result = await signInWithGoogle(redirectTo);
-    if (!result.ok) setError(result.error || 'Google 로그인을 시작할 수 없습니다.');
-    setLoading(false);
+    try {
+      const redirectTo = `/auth/callback?next=${encodeURIComponent(from)}`;
+      const result = await signInWithGoogle(redirectTo);
+      if (!result.ok) setError(result.error || 'Google 로그인을 시작할 수 없습니다.');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Google 로그인 시작 중 오류가 발생했습니다.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
