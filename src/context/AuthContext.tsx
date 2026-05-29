@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { Session } from '@supabase/supabase-js';
 import { isSupabaseConfigured, supabase } from '../lib/supabase';
 
@@ -16,7 +16,7 @@ interface AuthContextType {
   authError: string | null;
   isAdmin: boolean;
   sendLoginLink: (email: string, redirectTo?: string) => Promise<{ ok: boolean; error?: string }>;
-  refreshUser: () => Promise<void>;
+  refreshUser: () => Promise<AuthUser | null>;
   logout: () => Promise<void>;
 }
 
@@ -30,7 +30,7 @@ const AuthContext = createContext<AuthContextType>({
   authError: null,
   isAdmin: false,
   sendLoginLink: async () => ({ ok: false, error: '인증 초기화 중입니다.' }),
-  refreshUser: async () => {},
+  refreshUser: async () => null,
   logout: async () => {},
 });
 
@@ -87,8 +87,8 @@ const sanitizeRedirectPath = (redirectTo?: string) => {
   if (!redirectTo) return '/';
 
   try {
-    const parsed = new URL(redirectTo, window.location.origin);
-    const currentOrigin = window.location.origin;
+    const currentOrigin = typeof window === 'undefined' ? DEFAULT_AUTH_REDIRECT_ORIGIN : window.location.origin;
+    const parsed = new URL(redirectTo, currentOrigin);
     const targetOrigin = authRedirectOrigin();
 
     if (parsed.origin === currentOrigin || parsed.origin === targetOrigin || LOCAL_HOSTS.has(parsed.hostname)) {
@@ -106,24 +106,36 @@ const resolveEmailRedirectTo = (redirectTo?: string) => {
   return `${authRedirectOrigin()}${path.startsWith('/') ? path : `/${path}`}`;
 };
 
+const authFailureLoginUrl = (code: string, email?: string) => {
+  const params = new URLSearchParams({ error: code });
+  if (email) params.set('email', email);
+  return `/login?${params.toString()}`;
+};
+
+const isRateLimitError = (message: string) =>
+  /rate limit|rate_limit|too many|email rate/i.test(message);
+
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState(true);
   const [authError, setAuthError] = useState<string | null>(null);
 
-  const loadMemberForSession = async (session: Session | null) => {
+  const loadMemberForSession = useCallback(async (session: Session | null): Promise<AuthUser | null> => {
     const email = normalizeEmail(session?.user?.email || '');
     if (!session || !email) {
       setUser(null);
       setAuthError(null);
-      return;
+      return null;
     }
 
     if (!isSchoolEmail(email)) {
       await supabase.auth.signOut();
       setUser(null);
       setAuthError('가천대학교 이메일로만 로그인할 수 있습니다.');
-      return;
+      if (typeof window !== 'undefined' && window.location.pathname !== '/login') {
+        window.location.replace(authFailureLoginUrl('school_email_required', email));
+      }
+      return null;
     }
 
     try {
@@ -140,15 +152,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         } | null;
 
         if (member?.id && member.is_active !== false) {
-          setUser({
+          const nextUser: AuthUser = {
             id: session.user.id,
             email,
             name: member.name,
             role: roleFromMember(member),
             member_id: member.id,
-          });
+          };
+          setUser(nextUser);
           setAuthError(null);
-          return;
+          return nextUser;
         }
       }
     } catch {
@@ -197,32 +210,38 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       await supabase.auth.signOut();
       setUser(null);
       setAuthError('등록된 A.ing 부원 이메일이 아닙니다. 운영진에게 등록을 요청해주세요.');
-      return;
+      if (typeof window !== 'undefined' && window.location.pathname !== '/login') {
+        window.location.replace(authFailureLoginUrl('not_registered', email));
+      }
+      return null;
     }
 
-    setUser({
+    const nextUser: AuthUser = {
       id: session.user.id,
       email,
       name: member.name,
       role: roleFromMember(member),
       member_id: member.id,
-    });
+    };
+    setUser(nextUser);
     setAuthError(null);
-  };
+    return nextUser;
+  }, []);
 
-  const refreshUser = async () => {
+  const refreshUser = useCallback(async () => {
     if (!isSupabaseConfigured) {
       setUser(null);
       setAuthError(null);
       setLoading(false);
-      return;
+      return null;
     }
 
     setLoading(true);
     const { data } = await supabase.auth.getSession();
-    await loadMemberForSession(data.session);
+    const nextUser = await loadMemberForSession(data.session);
     setLoading(false);
-  };
+    return nextUser;
+  }, [loadMemberForSession]);
 
   useEffect(() => {
     let mounted = true;
@@ -253,7 +272,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       mounted = false;
       listener.subscription.unsubscribe();
     };
-  }, []);
+  }, [loadMemberForSession]);
 
   const sendLoginLink = async (rawEmail: string, redirectTo?: string) => {
     const email = normalizeEmail(rawEmail);
@@ -265,6 +284,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return { ok: false, error: '가천대학교 이메일만 사용할 수 있습니다.' };
     }
 
+    try {
+      const { data, error } = await supabase.rpc('is_registered_member_email', { input_email: email });
+      if (!error && data === false) {
+        return { ok: false, error: '등록된 A.ing 부원 이메일이 아닙니다. 운영진에게 먼저 등록을 요청해주세요.' };
+      }
+    } catch {
+      // Older schemas may not have the preflight RPC yet. Auth callback still enforces membership.
+    }
+
     const { error } = await supabase.auth.signInWithOtp({
       email,
       options: {
@@ -273,7 +301,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       },
     });
 
-    if (error) return { ok: false, error: error.message };
+    if (error) {
+      if (isRateLimitError(error.message)) {
+        return { ok: false, error: '메일 발송 제한에 걸렸습니다. 잠시 뒤 새 인증 링크를 다시 요청해주세요.' };
+      }
+      return { ok: false, error: error.message };
+    }
     return { ok: true };
   };
 

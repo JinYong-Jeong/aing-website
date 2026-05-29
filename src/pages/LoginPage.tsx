@@ -4,16 +4,56 @@ import { Mail, ShieldCheck } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import AnimatedSection from '../components/AnimatedSection';
 
+const LOGIN_LINK_COOLDOWN_MS = 60_000;
+const LAST_LOGIN_LINK_SENT_AT = 'aing_last_login_link_sent_at';
+
+const safeRedirectPath = (value?: string | null) => {
+  if (!value || !value.startsWith('/') || value.startsWith('//')) return '/';
+  return value;
+};
+
+const decodeAuthDescription = (value: string) => {
+  try {
+    return decodeURIComponent(value.replace(/\+/g, ' '));
+  } catch {
+    return value.replace(/\+/g, ' ');
+  }
+};
+
+const authErrorMessage = (code: string | null, description: string | null) => {
+  if (code === 'otp_expired') {
+    return '인증 링크가 만료됐거나 이미 사용된 링크입니다. 이메일을 다시 입력해서 새 인증 링크를 받아주세요.';
+  }
+  if (code === 'not_registered') {
+    return '등록된 A.ing 부원 이메일이 아닙니다. 운영진에게 등록을 요청해주세요.';
+  }
+  if (code === 'school_email_required') {
+    return '가천대학교 이메일로만 로그인할 수 있습니다.';
+  }
+  if (code === 'session_missing') {
+    return '인증 세션을 확인하지 못했습니다. 새 인증 링크를 다시 요청해주세요.';
+  }
+  if (description) return decodeAuthDescription(description);
+  return '이메일 인증에 실패했습니다. 새 인증 링크를 요청해주세요.';
+};
+
+const secondsUntilNextSend = () => {
+  const lastSentAt = Number(localStorage.getItem(LAST_LOGIN_LINK_SENT_AT) || 0);
+  const remaining = LOGIN_LINK_COOLDOWN_MS - (Date.now() - lastSentAt);
+  return Math.max(0, Math.ceil(remaining / 1000));
+};
+
 const LoginPage: React.FC = () => {
   const [email, setEmail] = useState('');
   const [error, setError] = useState('');
   const [sent, setSent] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [cooldownLeft, setCooldownLeft] = useState(0);
   const { user, authError, sendLoginLink } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
-  const from = useMemo(() => (location.state as { from?: string })?.from || '/', [location.state]);
+  const from = useMemo(() => safeRedirectPath((location.state as { from?: string })?.from), [location.state]);
 
   useEffect(() => {
     if (user) navigate(from, { replace: true });
@@ -24,31 +64,51 @@ const LoginPage: React.FC = () => {
   }, [authError]);
 
   useEffect(() => {
-    const params = new URLSearchParams(window.location.hash.replace(/^#/, ''));
-    const errorCode = params.get('error_code');
-    const errorDescription = params.get('error_description');
+    const searchParams = new URLSearchParams(location.search);
+    const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ''));
+    const errorCode = searchParams.get('error_code') || searchParams.get('error') || hashParams.get('error_code') || hashParams.get('error');
+    const errorDescription = searchParams.get('error_description') || hashParams.get('error_description');
+    const returnedEmail = searchParams.get('email') || hashParams.get('email');
 
+    if (returnedEmail) setEmail(returnedEmail);
     if (!errorCode && !errorDescription) return;
 
-    if (errorCode === 'otp_expired') {
-      setError('인증 링크가 만료됐거나 이미 사용된 링크입니다. 이메일을 다시 입력해서 새 인증 링크를 받아주세요.');
-    } else {
-      setError(errorDescription ? decodeURIComponent(errorDescription.replace(/\+/g, ' ')) : '이메일 인증에 실패했습니다. 새 인증 링크를 요청해주세요.');
-    }
+    setError(authErrorMessage(errorCode, errorDescription));
 
-    window.history.replaceState(null, document.title, window.location.pathname + window.location.search);
+    window.history.replaceState(null, document.title, window.location.pathname);
+  }, [location.search]);
+
+  useEffect(() => {
+    const tick = () => setCooldownLeft(secondsUntilNextSend());
+    tick();
+    const timer = window.setInterval(tick, 1000);
+    return () => window.clearInterval(timer);
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const secondsLeft = secondsUntilNextSend();
+    if (secondsLeft > 0) {
+      setCooldownLeft(secondsLeft);
+      setSent(false);
+      setError(`메일 발송 제한을 피하려고 ${secondsLeft}초 뒤 다시 요청할 수 있습니다.`);
+      return;
+    }
+
     setLoading(true);
     setError('');
     setSent(false);
-    const redirectTo = `${window.location.origin}${from}`;
+    const redirectTo = `/auth/callback?next=${encodeURIComponent(from)}`;
     const result = await sendLoginLink(email, redirectTo);
     if (result.ok) {
+      localStorage.setItem(LAST_LOGIN_LINK_SENT_AT, String(Date.now()));
+      setCooldownLeft(secondsUntilNextSend());
       setSent(true);
     } else {
+      if (/메일 발송 제한/.test(result.error || '')) {
+        localStorage.setItem(LAST_LOGIN_LINK_SENT_AT, String(Date.now()));
+        setCooldownLeft(secondsUntilNextSend());
+      }
       setError(result.error || '로그인 링크를 보낼 수 없습니다.');
     }
     setLoading(false);
@@ -87,11 +147,11 @@ const LoginPage: React.FC = () => {
             {error && <p className="text-red-500 text-xs leading-relaxed">{error}</p>}
             {sent && (
               <p className="text-green-600 text-xs leading-relaxed">
-                인증 링크를 보냈습니다. 메일함에서 링크를 열면 로그인됩니다.
+                인증 링크를 보냈습니다. 메일함에서 링크를 열면 로그인 확인 화면으로 이동합니다.
               </p>
             )}
-            <button type="submit" className="btn-primary w-full" disabled={loading}>
-              {loading ? '전송 중...' : '인증 링크 받기'}
+            <button type="submit" className="btn-primary w-full" disabled={loading || cooldownLeft > 0}>
+              {loading ? '전송 중...' : cooldownLeft > 0 ? `${cooldownLeft}초 후 재요청` : '인증 링크 받기'}
             </button>
             <p className="text-xs text-aing-muted text-center pt-1">
               등록된 A.ing 부원 이메일만 Members와 Team에 접근할 수 있습니다.

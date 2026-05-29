@@ -246,7 +246,10 @@ as $$
   select m.id
   from public.members m
   where m.is_active = true
-    and lower(coalesce(m.email, m.contact_email)) = lower(auth.jwt() ->> 'email')
+    and (
+      lower(m.email) = lower(auth.jwt() ->> 'email')
+      or lower(m.contact_email) = lower(auth.jwt() ->> 'email')
+    )
   limit 1
 $$;
 
@@ -261,7 +264,10 @@ as $$
     select 1
     from public.members m
     where m.is_active = true
-      and lower(coalesce(m.email, m.contact_email)) = lower(auth.jwt() ->> 'email')
+      and (
+        lower(m.email) = lower(auth.jwt() ->> 'email')
+        or lower(m.contact_email) = lower(auth.jwt() ->> 'email')
+      )
       and (
         m.track = 'admin'
         or m.role ~* '(ops|운영|회장|부회장|lead)'
@@ -287,13 +293,35 @@ as $$
   select m.id, m.name, m.role, m.track, m.email, m.contact_email, m.is_active
   from public.members m
   where m.is_active = true
-    and lower(coalesce(m.email, m.contact_email)) = lower(auth.jwt() ->> 'email')
+    and (
+      lower(m.email) = lower(auth.jwt() ->> 'email')
+      or lower(m.contact_email) = lower(auth.jwt() ->> 'email')
+    )
   limit 1
+$$;
+
+create or replace function public.is_registered_member_email(input_email text)
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select exists (
+    select 1
+    from public.members m
+    where m.is_active = true
+      and (
+        lower(m.email) = lower(input_email)
+        or lower(m.contact_email) = lower(input_email)
+      )
+  )
 $$;
 
 grant execute on function public.get_current_member() to authenticated;
 grant execute on function public.current_member_id() to authenticated;
 grant execute on function public.is_admin_member() to authenticated;
+grant execute on function public.is_registered_member_email(text) to anon, authenticated;
 
 -- ============================================================
 -- RLS

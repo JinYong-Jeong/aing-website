@@ -29,6 +29,10 @@
 - CRA `react-scripts`에서 Vite로 빌드 도구를 전환해 오래된 개발 서버 전이 취약점까지 제거했습니다.
 - 이메일 인증 링크가 로컬호스트로 돌아가지 않도록 기본 인증 redirect origin을 `https://aing-website.vercel.app`로 보정하고, 만료/무효 링크 오류 안내를 로그인 화면에 추가했습니다.
 - Supabase 설정이 아직 `localhost`를 반환하더라도 로컬 서버가 열린 상태라면 인증 fragment를 운영 도메인으로 즉시 옮기도록 HTML 초기 redirect 가드를 추가했습니다.
+- 이메일 인증 결과를 `/auth/callback`에서 전담 처리하도록 라우트를 추가해 홈으로 이동했지만 로그인되지 않은 것처럼 보이는 흐름을 방지했습니다.
+- 로그인 화면에 인증 실패 쿼리/해시 파라미터 처리, 재전송 쿨다운, Supabase `email rate limit exceeded` 안내를 추가했습니다.
+- 부원 인증 RPC가 `members.email`과 `members.contact_email`을 모두 정확히 확인하도록 수정하고, 등록 이메일 사전 확인 RPC를 추가했습니다.
+- Contact의 `메일 보내기` 동작을 Gmail 작성창 열기와 이메일 주소 복사 피드백으로 바꿔 `mailto:` 미설정 환경에서도 동작이 보이도록 개선했습니다.
 
 ---
 

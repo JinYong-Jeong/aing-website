@@ -36,9 +36,12 @@ In Supabase Dashboard, set Authentication > URL Configuration like this:
 
 - Site URL: `https://aing-website.vercel.app`
 - Redirect URLs: `https://aing-website.vercel.app/*`
+- Recommended explicit callback URL: `https://aing-website.vercel.app/auth/callback*`
 - Optional local testing URL: `http://localhost:3000/*`
 
-For email templates, use Supabase's confirmation link variable, not the site URL variable. If an old email opens `localhost:3000` or shows `otp_expired`, request a new link after these settings are saved.
+For email templates, use Supabase's confirmation link variable, not the site URL variable. The button in the template should point to `{{ .ConfirmationURL }}` so the auth token/code reaches `/auth/callback`. If an old email opens `localhost:3000`, opens the home page without a session, or shows `otp_expired`, request a new link after these settings are saved.
+
+Supabase may return `email rate limit exceeded` when links are requested repeatedly. The app adds a local resend cooldown and checks registered member emails before sending where the database RPC is available, but the provider-side throttle still has to expire or be adjusted in Supabase Auth rate-limit settings.
 
 If a magic-link URL with `access_token` or `refresh_token` has been shared, treat that link as compromised. Do not use it, revoke that user's active sessions in Supabase Auth if possible, and request a fresh link.
 

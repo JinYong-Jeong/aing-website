@@ -1,15 +1,34 @@
-import React from 'react';
-import { Github, Instagram, Mail, MapPin, Send } from 'lucide-react';
+import React, { useMemo, useState } from 'react';
+import { Check, Github, Instagram, Mail, MapPin, Send } from 'lucide-react';
 import AnimatedSection from '../components/AnimatedSection';
 import { useSiteSettings } from '../context/SiteSettingsContext';
 
 const ContactPage: React.FC = () => {
+  const [emailCopied, setEmailCopied] = useState(false);
   const s = useSiteSettings();
   const instagramUrl = s.instagram || 'https://www.instagram.com/aing_gc/';
   const githubUrl = s.github || 'https://github.com/aing-gachon';
   const emailAddr = s.email || 'gachon.aing@gmail.com';
   const locationStr = s.location || '가천대학교 AI관';
   const notionUrl = s.notion || '';
+  const gmailComposeUrl = useMemo(() => {
+    const params = new URLSearchParams({
+      view: 'cm',
+      fs: '1',
+      to: emailAddr,
+      su: 'A.ing 문의',
+    });
+    return `https://mail.google.com/mail/?${params.toString()}`;
+  }, [emailAddr]);
+
+  const handleEmailClick = () => {
+    navigator.clipboard?.writeText(emailAddr).then(() => {
+      setEmailCopied(true);
+      window.setTimeout(() => setEmailCopied(false), 3000);
+    }).catch(() => {
+      setEmailCopied(false);
+    });
+  };
 
   return (
     <div className="min-h-screen bg-aing-bg pt-20">
@@ -36,7 +55,13 @@ const ContactPage: React.FC = () => {
             <div>
               <h2 className="text-xl font-semibold text-aing-text mb-6">Contact Info</h2>
               <div className="space-y-4">
-                <a href={`mailto:${emailAddr}`} className="flex items-center gap-4 group">
+                <a
+                  href={gmailComposeUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={handleEmailClick}
+                  className="flex items-center gap-4 group"
+                >
                   <div className="p-3 rounded-xl bg-aing-bg-alt border border-aing-border group-hover:border-blue-200 transition-colors">
                     <Mail size={18} className="text-aing-blue" />
                   </div>
@@ -93,10 +118,19 @@ const ContactPage: React.FC = () => {
               <p className="text-sm text-aing-muted leading-relaxed mb-6">
                 지원, 협업, 활동 문의는 공식 이메일로 보내주세요. 운영진이 확인 후 답변드리겠습니다.
               </p>
-              <a href={`mailto:${emailAddr}`} className="btn-primary inline-flex items-center gap-2 text-sm">
-                메일 보내기
-                <Send size={14} />
+              <a
+                href={gmailComposeUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={handleEmailClick}
+                className="btn-primary inline-flex items-center gap-2 text-sm"
+              >
+                {emailCopied ? '주소 복사됨' : '메일 보내기'}
+                {emailCopied ? <Check size={14} /> : <Send size={14} />}
               </a>
+              <p className="text-xs text-aing-muted mt-3">
+                {emailCopied ? '이메일 주소를 복사했고 Gmail 작성창을 열었습니다.' : emailAddr}
+              </p>
             </div>
 
             <div className="card mt-6">
