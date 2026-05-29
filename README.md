@@ -25,9 +25,20 @@ src/
 ```env
 VITE_SUPABASE_URL=your_supabase_url
 VITE_SUPABASE_ANON_KEY=your_anon_key
+VITE_AUTH_REDIRECT_ORIGIN=https://aing-website.vercel.app
 ```
 
 Existing `REACT_APP_SUPABASE_URL` and `REACT_APP_SUPABASE_ANON_KEY` values are also accepted during migration.
+
+## Supabase Auth URL Setup
+
+In Supabase Dashboard, set Authentication > URL Configuration like this:
+
+- Site URL: `https://aing-website.vercel.app`
+- Redirect URLs: `https://aing-website.vercel.app/*`
+- Optional local testing URL: `http://localhost:3000/*`
+
+For email templates, use Supabase's confirmation link variable, not the site URL variable. If an old email opens `localhost:3000` or shows `otp_expired`, request a new link after these settings are saved.
 
 ## Database Setup
 

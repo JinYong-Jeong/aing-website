@@ -23,6 +23,22 @@ const LoginPage: React.FC = () => {
     if (authError) setError(authError);
   }, [authError]);
 
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.hash.replace(/^#/, ''));
+    const errorCode = params.get('error_code');
+    const errorDescription = params.get('error_description');
+
+    if (!errorCode && !errorDescription) return;
+
+    if (errorCode === 'otp_expired') {
+      setError('인증 링크가 만료됐거나 이미 사용된 링크입니다. 이메일을 다시 입력해서 새 인증 링크를 받아주세요.');
+    } else {
+      setError(errorDescription ? decodeURIComponent(errorDescription.replace(/\+/g, ' ')) : '이메일 인증에 실패했습니다. 새 인증 링크를 요청해주세요.');
+    }
+
+    window.history.replaceState(null, document.title, window.location.pathname + window.location.search);
+  }, []);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);

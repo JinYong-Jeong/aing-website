@@ -21,6 +21,8 @@ interface AuthContextType {
 }
 
 const SCHOOL_DOMAIN = 'gachon.ac.kr';
+const DEFAULT_AUTH_REDIRECT_ORIGIN = 'https://aing-website.vercel.app';
+const LOCAL_HOSTS = new Set(['localhost', '127.0.0.1', '0.0.0.0']);
 
 const AuthContext = createContext<AuthContextType>({
   user: null,
@@ -49,6 +51,59 @@ const roleFromMember = (member: { track?: string; role?: string }): AuthUser['ro
 const readRpcMember = (value: unknown) => {
   if (Array.isArray(value)) return value[0] || null;
   return value && typeof value === 'object' ? value : null;
+};
+
+const trimTrailingSlash = (value: string) => value.replace(/\/+$/, '');
+
+const configuredAuthOrigin = () => {
+  const configured =
+    import.meta.env.VITE_AUTH_REDIRECT_ORIGIN ||
+    import.meta.env.REACT_APP_AUTH_REDIRECT_ORIGIN ||
+    '';
+
+  if (!configured) return null;
+
+  try {
+    const url = new URL(configured);
+    return trimTrailingSlash(url.origin);
+  } catch {
+    return null;
+  }
+};
+
+const authRedirectOrigin = () => {
+  const configured = configuredAuthOrigin();
+  if (configured) return configured;
+
+  if (typeof window === 'undefined') return DEFAULT_AUTH_REDIRECT_ORIGIN;
+
+  const current = new URL(window.location.origin);
+  if (LOCAL_HOSTS.has(current.hostname)) return DEFAULT_AUTH_REDIRECT_ORIGIN;
+  if (current.protocol !== 'https:') return DEFAULT_AUTH_REDIRECT_ORIGIN;
+  return trimTrailingSlash(current.origin);
+};
+
+const sanitizeRedirectPath = (redirectTo?: string) => {
+  if (!redirectTo) return '/';
+
+  try {
+    const parsed = new URL(redirectTo, window.location.origin);
+    const currentOrigin = window.location.origin;
+    const targetOrigin = authRedirectOrigin();
+
+    if (parsed.origin === currentOrigin || parsed.origin === targetOrigin || LOCAL_HOSTS.has(parsed.hostname)) {
+      return `${parsed.pathname}${parsed.search}`;
+    }
+  } catch {
+    if (redirectTo.startsWith('/')) return redirectTo;
+  }
+
+  return '/';
+};
+
+const resolveEmailRedirectTo = (redirectTo?: string) => {
+  const path = sanitizeRedirectPath(redirectTo);
+  return `${authRedirectOrigin()}${path.startsWith('/') ? path : `/${path}`}`;
 };
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -213,7 +268,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const { error } = await supabase.auth.signInWithOtp({
       email,
       options: {
-        emailRedirectTo: redirectTo || window.location.origin,
+        emailRedirectTo: resolveEmailRedirectTo(redirectTo),
         shouldCreateUser: true,
       },
     });
