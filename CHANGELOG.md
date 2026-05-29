@@ -33,6 +33,7 @@
 - 로그인 화면에 인증 실패 쿼리/해시 파라미터 처리, 재전송 쿨다운, Supabase `email rate limit exceeded` 안내를 추가했습니다.
 - 부원 인증 RPC가 `members.email`과 `members.contact_email`을 모두 정확히 확인하도록 수정하고, 등록 이메일 사전 확인 RPC를 추가했습니다.
 - Contact의 `메일 보내기` 동작을 Gmail 작성창 열기와 이메일 주소 복사 피드백으로 바꿔 `mailto:` 미설정 환경에서도 동작이 보이도록 개선했습니다.
+- 기존 Supabase DB에 이미 `members` 테이블이 있는 경우에도 이메일 인증용 컬럼이 추가되도록 `schema_final.sql`에 호환 ALTER 구문을 보강했습니다.
 
 ---
 

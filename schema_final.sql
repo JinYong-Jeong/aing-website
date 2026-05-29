@@ -54,6 +54,96 @@ create table if not exists public.members (
   )
 );
 
+-- Existing databases created before the email-auth migration need these columns too.
+-- `create table if not exists` does not add new columns to an already existing table.
+alter table public.members add column if not exists email text;
+alter table public.members add column if not exists github text;
+alter table public.members add column if not exists linkedin text;
+alter table public.members add column if not exists instagram text;
+alter table public.members add column if not exists avatar_url text;
+alter table public.members add column if not exists bio text;
+alter table public.members add column if not exists project_idea text;
+alter table public.members add column if not exists interests text[] default '{}';
+alter table public.members add column if not exists skills text[] default '{}';
+alter table public.members add column if not exists workload int default 0;
+alter table public.members add column if not exists status text default 'mid';
+alter table public.members add column if not exists looking_for_team boolean default false;
+alter table public.members add column if not exists contact_info text;
+alter table public.members add column if not exists contact_email text;
+alter table public.members add column if not exists is_active boolean default true;
+alter table public.members add column if not exists generation int;
+alter table public.members add column if not exists "order" int default 99;
+alter table public.members add column if not exists created_at timestamptz default now();
+
+do $$
+begin
+  if not exists (
+    select 1
+    from pg_constraint
+    where conrelid = 'public.members'::regclass
+      and conname = 'members_email_key'
+  ) then
+    alter table public.members add constraint members_email_key unique (email);
+  end if;
+exception
+  when duplicate_object or duplicate_table or unique_violation then
+    raise notice 'Skipped members.email unique constraint because an equivalent constraint/index exists or duplicate emails already exist.';
+end $$;
+
+do $$
+begin
+  if not exists (
+    select 1
+    from pg_constraint
+    where conrelid = 'public.members'::regclass
+      and conname = 'members_email_school_check'
+  ) then
+    alter table public.members
+      add constraint members_email_school_check
+      check (email is null or lower(email) ~ '^[^@[:space:]]+@([a-z0-9-]+\.)*gachon\.ac\.kr$')
+      not valid;
+  end if;
+
+  if not exists (
+    select 1
+    from pg_constraint
+    where conrelid = 'public.members'::regclass
+      and conname = 'members_bio_length_check'
+  ) then
+    alter table public.members
+      add constraint members_bio_length_check
+      check (bio is null or char_length(bio) <= 300)
+      not valid;
+  end if;
+
+  if not exists (
+    select 1
+    from pg_constraint
+    where conrelid = 'public.members'::regclass
+      and conname = 'members_project_idea_length_check'
+  ) then
+    alter table public.members
+      add constraint members_project_idea_length_check
+      check (project_idea is null or char_length(project_idea) <= 500)
+      not valid;
+  end if;
+
+  if not exists (
+    select 1
+    from pg_constraint
+    where conrelid = 'public.members'::regclass
+      and conname = 'members_contact_length_check'
+  ) then
+    alter table public.members
+      add constraint members_contact_length_check
+      check (
+        (contact_info is null or char_length(contact_info) <= 160)
+        and (contact_email is null or char_length(contact_email) <= 160)
+      )
+      not valid;
+  end if;
+end $$;
+
 create table if not exists public.activities (
   id uuid default gen_random_uuid() primary key,
   slug text unique,
