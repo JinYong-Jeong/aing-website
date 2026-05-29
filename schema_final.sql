@@ -6,13 +6,13 @@
 
 create extension if not exists pgcrypto;
 
-create or replace function public.text_array_items_max_length(values text[], max_len int)
+create or replace function public.text_array_items_max_length(input_values text[], max_len int)
 returns boolean
 language sql
 immutable
 as $$
   select coalesce(bool_and(char_length(item) <= max_len), true)
-  from unnest(values) as item
+  from unnest(input_values) as item
 $$;
 
 -- ============================================================
