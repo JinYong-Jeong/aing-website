@@ -16,6 +16,8 @@ interface AuthContextType {
   authError: string | null;
   isAdmin: boolean;
   sendLoginLink: (email: string, redirectTo?: string) => Promise<{ ok: boolean; error?: string }>;
+  verifyLoginCode: (email: string, token: string) => Promise<{ ok: boolean; error?: string }>;
+  signInWithGoogle: (redirectTo?: string) => Promise<{ ok: boolean; error?: string }>;
   refreshUser: () => Promise<AuthUser | null>;
   logout: () => Promise<void>;
 }
@@ -30,6 +32,8 @@ const AuthContext = createContext<AuthContextType>({
   authError: null,
   isAdmin: false,
   sendLoginLink: async () => ({ ok: false, error: '인증 초기화 중입니다.' }),
+  verifyLoginCode: async () => ({ ok: false, error: '인증 초기화 중입니다.' }),
+  signInWithGoogle: async () => ({ ok: false, error: '인증 초기화 중입니다.' }),
   refreshUser: async () => null,
   logout: async () => {},
 });
@@ -114,6 +118,28 @@ const authFailureLoginUrl = (code: string, email?: string) => {
 
 const isRateLimitError = (message: string) =>
   /rate limit|rate_limit|too many|email rate/i.test(message);
+
+const validateLoginEmail = async (rawEmail: string) => {
+  const email = normalizeEmail(rawEmail);
+  if (!email) return { email, error: '이메일을 입력해주세요.' };
+  if (!isSupabaseConfigured) {
+    return { email, error: 'Supabase 환경변수가 설정되지 않아 이메일 인증을 사용할 수 없습니다.' };
+  }
+  if (!isSchoolEmail(email)) {
+    return { email, error: '가천대학교 이메일만 사용할 수 있습니다.' };
+  }
+
+  try {
+    const { data, error } = await supabase.rpc('is_registered_member_email', { input_email: email });
+    if (!error && data === false) {
+      return { email, error: '등록된 A.ing 부원 이메일이 아닙니다. 운영진에게 먼저 등록을 요청해주세요.' };
+    }
+  } catch {
+    // Older schemas may not have the preflight RPC yet. Auth callback still enforces membership.
+  }
+
+  return { email };
+};
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<AuthUser | null>(null);
@@ -275,23 +301,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [loadMemberForSession]);
 
   const sendLoginLink = async (rawEmail: string, redirectTo?: string) => {
-    const email = normalizeEmail(rawEmail);
-    if (!email) return { ok: false, error: '이메일을 입력해주세요.' };
-    if (!isSupabaseConfigured) {
-      return { ok: false, error: 'Supabase 환경변수가 설정되지 않아 이메일 인증을 보낼 수 없습니다.' };
-    }
-    if (!isSchoolEmail(email)) {
-      return { ok: false, error: '가천대학교 이메일만 사용할 수 있습니다.' };
-    }
-
-    try {
-      const { data, error } = await supabase.rpc('is_registered_member_email', { input_email: email });
-      if (!error && data === false) {
-        return { ok: false, error: '등록된 A.ing 부원 이메일이 아닙니다. 운영진에게 먼저 등록을 요청해주세요.' };
-      }
-    } catch {
-      // Older schemas may not have the preflight RPC yet. Auth callback still enforces membership.
-    }
+    const { email, error: validationError } = await validateLoginEmail(rawEmail);
+    if (validationError) return { ok: false, error: validationError };
 
     const { error } = await supabase.auth.signInWithOtp({
       email,
@@ -310,6 +321,58 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return { ok: true };
   };
 
+  const verifyLoginCode = async (rawEmail: string, rawToken: string) => {
+    const { email, error: validationError } = await validateLoginEmail(rawEmail);
+    if (validationError) return { ok: false, error: validationError };
+
+    const token = rawToken.replace(/\s+/g, '');
+    if (!/^\d{6}$/.test(token)) {
+      return { ok: false, error: '6자리 인증 코드를 입력해주세요.' };
+    }
+
+    setLoading(true);
+    const { data, error } = await supabase.auth.verifyOtp({
+      email,
+      token,
+      type: 'email',
+    });
+
+    if (error) {
+      setLoading(false);
+      if (isRateLimitError(error.message)) {
+        return { ok: false, error: '인증 시도 제한에 걸렸습니다. 잠시 뒤 다시 시도해주세요.' };
+      }
+      return { ok: false, error: error.message };
+    }
+
+    const nextUser = await loadMemberForSession(data.session);
+    setLoading(false);
+    if (!nextUser) {
+      return { ok: false, error: '인증은 완료됐지만 등록된 부원 정보를 확인하지 못했습니다.' };
+    }
+    return { ok: true };
+  };
+
+  const signInWithGoogle = async (redirectTo?: string) => {
+    if (!isSupabaseConfigured) {
+      return { ok: false, error: 'Supabase 환경변수가 설정되지 않아 Google 로그인을 사용할 수 없습니다.' };
+    }
+
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: resolveEmailRedirectTo(redirectTo),
+        queryParams: {
+          hd: SCHOOL_DOMAIN,
+          prompt: 'select_account',
+        },
+      },
+    });
+
+    if (error) return { ok: false, error: error.message };
+    return { ok: true };
+  };
+
   const logout = async () => {
     if (isSupabaseConfigured) {
       await supabase.auth.signOut();
@@ -322,7 +385,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const isAdmin = useMemo(() => user?.role === 'admin' || user?.role === 'ops', [user]);
 
   return (
-    <AuthContext.Provider value={{ user, loading, authError, isAdmin, sendLoginLink, refreshUser, logout }}>
+    <AuthContext.Provider value={{ user, loading, authError, isAdmin, sendLoginLink, verifyLoginCode, signInWithGoogle, refreshUser, logout }}>
       {children}
     </AuthContext.Provider>
   );

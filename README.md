@@ -26,6 +26,7 @@ src/
 VITE_SUPABASE_URL=your_supabase_url
 VITE_SUPABASE_ANON_KEY=your_anon_key
 VITE_AUTH_REDIRECT_ORIGIN=https://aing-website.vercel.app
+VITE_ENABLE_GOOGLE_OAUTH=false
 ```
 
 Existing `REACT_APP_SUPABASE_URL` and `REACT_APP_SUPABASE_ANON_KEY` values are also accepted during migration.
@@ -39,9 +40,11 @@ In Supabase Dashboard, set Authentication > URL Configuration like this:
 - Recommended explicit callback URL: `https://aing-website.vercel.app/auth/callback*`
 - Optional local testing URL: `http://localhost:3000/*`
 
-For email templates, use Supabase's confirmation link variable, not the site URL variable. The button in the template should point to `{{ .ConfirmationURL }}` so the auth token/code reaches `/auth/callback`. If an old email opens `localhost:3000`, opens the home page without a session, or shows `otp_expired`, request a new link after these settings are saved.
+For email templates, use Supabase's confirmation link variable, not the site URL variable. The button in the template should point to `{{ .ConfirmationURL }}` so the auth token/code reaches `/auth/callback`. Include `{{ .Token }}` in the same template if you want users to type the 6-digit code on the login screen instead of opening the link. If an old email opens `localhost:3000`, opens the home page without a session, or shows `otp_expired`, request a new link after these settings are saved.
 
 Supabase may return `email rate limit exceeded` when links are requested repeatedly. The app adds a local resend cooldown and checks registered member emails before sending where the database RPC is available, but the provider-side throttle still has to expire or be adjusted in Supabase Auth rate-limit settings.
+
+For the fastest login experience, enable Google OAuth in Supabase and Google Cloud, then set `VITE_ENABLE_GOOGLE_OAUTH=true` in Vercel. The app still enforces `@gachon.ac.kr` plus active member registration after OAuth returns.
 
 If a magic-link URL with `access_token` or `refresh_token` has been shared, treat that link as compromised. Do not use it, revoke that user's active sessions in Supabase Auth if possible, and request a fresh link.
 

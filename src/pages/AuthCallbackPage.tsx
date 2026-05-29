@@ -3,9 +3,9 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { AlertCircle, Loader2, ShieldCheck } from 'lucide-react';
 import AnimatedSection from '../components/AnimatedSection';
 import { useAuth } from '../context/AuthContext';
-import { isSupabaseConfigured } from '../lib/supabase';
+import { isSupabaseConfigured, supabase } from '../lib/supabase';
 
-const AUTH_CALLBACK_WAIT_MS = 700;
+const SESSION_RETRY_DELAYS_MS = [0, 120, 240, 480, 800];
 
 const safeRedirectPath = (value: string | null) => {
   if (!value || !value.startsWith('/') || value.startsWith('//')) return '/';
@@ -57,6 +57,17 @@ const AuthCallbackPage: React.FC = () => {
   useEffect(() => {
     let cancelled = false;
 
+    const waitForAuthSession = async () => {
+      for (const delay of SESSION_RETRY_DELAYS_MS) {
+        if (delay > 0) {
+          await new Promise(resolve => window.setTimeout(resolve, delay));
+        }
+        const { data } = await supabase.auth.getSession();
+        if (data.session) return true;
+      }
+      return false;
+    };
+
     const verifySession = async () => {
       const { code, description } = readCallbackError(location.search);
       if (code || description) {
@@ -70,17 +81,26 @@ const AuthCallbackPage: React.FC = () => {
         return;
       }
 
-      await new Promise(resolve => window.setTimeout(resolve, AUTH_CALLBACK_WAIT_MS));
-      const nextUser = await refreshUser();
-      if (cancelled || nextUser) {
-        if (nextUser) navigate(next, { replace: true });
-        return;
+      const hasSession = await waitForAuthSession();
+      if (cancelled) return;
+      if (hasSession) {
+        const nextUser = await refreshUser();
+        if (cancelled || nextUser) {
+          if (nextUser) navigate(next, { replace: true });
+          return;
+        }
+      } else {
+        const nextUser = await refreshUser();
+        if (cancelled || nextUser) {
+          if (nextUser) navigate(next, { replace: true });
+          return;
+        }
       }
 
-      await new Promise(resolve => window.setTimeout(resolve, 300));
       const retryUser = await refreshUser();
-      if (cancelled || retryUser) {
-        if (retryUser) navigate(next, { replace: true });
+      if (cancelled) return;
+      if (retryUser) {
+        navigate(next, { replace: true });
         return;
       }
 

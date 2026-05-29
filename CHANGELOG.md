@@ -34,6 +34,8 @@
 - 부원 인증 RPC가 `members.email`과 `members.contact_email`을 모두 정확히 확인하도록 수정하고, 등록 이메일 사전 확인 RPC를 추가했습니다.
 - Contact의 `메일 보내기` 동작을 Gmail 작성창 열기와 이메일 주소 복사 피드백으로 바꿔 `mailto:` 미설정 환경에서도 동작이 보이도록 개선했습니다.
 - 기존 Supabase DB에 이미 `members` 테이블이 있는 경우에도 이메일 인증용 컬럼이 추가되도록 `schema_final.sql`에 호환 ALTER 구문을 보강했습니다.
+- 이메일 인증 콜백의 고정 대기 시간을 줄이고, 메일 링크 대신 6자리 OTP 코드를 입력해 바로 로그인할 수 있는 흐름을 추가했습니다.
+- Supabase/Google 설정 후 환경변수로 켤 수 있는 Google OAuth 로그인 진입점을 추가했습니다.
 
 ---
 
