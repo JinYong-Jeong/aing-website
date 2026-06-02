@@ -228,8 +228,8 @@ create table if not exists public.team_posts (
   contact text,
   created_at timestamptz default now(),
   updated_at timestamptz default now(),
-  constraint team_posts_title_length_check check (char_length(title) between 4 and 80),
-  constraint team_posts_description_length_check check (char_length(description) between 20 and 1000),
+  constraint team_posts_title_length_check check (char_length(title) between 2 and 80),
+  constraint team_posts_description_length_check check (char_length(description) between 1 and 1000),
   constraint team_posts_members_check check (max_members between 2 and 8 and current_members between 1 and max_members),
   constraint team_posts_contact_length_check check (contact is null or char_length(contact) <= 120),
   constraint team_posts_skills_count_check check (coalesce(array_length(required_skills, 1), 0) <= 8),
@@ -247,6 +247,92 @@ create table if not exists public.team_applications (
   unique(team_post_id, applicant_id),
   constraint team_applications_message_length_check check (message is null or char_length(message) <= 300)
 );
+
+-- Existing Team tables may predate the hardened schema. Keep them compatible with the app.
+alter table public.team_posts add column if not exists title text;
+alter table public.team_posts add column if not exists description text;
+alter table public.team_posts add column if not exists author_id uuid references public.members(id) on delete cascade;
+alter table public.team_posts add column if not exists author_name text;
+alter table public.team_posts add column if not exists required_skills text[] default '{}';
+alter table public.team_posts add column if not exists max_members int default 4;
+alter table public.team_posts add column if not exists current_members int default 1;
+alter table public.team_posts add column if not exists status text default 'open';
+alter table public.team_posts add column if not exists contact text;
+alter table public.team_posts add column if not exists created_at timestamptz default now();
+alter table public.team_posts add column if not exists updated_at timestamptz default now();
+
+alter table public.team_applications add column if not exists team_post_id uuid references public.team_posts(id) on delete cascade;
+alter table public.team_applications add column if not exists applicant_id uuid references public.members(id) on delete cascade;
+alter table public.team_applications add column if not exists applicant_name text;
+alter table public.team_applications add column if not exists message text;
+alter table public.team_applications add column if not exists status text default 'pending';
+alter table public.team_applications add column if not exists created_at timestamptz default now();
+
+do $$
+begin
+  alter table public.team_posts drop constraint if exists team_posts_title_length_check;
+  alter table public.team_posts
+    add constraint team_posts_title_length_check
+    check (title is null or char_length(title) between 2 and 80)
+    not valid;
+
+  alter table public.team_posts drop constraint if exists team_posts_description_length_check;
+  alter table public.team_posts
+    add constraint team_posts_description_length_check
+    check (description is null or char_length(description) between 1 and 1000)
+    not valid;
+
+  alter table public.team_posts drop constraint if exists team_posts_members_check;
+  alter table public.team_posts
+    add constraint team_posts_members_check
+    check (
+      max_members is null
+      or current_members is null
+      or (max_members between 2 and 8 and current_members between 1 and max_members)
+    )
+    not valid;
+
+  alter table public.team_posts drop constraint if exists team_posts_contact_length_check;
+  alter table public.team_posts
+    add constraint team_posts_contact_length_check
+    check (contact is null or char_length(contact) <= 120)
+    not valid;
+
+  alter table public.team_posts drop constraint if exists team_posts_skills_count_check;
+  alter table public.team_posts
+    add constraint team_posts_skills_count_check
+    check (coalesce(array_length(required_skills, 1), 0) <= 8)
+    not valid;
+
+  alter table public.team_posts drop constraint if exists team_posts_skills_length_check;
+  alter table public.team_posts
+    add constraint team_posts_skills_length_check
+    check (public.text_array_items_max_length(required_skills, 24))
+    not valid;
+
+  alter table public.team_applications drop constraint if exists team_applications_message_length_check;
+  alter table public.team_applications
+    add constraint team_applications_message_length_check
+    check (message is null or char_length(message) <= 300)
+    not valid;
+end $$;
+
+do $$
+begin
+  if not exists (
+    select 1
+    from pg_constraint
+    where conrelid = 'public.team_applications'::regclass
+      and conname = 'team_applications_team_post_id_applicant_id_key'
+  ) then
+    alter table public.team_applications
+      add constraint team_applications_team_post_id_applicant_id_key
+      unique (team_post_id, applicant_id);
+  end if;
+exception
+  when duplicate_object or duplicate_table or unique_violation then
+    raise notice 'Skipped team_applications unique constraint because an equivalent constraint/index exists or duplicates already exist.';
+end $$;
 
 create table if not exists public.messages (
   id uuid default gen_random_uuid() primary key,
@@ -614,3 +700,5 @@ values
   ('email', 'gachon.aing@gmail.com'),
   ('footer_text', '© 2026 A.ing. All rights reserved.')
 on conflict (key) do nothing;
+
+notify pgrst, 'reload schema';

@@ -7,7 +7,9 @@ import { useAuth } from '../context/AuthContext';
 
 const LIMITS = {
   title: 80,
+  titleMin: 2,
   description: 1000,
+  descriptionMin: 1,
   skill: 24,
   skillCount: 8,
   contact: 120,
@@ -18,6 +20,8 @@ const LIMITS = {
   recentWindowMs: 10 * 60_000,
   recentMax: 2,
 };
+
+const LEGACY_DB_DESCRIPTION_MIN = 20;
 
 const TEAM_POST_SELECT = [
   'id', 'author_id', 'author_name', 'title', 'description', 'required_skills',
@@ -39,6 +43,33 @@ type TeamPostValidation =
   | { title: string; description: string; contact: string; skills: string[]; maxMembers: number };
 
 const trimText = (value: string, max: number) => value.trim().slice(0, max);
+
+const descriptionForStorage = (value: string) =>
+  value.length > 0 && value.length < LEGACY_DB_DESCRIPTION_MIN
+    ? value.padEnd(LEGACY_DB_DESCRIPTION_MIN, ' ')
+    : value;
+
+const friendlyTeamError = (error: unknown) => {
+  const message =
+    error instanceof Error
+      ? error.message
+      : typeof error === 'object' && error && 'message' in error
+        ? String((error as { message?: unknown }).message || '')
+        : String(error || '');
+  if (/row-level security|violates row-level security/i.test(message)) {
+    return '권한 확인에 실패했습니다. 로그인한 부원 계정인지 확인하고, 최신 schema_final.sql을 Supabase에 다시 적용해주세요.';
+  }
+  if (/schema cache|Could not find|column/i.test(message)) {
+    return 'DB 스키마가 최신 코드와 맞지 않습니다. 최신 schema_final.sql을 Supabase SQL Editor에서 다시 실행해주세요.';
+  }
+  if (/team_posts_description_length_check|description_length/i.test(message)) {
+    return 'DB의 설명 길이 제약이 예전 상태입니다. 최신 schema_final.sql을 다시 실행해주세요.';
+  }
+  if (/duplicate key|23505/i.test(message)) {
+    return '이미 처리된 요청입니다.';
+  }
+  return message || '요청 처리 중 오류가 발생했습니다.';
+};
 
 const normalizeSkills = (value: string) => {
   const seen = new Set<string>();
@@ -128,8 +159,8 @@ const TeamPage: React.FC = () => {
 
     if (!user?.member_id) return { error: '로그인한 부원만 모집글을 작성할 수 있습니다.' };
     if (myOpenPosts >= LIMITS.openPostsPerMember) return { error: `열린 모집글은 계정당 ${LIMITS.openPostsPerMember}개까지만 작성할 수 있습니다.` };
-    if (title.length < 4) return { error: '제목은 4자 이상 입력해주세요.' };
-    if (description.length < 20) return { error: '설명은 20자 이상 입력해주세요.' };
+    if (title.length < LIMITS.titleMin) return { error: `제목은 ${LIMITS.titleMin}자 이상 입력해주세요.` };
+    if (description.length < LIMITS.descriptionMin) return { error: '설명을 입력해주세요.' };
     if (description.length > LIMITS.description) return { error: `설명은 ${LIMITS.description}자 이하로 입력해주세요.` };
     if (!Number.isInteger(maxMembers) || maxMembers < LIMITS.maxMembersMin || maxMembers > LIMITS.maxMembersMax) {
       return { error: `모집 인원은 ${LIMITS.maxMembersMin}-${LIMITS.maxMembersMax}명 사이로 입력해주세요.` };
@@ -171,7 +202,7 @@ const TeamPage: React.FC = () => {
 
       const { error } = await supabase.from('team_posts').insert({
         title: validated.title,
-        description: validated.description,
+        description: descriptionForStorage(validated.description),
         required_skills: validated.skills,
         max_members: validated.maxMembers,
         current_members: 1,
@@ -187,7 +218,7 @@ const TeamPage: React.FC = () => {
       setShowForm(false);
       await fetchPosts();
     } catch (e: unknown) {
-      setFormError(e instanceof Error ? e.message : '모집글 작성 중 오류가 발생했습니다.');
+      setFormError(friendlyTeamError(e));
     } finally {
       setSubmitting(false);
     }
@@ -230,7 +261,7 @@ const TeamPage: React.FC = () => {
     if (error?.code === '23505') {
       alert('이미 지원했습니다.');
     } else if (error) {
-      alert('지원 중 오류가 발생했습니다.');
+      alert(friendlyTeamError(error));
     } else {
       localStorage.setItem('aing_team_apply_last_submit', String(Date.now()));
       alert('지원이 완료되었습니다. 작성자의 응답을 기다려주세요.');

@@ -27,6 +27,8 @@ VITE_SUPABASE_URL=your_supabase_url
 VITE_SUPABASE_ANON_KEY=your_anon_key
 VITE_AUTH_REDIRECT_ORIGIN=https://aing-website.vercel.app
 VITE_ENABLE_GOOGLE_OAUTH=false
+VITE_ENABLE_EMAIL_CODE_LOGIN=false
+VITE_AUTH_PREFLIGHT_MEMBERS=false
 ```
 
 Existing `REACT_APP_SUPABASE_URL` and `REACT_APP_SUPABASE_ANON_KEY` values are also accepted during migration.
@@ -40,9 +42,13 @@ In Supabase Dashboard, set Authentication > URL Configuration like this:
 - Recommended explicit callback URL: `https://aing-website.vercel.app/auth/callback*`
 - Optional local testing URL: `http://localhost:3000/*`
 
-For email templates, use Supabase's confirmation link variable, not the site URL variable. The button in the template should point to `{{ .ConfirmationURL }}` so the auth token/code reaches `/auth/callback`. Include `{{ .Token }}` in the same template if you want users to type the 6-digit code on the login screen instead of opening the link. If an old email opens `localhost:3000`, opens the home page without a session, or shows `otp_expired`, request a new link after these settings are saved.
+For email templates, use Supabase's confirmation link variable, not the site URL variable. The button in the template should point to `{{ .ConfirmationURL }}` so the auth token reaches `/auth/callback`. If an old email opens `localhost:3000`, opens the home page without a session, or shows `otp_expired`, request a new link after these settings are saved.
 
-Supabase may return `email rate limit exceeded` when links are requested repeatedly. The app adds a local resend cooldown and checks registered member emails before sending where the database RPC is available, but the provider-side throttle still has to expire or be adjusted in Supabase Auth rate-limit settings.
+The 6-digit email code input is optional and hidden by default because Supabase templates do not show it unless the template explicitly includes `{{ .Token }}`. Enable it only after updating the template by setting `VITE_ENABLE_EMAIL_CODE_LOGIN=true`.
+
+Supabase may return `email rate limit exceeded` when links are requested repeatedly. The app adds a local resend cooldown, but the provider-side throttle still has to expire or be adjusted in Supabase Auth rate-limit settings.
+
+Member preflight checks are disabled by default for speed. Set `VITE_AUTH_PREFLIGHT_MEMBERS=true` only if you want the app to check `members.email`/`members.contact_email` before sending an auth email. Members and Team remain protected after sign-in either way.
 
 For the fastest login experience, enable Google OAuth in Supabase and Google Cloud, then set `VITE_ENABLE_GOOGLE_OAUTH=true` in Vercel. The app still enforces `@gachon.ac.kr` plus active member registration after OAuth returns.
 

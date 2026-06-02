@@ -22,8 +22,22 @@ const TEAM_POST_ADMIN_SELECT = [
   'status',
   'contact',
   'created_at',
-  'updated_at',
   'applications:team_applications(id,team_post_id,applicant_id,applicant_name,message,status,created_at)',
+].join(',');
+
+const TEAM_POST_ADMIN_FALLBACK_SELECT = [
+  'id',
+  'title',
+  'description',
+  'author_id',
+  'author_name',
+  'required_skills',
+  'max_members',
+  'current_members',
+  'status',
+  'contact',
+  'created_at',
+  'applications:team_applications(id,team_post_id,applicant_id,applicant_name,status,created_at)',
 ].join(',');
 
 const AdminTeamPosts: React.FC = () => {
@@ -42,11 +56,19 @@ const AdminTeamPosts: React.FC = () => {
   const fetchPosts = async () => {
     setLoading(true);
     try {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from('team_posts')
         .select(TEAM_POST_ADMIN_SELECT)
         .order('created_at', { ascending: false });
-      setPosts((data as unknown as TeamPostWithApps[]) ?? []);
+      if (error && /message|schema cache|Could not find/i.test(error.message)) {
+        const { data: fallbackData } = await supabase
+          .from('team_posts')
+          .select(TEAM_POST_ADMIN_FALLBACK_SELECT)
+          .order('created_at', { ascending: false });
+        setPosts((fallbackData as unknown as TeamPostWithApps[]) ?? []);
+      } else {
+        setPosts((data as unknown as TeamPostWithApps[]) ?? []);
+      }
     } catch {
       setPosts([]);
     }

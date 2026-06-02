@@ -25,8 +25,11 @@ interface AuthContextType {
 const SCHOOL_DOMAIN = 'gachon.ac.kr';
 const DEFAULT_AUTH_REDIRECT_ORIGIN = 'https://aing-website.vercel.app';
 const LOCAL_HOSTS = new Set(['localhost', '127.0.0.1', '0.0.0.0']);
-const AUTH_REQUEST_TIMEOUT_MS = 15_000;
-const MEMBER_PREFLIGHT_TIMEOUT_MS = 5_000;
+const AUTH_REQUEST_TIMEOUT_MS = 10_000;
+const MEMBER_PREFLIGHT_TIMEOUT_MS = 1_200;
+const MEMBER_PREFLIGHT_ENABLED =
+  import.meta.env.VITE_AUTH_PREFLIGHT_MEMBERS === 'true' ||
+  import.meta.env.REACT_APP_AUTH_PREFLIGHT_MEMBERS === 'true';
 
 const AuthContext = createContext<AuthContextType>({
   user: null,
@@ -141,7 +144,7 @@ const withTimeout = async <T,>(promise: PromiseLike<T>, timeoutMs: number, messa
   }
 };
 
-const validateLoginEmail = async (rawEmail: string) => {
+const validateLoginEmail = async (rawEmail: string, options: { preflightMember?: boolean } = {}) => {
   const email = normalizeEmail(rawEmail);
   if (!email) return { email, error: '이메일을 입력해주세요.' };
   if (!isSupabaseConfigured) {
@@ -150,6 +153,8 @@ const validateLoginEmail = async (rawEmail: string) => {
   if (!isSchoolEmail(email)) {
     return { email, error: '가천대학교 이메일만 사용할 수 있습니다.' };
   }
+
+  if (!options.preflightMember) return { email };
 
   try {
     const { data, error } = await withTimeout(
@@ -349,7 +354,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [loadMemberForSession]);
 
   const sendLoginLink = async (rawEmail: string, redirectTo?: string) => {
-    const { email, error: validationError } = await validateLoginEmail(rawEmail);
+    const { email, error: validationError } = await validateLoginEmail(rawEmail, {
+      preflightMember: MEMBER_PREFLIGHT_ENABLED,
+    });
     if (validationError) return { ok: false, error: validationError };
 
     try {
@@ -383,7 +390,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const verifyLoginCode = async (rawEmail: string, rawToken: string) => {
-    const { email, error: validationError } = await validateLoginEmail(rawEmail);
+    const { email, error: validationError } = await validateLoginEmail(rawEmail, {
+      preflightMember: MEMBER_PREFLIGHT_ENABLED,
+    });
     if (validationError) return { ok: false, error: validationError };
 
     const token = rawToken.replace(/\s+/g, '');

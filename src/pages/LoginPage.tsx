@@ -9,6 +9,9 @@ const LAST_LOGIN_LINK_SENT_AT = 'aing_last_login_link_sent_at';
 const GOOGLE_OAUTH_ENABLED =
   import.meta.env.VITE_ENABLE_GOOGLE_OAUTH === 'true' ||
   import.meta.env.REACT_APP_ENABLE_GOOGLE_OAUTH === 'true';
+const EMAIL_CODE_LOGIN_ENABLED =
+  import.meta.env.VITE_ENABLE_EMAIL_CODE_LOGIN === 'true' ||
+  import.meta.env.REACT_APP_ENABLE_EMAIL_CODE_LOGIN === 'true';
 
 const safeRedirectPath = (value?: string | null) => {
   if (!value || !value.startsWith('/') || value.startsWith('//')) return '/';
@@ -192,10 +195,12 @@ const LoginPage: React.FC = () => {
             {error && <p className="text-red-500 text-xs leading-relaxed">{error}</p>}
             {sent && (
               <p className="text-green-600 text-xs leading-relaxed">
-                인증 메일을 보냈습니다. 메일 링크를 열거나 6자리 코드가 보이면 아래에 입력하세요.
+                {EMAIL_CODE_LOGIN_ENABLED
+                  ? '인증 메일을 보냈습니다. 메일 링크를 열거나 6자리 코드를 입력하세요.'
+                  : '인증 메일을 보냈습니다. 메일의 로그인 링크를 열어주세요.'}
               </p>
             )}
-            {sent && (
+            {sent && EMAIL_CODE_LOGIN_ENABLED && (
               <div>
                 <label className="block text-xs text-aing-muted mb-2">인증 코드</label>
                 <div className="relative">

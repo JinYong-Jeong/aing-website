@@ -7,7 +7,9 @@ import { useAuth } from '../context/AuthContext';
 
 const LIMITS = {
   title: 80,
+  titleMin: 2,
   description: 1000,
+  descriptionMin: 1,
   skill: 24,
   skillCount: 8,
   contact: 120,
@@ -15,6 +17,35 @@ const LIMITS = {
   maxMembersMin: 2,
   maxMembersMax: 8,
   submitCooldownMs: 60_000,
+};
+
+const LEGACY_DB_DESCRIPTION_MIN = 20;
+
+const descriptionForStorage = (value: string) =>
+  value.length > 0 && value.length < LEGACY_DB_DESCRIPTION_MIN
+    ? value.padEnd(LEGACY_DB_DESCRIPTION_MIN, ' ')
+    : value;
+
+const friendlyTeamError = (error: unknown) => {
+  const message =
+    error instanceof Error
+      ? error.message
+      : typeof error === 'object' && error && 'message' in error
+        ? String((error as { message?: unknown }).message || '')
+        : String(error || '');
+  if (/row-level security|violates row-level security/i.test(message)) {
+    return '권한 확인에 실패했습니다. 로그인한 부원 계정인지 확인하고, 최신 schema_final.sql을 Supabase에 다시 적용해주세요.';
+  }
+  if (/schema cache|Could not find|column/i.test(message)) {
+    return 'DB 스키마가 최신 코드와 맞지 않습니다. 최신 schema_final.sql을 Supabase SQL Editor에서 다시 실행해주세요.';
+  }
+  if (/team_posts_description_length_check|description_length/i.test(message)) {
+    return 'DB의 설명 길이 제약이 예전 상태입니다. 최신 schema_final.sql을 다시 실행해주세요.';
+  }
+  if (/duplicate key|23505/i.test(message)) {
+    return '이미 처리된 요청입니다.';
+  }
+  return message || '요청 처리 중 오류가 발생했습니다.';
 };
 
 const POST_SELECT = [
@@ -95,11 +126,22 @@ const TeamPostDetailPage: React.FC = () => {
       ? 'id,team_post_id,applicant_id,applicant_name,message,status,created_at'
       : 'id,team_post_id,applicant_id,applicant_name,status,created_at';
 
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('team_applications')
       .select(select)
       .eq('team_post_id', currentPost.id)
       .order('created_at', { ascending: true });
+
+    if (error && /message|schema cache|Could not find/i.test(error.message)) {
+      const { data: fallbackData } = await supabase
+        .from('team_applications')
+        .select('id,team_post_id,applicant_id,applicant_name,status,created_at')
+        .eq('team_post_id', currentPost.id)
+        .order('created_at', { ascending: true });
+      setApplications((fallbackData || []) as unknown as TeamApplication[]);
+      return;
+    }
+
     setApplications((data || []) as unknown as TeamApplication[]);
   }, [isAdmin, user?.member_id]);
 
@@ -136,8 +178,8 @@ const TeamPostDetailPage: React.FC = () => {
     const contact = editForm.contact.trim().slice(0, LIMITS.contact);
     const maxMembers = Number(editForm.max_members);
 
-    if (title.length < 4) return { error: '제목은 4자 이상 입력해주세요.' };
-    if (description.length < 20) return { error: '설명은 20자 이상 입력해주세요.' };
+    if (title.length < LIMITS.titleMin) return { error: `제목은 ${LIMITS.titleMin}자 이상 입력해주세요.` };
+    if (description.length < LIMITS.descriptionMin) return { error: '설명을 입력해주세요.' };
     if (!Number.isInteger(maxMembers) || maxMembers < Math.max(LIMITS.maxMembersMin, filled) || maxMembers > LIMITS.maxMembersMax) {
       return { error: `모집 인원은 현재 인원 이상, ${LIMITS.maxMembersMax}명 이하로 입력해주세요.` };
     }
@@ -180,17 +222,16 @@ const TeamPostDetailPage: React.FC = () => {
       .from('team_posts')
       .update({
         title: validated.title,
-        description: validated.description,
+        description: descriptionForStorage(validated.description),
         required_skills: validated.required_skills,
         max_members: validated.maxMembers,
         contact: validated.contact || null,
         status: validated.status,
-        updated_at: new Date().toISOString(),
       })
       .eq('id', post.id);
 
     if (error) {
-      setEditError(error.message);
+      setEditError(friendlyTeamError(error));
     } else {
       setShowEditModal(false);
       await fetchPost();
@@ -221,18 +262,24 @@ const TeamPostDetailPage: React.FC = () => {
     }
 
     setApplySubmitting(true);
-    const { error } = await supabase.from('team_applications').insert({
+    const applicationPayload = {
       team_post_id: post.id,
       applicant_id: user.member_id,
       applicant_name: user.name,
       message: applyMessage.trim().slice(0, LIMITS.message) || null,
       status: 'pending',
-    });
+    };
+    let { error } = await supabase.from('team_applications').insert(applicationPayload);
+    if (error && /message|schema cache|Could not find/i.test(error.message)) {
+      const { message: _message, ...fallbackPayload } = applicationPayload;
+      const fallbackResult = await supabase.from('team_applications').insert(fallbackPayload);
+      error = fallbackResult.error;
+    }
 
     if (error?.code === '23505') {
       setApplyError('이미 지원했습니다.');
     } else if (error) {
-      setApplyError(error.message);
+      setApplyError(friendlyTeamError(error));
     } else {
       localStorage.setItem('aing_team_apply_last_submit', String(Date.now()));
       setShowApplyModal(false);
