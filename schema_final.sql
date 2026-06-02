@@ -75,74 +75,35 @@ alter table public.members add column if not exists generation int;
 alter table public.members add column if not exists "order" int default 99;
 alter table public.members add column if not exists created_at timestamptz default now();
 
-do $$
-begin
-  if not exists (
-    select 1
-    from pg_constraint
-    where conrelid = 'public.members'::regclass
-      and conname = 'members_email_key'
-  ) then
-    alter table public.members add constraint members_email_key unique (email);
-  end if;
-exception
-  when duplicate_object or duplicate_table or unique_violation then
-    raise notice 'Skipped members.email unique constraint because an equivalent constraint/index exists or duplicate emails already exist.';
-end $$;
+create index if not exists members_email_lookup_idx on public.members (lower(email));
+create index if not exists members_contact_email_lookup_idx on public.members (lower(contact_email));
 
-do $$
-begin
-  if not exists (
-    select 1
-    from pg_constraint
-    where conrelid = 'public.members'::regclass
-      and conname = 'members_email_school_check'
-  ) then
-    alter table public.members
-      add constraint members_email_school_check
-      check (email is null or lower(email) ~ '^[^@[:space:]]+@([a-z0-9-]+\.)*gachon\.ac\.kr$')
-      not valid;
-  end if;
+alter table public.members drop constraint if exists members_email_school_check;
+alter table public.members
+  add constraint members_email_school_check
+  check (email is null or lower(email) ~ '^[^@[:space:]]+@([a-z0-9-]+\.)*gachon\.ac\.kr$')
+  not valid;
 
-  if not exists (
-    select 1
-    from pg_constraint
-    where conrelid = 'public.members'::regclass
-      and conname = 'members_bio_length_check'
-  ) then
-    alter table public.members
-      add constraint members_bio_length_check
-      check (bio is null or char_length(bio) <= 300)
-      not valid;
-  end if;
+alter table public.members drop constraint if exists members_bio_length_check;
+alter table public.members
+  add constraint members_bio_length_check
+  check (bio is null or char_length(bio) <= 300)
+  not valid;
 
-  if not exists (
-    select 1
-    from pg_constraint
-    where conrelid = 'public.members'::regclass
-      and conname = 'members_project_idea_length_check'
-  ) then
-    alter table public.members
-      add constraint members_project_idea_length_check
-      check (project_idea is null or char_length(project_idea) <= 500)
-      not valid;
-  end if;
+alter table public.members drop constraint if exists members_project_idea_length_check;
+alter table public.members
+  add constraint members_project_idea_length_check
+  check (project_idea is null or char_length(project_idea) <= 500)
+  not valid;
 
-  if not exists (
-    select 1
-    from pg_constraint
-    where conrelid = 'public.members'::regclass
-      and conname = 'members_contact_length_check'
-  ) then
-    alter table public.members
-      add constraint members_contact_length_check
-      check (
-        (contact_info is null or char_length(contact_info) <= 160)
-        and (contact_email is null or char_length(contact_email) <= 160)
-      )
-      not valid;
-  end if;
-end $$;
+alter table public.members drop constraint if exists members_contact_length_check;
+alter table public.members
+  add constraint members_contact_length_check
+  check (
+    (contact_info is null or char_length(contact_info) <= 160)
+    and (contact_email is null or char_length(contact_email) <= 160)
+  )
+  not valid;
 
 create table if not exists public.activities (
   id uuid default gen_random_uuid() primary key,
@@ -268,71 +229,55 @@ alter table public.team_applications add column if not exists message text;
 alter table public.team_applications add column if not exists status text default 'pending';
 alter table public.team_applications add column if not exists created_at timestamptz default now();
 
-do $$
-begin
-  alter table public.team_posts drop constraint if exists team_posts_title_length_check;
-  alter table public.team_posts
-    add constraint team_posts_title_length_check
-    check (title is null or char_length(title) between 2 and 80)
-    not valid;
+create index if not exists team_posts_author_lookup_idx on public.team_posts (author_id);
+create index if not exists team_applications_post_lookup_idx on public.team_applications (team_post_id);
+create index if not exists team_applications_applicant_lookup_idx on public.team_applications (applicant_id);
 
-  alter table public.team_posts drop constraint if exists team_posts_description_length_check;
-  alter table public.team_posts
-    add constraint team_posts_description_length_check
-    check (description is null or char_length(description) between 1 and 1000)
-    not valid;
+alter table public.team_posts drop constraint if exists team_posts_title_length_check;
+alter table public.team_posts
+  add constraint team_posts_title_length_check
+  check (title is null or char_length(title) between 2 and 80)
+  not valid;
 
-  alter table public.team_posts drop constraint if exists team_posts_members_check;
-  alter table public.team_posts
-    add constraint team_posts_members_check
-    check (
-      max_members is null
-      or current_members is null
-      or (max_members between 2 and 8 and current_members between 1 and max_members)
-    )
-    not valid;
+alter table public.team_posts drop constraint if exists team_posts_description_length_check;
+alter table public.team_posts
+  add constraint team_posts_description_length_check
+  check (description is null or char_length(description) between 1 and 1000)
+  not valid;
 
-  alter table public.team_posts drop constraint if exists team_posts_contact_length_check;
-  alter table public.team_posts
-    add constraint team_posts_contact_length_check
-    check (contact is null or char_length(contact) <= 120)
-    not valid;
+alter table public.team_posts drop constraint if exists team_posts_members_check;
+alter table public.team_posts
+  add constraint team_posts_members_check
+  check (
+    max_members is null
+    or current_members is null
+    or (max_members between 2 and 8 and current_members between 1 and max_members)
+  )
+  not valid;
 
-  alter table public.team_posts drop constraint if exists team_posts_skills_count_check;
-  alter table public.team_posts
-    add constraint team_posts_skills_count_check
-    check (coalesce(array_length(required_skills, 1), 0) <= 8)
-    not valid;
+alter table public.team_posts drop constraint if exists team_posts_contact_length_check;
+alter table public.team_posts
+  add constraint team_posts_contact_length_check
+  check (contact is null or char_length(contact) <= 120)
+  not valid;
 
-  alter table public.team_posts drop constraint if exists team_posts_skills_length_check;
-  alter table public.team_posts
-    add constraint team_posts_skills_length_check
-    check (public.text_array_items_max_length(required_skills, 24))
-    not valid;
+alter table public.team_posts drop constraint if exists team_posts_skills_count_check;
+alter table public.team_posts
+  add constraint team_posts_skills_count_check
+  check (coalesce(array_length(required_skills, 1), 0) <= 8)
+  not valid;
 
-  alter table public.team_applications drop constraint if exists team_applications_message_length_check;
-  alter table public.team_applications
-    add constraint team_applications_message_length_check
-    check (message is null or char_length(message) <= 300)
-    not valid;
-end $$;
+alter table public.team_posts drop constraint if exists team_posts_skills_length_check;
+alter table public.team_posts
+  add constraint team_posts_skills_length_check
+  check (public.text_array_items_max_length(required_skills, 24))
+  not valid;
 
-do $$
-begin
-  if not exists (
-    select 1
-    from pg_constraint
-    where conrelid = 'public.team_applications'::regclass
-      and conname = 'team_applications_team_post_id_applicant_id_key'
-  ) then
-    alter table public.team_applications
-      add constraint team_applications_team_post_id_applicant_id_key
-      unique (team_post_id, applicant_id);
-  end if;
-exception
-  when duplicate_object or duplicate_table or unique_violation then
-    raise notice 'Skipped team_applications unique constraint because an equivalent constraint/index exists or duplicates already exist.';
-end $$;
+alter table public.team_applications drop constraint if exists team_applications_message_length_check;
+alter table public.team_applications
+  add constraint team_applications_message_length_check
+  check (message is null or char_length(message) <= 300)
+  not valid;
 
 create table if not exists public.messages (
   id uuid default gen_random_uuid() primary key,

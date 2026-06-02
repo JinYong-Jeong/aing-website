@@ -41,6 +41,7 @@
 - 이메일 템플릿에 6자리 코드가 없는 운영 상태를 고려해 OTP 코드 입력 UI를 환경변수로 켜는 선택 기능으로 바꿨습니다.
 - Team 모집글 설명 20자 최소 제한을 제거하고, 기존 DB의 `updated_at`/`message` 컬럼 누락에도 작성/수정/신청/관리 화면이 fallback되도록 보강했습니다.
 - 기존 Supabase Team 테이블에도 누락 컬럼과 완화된 제약이 적용되도록 `schema_final.sql` 호환 ALTER 및 PostgREST schema cache reload를 추가했습니다.
+- Supabase SQL Editor에서 dollar-quoted `do $$` 블록 중간에 자동 RLS 문장이 삽입돼 실행이 깨지는 일을 줄이기 위해 멤버/팀 호환 스키마 보강 구간을 일반 `ALTER TABLE` 문으로 단순화했습니다.
 
 ---
 
